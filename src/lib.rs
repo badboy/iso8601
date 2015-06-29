@@ -4,6 +4,7 @@ extern crate nom;
 use nom::IResult;
 use nom::IResult::*;
 use nom::Err::*;
+use std::fmt;
 
 mod helper;
 use helper::*;
@@ -22,19 +23,43 @@ macro_rules! errln {
 #[allow(unused_imports)] use std::io::Write;
 
 
-#[derive(Debug,Eq,PartialEq)]
+#[derive(Eq,PartialEq)]
 struct Date {
     year: i32,
     month: u32,
     day: u32,
 }
 
-#[derive(Debug,Eq,PartialEq)]
+#[derive(Eq,PartialEq)]
 struct Time {
     hour: u32,
     minute: u32,
     second: u32,
     tz_offset: i32,
+}
+
+#[derive(Eq,PartialEq)]
+struct DateTime {
+    date: Date,
+    time: Time,
+}
+
+impl fmt::Debug for Date {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:0>4?}-{:0>2?}-{:0>2?}",
+               self.year, self.month, self.day)
+    }
+}
+impl fmt::Debug for Time {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:0>2?}:{:0>2?}:{:0>2?}Z{:0>4?}",
+               self.hour, self.minute, self.second, self.tz_offset*100)
+    }
+}
+impl fmt::Debug for DateTime {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}T{:?}", self.date, self.time)
+    }
 }
 
 /// Take n bytes and ensure that they are only in the provided range of bytes
