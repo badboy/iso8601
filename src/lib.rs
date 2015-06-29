@@ -10,23 +10,23 @@ use helper::*;
 
 #[derive(Eq,PartialEq)]
 pub struct Date {
-    year: i32,
-    month: u32,
-    day: u32,
+    pub year: i32,
+    pub month: u32,
+    pub day: u32,
 }
 
 #[derive(Eq,PartialEq)]
 pub struct Time {
-    hour: u32,
-    minute: u32,
-    second: u32,
-    tz_offset: i32,
+    pub hour: u32,
+    pub minute: u32,
+    pub second: u32,
+    pub tz_offset: i32,
 }
 
 #[derive(Eq,PartialEq)]
 pub struct DateTime {
-    date: Date,
-    time: Time,
+    pub date: Date,
+    pub time: Time,
 }
 
 impl fmt::Debug for Date {

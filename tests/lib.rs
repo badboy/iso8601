@@ -1,4 +1,10 @@
-/*
+extern crate iso8601;
+extern crate nom;
+
+use nom::IResult::*;
+
+use iso8601::*;
+
 #[test]
 fn parse_year() {
     assert_eq!(Done(&[][..], 2015), year(b"2015"));
@@ -153,4 +159,3 @@ fn parse_datetime_error() {
         assert!(res.is_err() || res.is_incomplete());
     }
 }
-*/
