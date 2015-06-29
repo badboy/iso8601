@@ -199,6 +199,19 @@ named!(time_with_timezone <&[u8], Time>, chain!(
         }
         ));
 
+named!(datetime <&[u8], DateTime>, chain!(
+        d: date ~
+        tag!("T") ~
+        t: time_with_timezone
+        ,
+        || {
+            DateTime{
+                date: d,
+                time: t,
+            }
+        }
+        ));
+
 #[test]
 fn parse_year() {
     assert_eq!(Done(&[][..], 2015), year(b"2015"));
@@ -304,12 +317,52 @@ fn parse_time_with_timezone() {
                time_with_timezone(b"16:43:16+00:00"));
     assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 5}),
                time_with_timezone(b"16:43:16+05:00"));
+    assert_eq!(Done(&b"+"[..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 0}),
+               time_with_timezone(b"16:43:16+"));
+    assert_eq!(Done(&b"+0"[..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 0}),
+               time_with_timezone(b"16:43:16+0"));
+    assert_eq!(Done(&b"+05:"[..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 0}),
+               time_with_timezone(b"16:43:16+05:"));
 
     assert!(time_with_timezone(b"20:").is_incomplete());
     assert!(time_with_timezone(b"20p42p16").is_err());
     assert!(time_with_timezone(b"pppp").is_err());
 
-    assert!(time_with_timezone(b"16:43:16+").is_err());
-    assert!(time_with_timezone(b"16:43:16+0").is_err());
-    assert!(time_with_timezone(b"16:43:16+05:").is_err());
+}
+
+#[test]
+fn parse_datetime_correct() {
+    fn make_datetime((year, month, day, hour, minute, second, tz_offset): (i32, u32, u32, u32, u32, u32, i32)) -> DateTime {
+        DateTime {
+            date: Date{ year: year, month: month, day: day },
+            time: Time{ hour: hour, minute: minute, second: second, tz_offset: tz_offset },
+        }
+    }
+
+    let test_datetimes = vec![
+        ("2007-08-31T16:47+00:00",     (2007,  08,  31,  16,  47,  0,   0)),
+        ("2007-12-24T18:21Z",          (2007,  12,  24,  18,  21,  0,   0)),
+        ("2008-02-01T09:00:22+05",     (2008,  02,  01,  9,   0,   22,  5)),
+        ("2009-01-01T12:00:00+01:00",  (2009,  1,   1,   12,  0,   0,   1)),
+        ("2009-06-30T18:30:00+02:00",  (2009,  06,  30,  18,  30,  0,   2)),
+        ("2015-06-29T23:07+02:00",     (2015,  06,  29,  23,  07,  0,   2)),
+        ("2015-06-26T16:43:16",        (2015,  06,  26,  16,  43, 16,   0)),
+    ];
+
+    for (iso_string, data) in test_datetimes {
+        assert_eq!(Done(&[][..], make_datetime(data)), datetime(iso_string.as_bytes()));
+    }
+}
+
+#[test]
+fn parse_datetime_error() {
+    let test_datetimes = vec![
+        "ppp",
+        "dumd-di-duTmd:iu:m"
+    ];
+
+    for iso_string in test_datetimes {
+        let res = datetime(iso_string.as_bytes());
+        assert!(res.is_err() || res.is_incomplete());
+    }
 }
