@@ -97,7 +97,7 @@ macro_rules! empty_or(
         } else {
             match $submac!($i, $($args)*) {
                 nom::IResult::Done(i,o)     => nom::IResult::Done(i, Some(o)),
-                nom::IResult::Error(e)      => nom::IResult::Error(e),
+                nom::IResult::Error(_)      => nom::IResult::Done($i, None),
                 nom::IResult::Incomplete(i) => nom::IResult::Incomplete(i)
 
             }
