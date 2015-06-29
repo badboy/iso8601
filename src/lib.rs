@@ -104,14 +104,14 @@ named!(pub year <&[u8], i32>, chain!(
         }));
 
 named!(lower_month <&[u8], u32>, chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
-named!(upper_month <&[u8], u32>, chain!(tag!("1") ~ s:char_between!('0', '2') ,       || 10+buf_to_u32(s)));
+named!(upper_month <&[u8], u32>, chain!(tag!("1") ~ s:char_between!('0', '2') , || 10+buf_to_u32(s)));
 
 named!(pub month <&[u8], u32>, alt!(lower_month | upper_month));
 
-named!(day_zero <&[u8], u32>,  chain!(tag!("0") ~ s:char_between!('1', '9') ,  || buf_to_u32(s)));
+named!(day_zero <&[u8], u32>,  chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
 named!(day_one <&[u8], u32>,   chain!(tag!("1") ~ s:char_between!('0', '9') , || 10+buf_to_u32(s)));
 named!(day_two <&[u8], u32>,   chain!(tag!("2") ~ s:char_between!('0', '9') , || 20+buf_to_u32(s)));
-named!(day_three <&[u8], u32>, chain!(tag!("3") ~ s:char_between!('0', '1') ,         || 30+buf_to_u32(s)));
+named!(day_three <&[u8], u32>, chain!(tag!("3") ~ s:char_between!('0', '1') , || 30+buf_to_u32(s)));
 
 named!(pub day <&[u8], u32>, alt!(day_zero | day_one | day_two | day_three));
 
