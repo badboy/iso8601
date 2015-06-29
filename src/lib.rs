@@ -8,20 +8,6 @@ use std::fmt;
 mod helper;
 use helper::*;
 
-macro_rules! errprint {
-    ($($arg:tt)*) => (
-        std::io::stderr().write_fmt(format_args!($($arg)*))
-        );
-}
-
-macro_rules! errln {
-    ($fmt:expr) => (errprint!(concat!($fmt, "\n")));
-    ($fmt:expr, $($arg:tt)*) => (errprint!(concat!($fmt, "\n"), $($arg)*));
-}
-
-#[allow(unused_imports)] use std::io::Write;
-
-
 #[derive(Eq,PartialEq)]
 pub struct Date {
     year: i32,
@@ -151,8 +137,6 @@ named!(below_sixty <&[u8], u32>, chain!(f:char_between!('0','5') ~ s:char_betwee
 named!(pub minute <&[u8], u32>, call!(below_sixty));
 named!(pub second <&[u8], u32>, call!(below_sixty));
 
-named!(append_seconds <&[u8], u32>, chain!(tag!(":") ~ sec:second, || sec));
-
 named!(pub time <&[u8], Time>, chain!(
         h: hour ~
         tag!(":") ~
@@ -174,7 +158,7 @@ named!(pub time <&[u8], Time>, chain!(
 named!(timezone <&[u8], u32>, chain!(
         tag!("+") ~
         h: hour ~
-        m: empty_or!(
+        empty_or!(
             chain!(
                 tag!(":")? ~ m: minute , || { m }
             ))
