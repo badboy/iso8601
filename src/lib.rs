@@ -175,8 +175,10 @@ named!(time <&[u8], Time>, chain!(
 named!(timezone <&[u8], u32>, chain!(
         tag!("+") ~
         h: hour ~
-        tag!(":")? ~
-        m: minute
+        m: empty_or!(
+            chain!(
+                tag!(":")? ~ m: minute , || { m }
+            ))
         ,
         || { h }));
 
