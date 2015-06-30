@@ -10,7 +10,7 @@ use helper::*;
 
 #[macro_use] mod macros;
 
-mod easy;
+pub mod easy;
 
 #[derive(Eq,PartialEq)]
 pub struct Date {
