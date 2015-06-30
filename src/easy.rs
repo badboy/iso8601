@@ -9,16 +9,20 @@ named!(take_4_digits, take_n_filter!(4, is_digit));
 named!(take_2_digits, take_n_filter!(2, is_digit));
 
 named!(sign, alt!(tag!("+") | tag!("-")));
+named!(numeric_sign <&[u8], i32>, map!(sign, |s: &[u8]| {
+    match s {
+        b"-" => -1,
+        _ => 1,
+    }
+}));
+
 named!(positive_year  <&[u8], i32>, map!(call!(take_4_digits), buf_to_i32));
 named!(pub year <&[u8], i32>, chain!(
-        pref: opt!(sign) ~
+        pref: opt!(numeric_sign) ~
         y: positive_year
         ,
         || {
-            match pref {
-                Some(b"-") => -y,
-                _ => y
-            }
+            pref.unwrap_or(1) * y
         }));
 
 named!(pub month <&[u8], u32>, map!(call!(take_2_digits), buf_to_u32));
@@ -49,19 +53,15 @@ named!(pub time <&[u8], Time>, chain!(
         ));
 
 named!(timezone_hour <&[u8], i32>, chain!(
-        s: sign ~
+        s: numeric_sign ~
         h: hour ~
         empty_or!(
             chain!(
                 tag!(":")? ~ m: minute , || { m }
             ))
         ,
-        || {
-            match s {
-                b"-" => -(h as i32),
-                _ => h as i32
-            }
-        }));
+        || { s * (h as i32) }
+        ));
 
 named!(tag_z, tag!("Z"));
 named!(timezone_utc <&[u8], i32>, map!(tag_z, |_| 0));
