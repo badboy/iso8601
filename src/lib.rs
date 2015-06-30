@@ -19,7 +19,7 @@ pub struct Date {
     pub day: u32,
 }
 
-#[derive(Eq,PartialEq)]
+#[derive(Clone,Eq,PartialEq)]
 pub struct Time {
     pub hour: u32,
     pub minute: u32,
@@ -48,6 +48,14 @@ impl fmt::Debug for Time {
 impl fmt::Debug for DateTime {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}T{:?}", self.date, self.time)
+    }
+}
+
+impl Time {
+    pub fn set_tz(&self, tzo: i32) -> Time {
+        let mut t = self.clone();
+        t.tz_offset = tzo;
+        t
     }
 }
 
