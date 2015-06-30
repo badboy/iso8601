@@ -62,3 +62,9 @@ fn easy_parse_datetime_error() {
         assert!(res.is_err() || res.is_incomplete());
     }
 }
+
+#[test]
+fn easy_allows_notallowed() {
+    assert_eq!(Done(&[][..], Time{ hour: 30, minute: 90, second: 90, tz_offset: 0}), time(b"30:90:90"));
+    assert_eq!(Done(&[][..], Date{ year: 0, month: 20, day: 40}), date(b"0000-20-40"));
+}

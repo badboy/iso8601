@@ -159,3 +159,9 @@ fn parse_datetime_error() {
         assert!(res.is_err() || res.is_incomplete());
     }
 }
+
+#[test]
+fn disallows_notallowed() {
+    assert!(time(b"30:90:90").is_err());
+    assert!(date(b"0000-20-40").is_err());
+}
