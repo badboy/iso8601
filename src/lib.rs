@@ -1,8 +1,10 @@
 #[macro_use]
 extern crate nom;
+extern crate chrono;
 
 use nom::IResult::*;
 use nom::Err::*;
+use chrono::{LocalResult,FixedOffset,TimeZone};
 use std::fmt;
 
 mod helper;
@@ -42,7 +44,7 @@ impl fmt::Debug for Date {
 impl fmt::Debug for Time {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:0>2?}:{:0>2?}:{:0>2?}Z{:0>4?}",
-               self.hour, self.minute, self.second, self.tz_offset*100)
+               self.hour, self.minute, self.second, 0)
     }
 }
 impl fmt::Debug for DateTime {
@@ -56,6 +58,14 @@ impl Time {
         let mut t = self.clone();
         t.tz_offset = tzo;
         t
+    }
+}
+
+impl DateTime {
+    pub fn to_chrono(&self) -> LocalResult<chrono::DateTime<FixedOffset>> {
+        chrono::FixedOffset::east(self.time.tz_offset)
+            .ymd_opt(self.date.year, self.date.month, self.date.day)
+            .and_hms_opt(self.time.hour, self.time.minute, self.time.second)
     }
 }
 

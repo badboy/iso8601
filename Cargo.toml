@@ -5,3 +5,4 @@ authors = ["Jan-Erik Rediger <janerik@fnordig.de>"]
 
 [dependencies]
 nom = "*"
+chrono = "*"

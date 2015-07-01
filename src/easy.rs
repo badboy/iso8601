@@ -55,12 +55,12 @@ named!(pub time <&[u8], Time>, chain!(
 named!(timezone_hour <&[u8], i32>, chain!(
         s: numeric_sign ~
         h: hour ~
-        empty_or!(
+        m: empty_or!(
             chain!(
                 tag!(":")? ~ m: minute , || { m }
             ))
         ,
-        || { s * (h as i32) }
+        || { (s * (h as i32) * 3600) + (m.unwrap_or(0) * 60) as i32 }
         ));
 
 named!(tag_z, tag!("Z"));

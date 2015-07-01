@@ -1,5 +1,8 @@
 extern crate iso8601;
+extern crate chrono;
 extern crate nom;
+
+use chrono::{FixedOffset,LocalResult,TimeZone};
 
 use nom::IResult::*;
 
@@ -31,7 +34,7 @@ fn easy_parse_datetime_correct() {
     fn make_datetime((year, month, day, hour, minute, second, tz_offset): (i32, u32, u32, u32, u32, u32, i32)) -> DateTime {
         DateTime {
             date: Date{ year: year, month: month, day: day },
-            time: Time{ hour: hour, minute: minute, second: second, tz_offset: tz_offset },
+            time: Time{ hour: hour, minute: minute, second: second, tz_offset: tz_offset*3600 },
         }
     }
 
@@ -67,4 +70,24 @@ fn easy_parse_datetime_error() {
 fn easy_allows_notallowed() {
     assert_eq!(Done(&[][..], Time{ hour: 30, minute: 90, second: 90, tz_offset: 0}), time(b"30:90:90"));
     assert_eq!(Done(&[][..], Date{ year: 0, month: 20, day: 40}), date(b"0000-20-40"));
+}
+
+#[test]
+fn easy_test_chrono_conversion() {
+    let t = datetime(b"0000-20-40T30:90:90Z");
+    if let Done(_, dt) = t {
+        assert_eq!(LocalResult::None, dt.to_chrono());
+    }
+
+    let t = datetime(b"2007-08-31T16:47+00:00");
+    if let Done(_, dt) = t {
+        let fixed_dt = FixedOffset::east(0).ymd(2007,08,31).and_hms(16,47,0);
+        assert_eq!(fixed_dt, dt.to_chrono().unwrap());
+
+
+    let t = datetime(b"2007-08-31T16:47-09:00");
+    if let Done(_, dt) = t {
+        let fixed_dt = FixedOffset::east(-9*3600).ymd(2007,08,31).and_hms(16,47,0);
+        assert_eq!(fixed_dt, dt.to_chrono().unwrap());
+    }   }
 }
