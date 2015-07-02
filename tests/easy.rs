@@ -83,11 +83,11 @@ fn easy_test_chrono_conversion() {
     if let Done(_, dt) = t {
         let fixed_dt = FixedOffset::east(0).ymd(2007,08,31).and_hms(16,47,0);
         assert_eq!(fixed_dt, dt.to_chrono().unwrap());
-
+    }
 
     let t = datetime(b"2007-08-31T16:47-09:00");
     if let Done(_, dt) = t {
         let fixed_dt = FixedOffset::east(-9*3600).ymd(2007,08,31).and_hms(16,47,0);
         assert_eq!(fixed_dt, dt.to_chrono().unwrap());
-    }   }
+    }
 }
