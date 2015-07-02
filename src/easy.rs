@@ -1,12 +1,10 @@
-use nom::{self,Needed,is_digit};
+use nom;
 use nom::IResult::*;
-use nom::Err::*;
 
 use helper::*;
 use super::{Date,Time,DateTime};
 
-named!(take_4_digits, take_n_filter!(4, is_digit));
-named!(take_2_digits, take_n_filter!(2, is_digit));
+use macros::{take_2_digits,take_4_digits};
 
 named!(sign, alt!(tag!("+") | tag!("-")));
 named!(numeric_sign <&[u8], i32>, map!(sign, |s: &[u8]| {

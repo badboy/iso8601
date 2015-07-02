@@ -1,32 +1,4 @@
-/// Take n bytes and ensure that they are only in the provided range of bytes
-#[macro_export]
-macro_rules! take_n_between(
-    ($input:expr, $count:expr, $min:expr, $max:expr) => (
-        {
-            let new_min = $min as u8;
-            let new_max = $max as u8;
-            let cnt = $count as usize;
-            if $input.len() < cnt {
-                nom::IResult::Incomplete(nom::Needed::Size(cnt))
-            } else {
-                for idx in 0..$count {
-                    if $input[idx] < new_min || $input[idx] > new_max {
-                        return nom::IResult::Error(nom::Err::Position(42 as u32,$input));
-                    }
-                }
-
-                nom::IResult::Done(&$input[$count..], &$input[0..$count])
-            }
-        }
-        );
-    );
-
-#[macro_export]
-macro_rules! char_between(
-    ($input:expr, $min:expr, $max:expr) => (
-        take_n_between!($input, 1, $min, $max)
-    );
-);
+use nom::{self,is_digit};
 
 #[macro_export]
 macro_rules! empty_or(
@@ -49,7 +21,7 @@ macro_rules! take_n_filter(
   ($input:expr, $count:expr, $submac:ident!( $($args:tt)* )) => (
       {
           if $input.len() < $count {
-              return nom::IResult::Incomplete(Needed::Size($count))
+              return nom::IResult::Incomplete(nom::Needed::Size($count))
           }
 
           for idx in 0..$count {
@@ -65,3 +37,16 @@ macro_rules! take_n_filter(
       take_n_filter!($input, $count, call!($f));
   );
 );
+
+#[macro_export]
+macro_rules! char_between(
+    ($input:expr, $min:expr, $max:expr) => (
+        {
+        fn f(c: u8) -> bool { c >= ($min as u8) && c <= ($max as u8)}
+        take_n_filter!($input, 1, f)
+        }
+    );
+);
+
+named!(pub take_4_digits, take_n_filter!(4, is_digit));
+named!(pub take_2_digits, take_n_filter!(2, is_digit));

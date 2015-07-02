@@ -11,6 +11,7 @@ mod helper;
 use helper::*;
 
 #[macro_use] mod macros;
+use macros::take_4_digits;
 
 pub mod easy;
 
@@ -73,7 +74,7 @@ named!(year_prefix, alt!(tag!("+") | tag!("-")));
 
 named!(pub year <&[u8], i32>, chain!(
         pref: opt!(year_prefix) ~
-        year: take_n_between!(4, '0', '9')
+        year: call!(take_4_digits)
         ,
         || {
             match pref {
