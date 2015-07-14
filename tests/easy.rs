@@ -10,6 +10,17 @@ use iso8601::{Date,Time,DateTime};
 use iso8601::easy::*;
 
 #[test]
+fn parse_year() {
+    assert_eq!(Done(&[][..], 2015), year(b"2015"));
+    assert_eq!(Done(&[][..], -0333), year(b"-0333"));
+
+    assert_eq!(Done(&b"-"[..], 2015), year(b"2015-"));
+
+    assert!(year(b"abcd").is_err());
+    assert!(year(b"2a03").is_err());
+}
+
+#[test]
 fn easy_parse_date() {
     assert_eq!(Done(&[][..], Date{ year: 2015, month: 6, day: 26 }), date(b"2015-06-26"));
     assert_eq!(Done(&[][..], Date{ year: -333, month: 7, day: 11 }), date(b"-0333-07-11"));

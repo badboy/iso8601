@@ -17,24 +17,26 @@ macro_rules! empty_or(
 );
 
 #[macro_export]
-macro_rules! take_n_filter(
-  ($input:expr, $count:expr, $submac:ident!( $($args:tt)* )) => (
-      {
-          if $input.len() < $count {
-              return nom::IResult::Incomplete(nom::Needed::Size($count))
-          }
+macro_rules! check(
+  ($input:expr, $submac:ident!( $($args:tt)* )) => (
 
-          for idx in 0..$count {
-              if !$submac!($input[idx], $($args)*) {
-                  return nom::IResult::Error(nom::Err::Position(42, $input))
-              }
-          }
-
-          nom::IResult::Done(&$input[$count..], &$input[0..$count])
+    {
+      let mut failed = false;
+      for idx in 0..$input.len() {
+        if !$submac!($input[idx], $($args)*) {
+            failed = true;
+            break;
+        }
       }
+      if failed {
+        nom::IResult::Error(nom::Err::Position(nom::ErrorCode::Filter as u32,$input))
+      } else {
+        nom::IResult::Done(&b""[..], $input)
+      }
+    }
   );
-  ($input:expr, $count: expr, $f:expr) => (
-      take_n_filter!($input, $count, call!($f));
+  ($input:expr, $f:expr) => (
+    check!($input, call!($f));
   );
 );
 
@@ -43,10 +45,11 @@ macro_rules! char_between(
     ($input:expr, $min:expr, $max:expr) => (
         {
         fn f(c: u8) -> bool { c >= ($min as u8) && c <= ($max as u8)}
-        take_n_filter!($input, 1, f)
+        flat_map!($input, take!(1), check!(f))
         }
     );
 );
 
-named!(pub take_4_digits, take_n_filter!(4, is_digit));
-named!(pub take_2_digits, take_n_filter!(2, is_digit));
+
+named!(pub take_4_digits, flat_map!(take!(4), check!(is_digit)));
+named!(pub take_2_digits, flat_map!(take!(2), check!(is_digit)));
