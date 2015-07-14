@@ -59,8 +59,7 @@ named!(timezone_hour <&[u8], i32>, chain!(
         || { (s * (h as i32) * 3600) + (m.unwrap_or(0) * 60) as i32 }
         ));
 
-named!(tag_z, tag!("Z"));
-named!(timezone_utc <&[u8], i32>, map!(tag_z, |_| 0));
+named!(timezone_utc <&[u8], i32>, map!(tag!("Z"), |_| 0));
 named!(timezone <&[u8], i32>, alt!(timezone_utc | timezone_hour));
 
 named!(pub datetime <&[u8], DateTime>, chain!(
