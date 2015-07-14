@@ -15,7 +15,7 @@ named!(sign <&[u8], i32>, alt!(
 named!(positive_year  <&[u8], i32>, map!(call!(take_4_digits), buf_to_i32));
 named!(pub year <&[u8], i32>, chain!(
         pref: opt!(sign) ~
-        y: positive_year
+        y:    positive_year
         ,
         || {
             pref.unwrap_or(1) * y
@@ -35,9 +35,9 @@ named!(pub minute <&[u8], u32>, map!(call!(take_2_digits), buf_to_u32));
 named!(pub second <&[u8], u32>, map!(call!(take_2_digits), buf_to_u32));
 
 named!(pub time <&[u8], Time>, chain!(
-        h: hour ~
-        tag!(":") ~
-        m: minute ~
+        h: hour      ~
+           tag!(":") ~
+        m: minute    ~
         s: empty_or!(chain!(
                 tag!(":") ~ s:second , || { s }))
         ,
@@ -64,9 +64,9 @@ named!(timezone_utc <&[u8], i32>, map!(tag_z, |_| 0));
 named!(timezone <&[u8], i32>, alt!(timezone_utc | timezone_hour));
 
 named!(pub datetime <&[u8], DateTime>, chain!(
-        d: date ~
-        tag!("T") ~
-        t: time ~
+        d:   date      ~
+             tag!("T") ~
+        t:   time      ~
         tzo: empty_or!(call!(timezone))
         ,
         || {
