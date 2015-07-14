@@ -6,17 +6,15 @@ use super::{Date,Time,DateTime};
 
 use macros::{take_2_digits,take_4_digits};
 
-named!(sign, alt!(tag!("+") | tag!("-")));
-named!(numeric_sign <&[u8], i32>, map!(sign, |s: &[u8]| {
-    match s {
-        b"-" => -1,
-        _ => 1,
-    }
-}));
+named!(sign <&[u8], i32>, alt!(
+        tag!("-") => { |_| -1 } |
+        tag!("+") => { |_| 1 }
+        )
+    );
 
 named!(positive_year  <&[u8], i32>, map!(call!(take_4_digits), buf_to_i32));
 named!(pub year <&[u8], i32>, chain!(
-        pref: opt!(numeric_sign) ~
+        pref: opt!(sign) ~
         y: positive_year
         ,
         || {
@@ -51,7 +49,7 @@ named!(pub time <&[u8], Time>, chain!(
         ));
 
 named!(timezone_hour <&[u8], i32>, chain!(
-        s: numeric_sign ~
+        s: sign ~
         h: hour ~
         m: empty_or!(
             chain!(
