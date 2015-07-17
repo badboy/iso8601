@@ -113,9 +113,10 @@ named!(pub hour <&[u8], u32>, alt!(lower_hour | upper_hour));
 
 named!(below_sixty <&[u8], u32>, chain!(f:char_between!('0','5') ~ s:char_between!('0','9') ,
                                        || { buf_to_u32(f)*10 + buf_to_u32(s) } ));
+named!(upto_sixty <&[u8], u32>, alt!(below_sixty | map!(tag!("60"), |_| 60)));
 
 named!(pub minute <&[u8], u32>, call!(below_sixty));
-named!(pub second <&[u8], u32>, call!(below_sixty));
+named!(pub second <&[u8], u32>, call!(upto_sixty));
 
 named!(pub time <&[u8], Time>, chain!(
         h: hour ~

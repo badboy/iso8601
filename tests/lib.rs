@@ -84,8 +84,8 @@ fn parse_second() {
     assert_eq!(Done(&[][..], 1), second(b"01"));
     assert_eq!(Done(&[][..], 30), second(b"30"));
     assert_eq!(Done(&[][..], 59), second(b"59"));
+    assert_eq!(Done(&[][..], 60), second(b"60"));
 
-    assert!(second(b"60").is_err());
     assert!(second(b"61").is_err());
     assert!(second(b"ab").is_err());
 }
