@@ -72,7 +72,7 @@ impl DateTime {
 
 named!(year_prefix, alt!(tag!("+") | tag!("-")));
 
-named!(pub year <&[u8], i32>, chain!(
+named!(pub year <i32>, chain!(
         pref: opt!(year_prefix) ~
         year: call!(take_4_digits)
         ,
@@ -83,19 +83,19 @@ named!(pub year <&[u8], i32>, chain!(
             }
         }));
 
-named!(lower_month <&[u8], u32>, chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
-named!(upper_month <&[u8], u32>, chain!(tag!("1") ~ s:char_between!('0', '2') , || 10+buf_to_u32(s)));
+named!(lower_month <u32>, chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
+named!(upper_month <u32>, chain!(tag!("1") ~ s:char_between!('0', '2') , || 10+buf_to_u32(s)));
 
-named!(pub month <&[u8], u32>, alt!(lower_month | upper_month));
+named!(pub month <u32>, alt!(lower_month | upper_month));
 
-named!(day_zero <&[u8], u32>,  chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
-named!(day_one <&[u8], u32>,   chain!(tag!("1") ~ s:char_between!('0', '9') , || 10+buf_to_u32(s)));
-named!(day_two <&[u8], u32>,   chain!(tag!("2") ~ s:char_between!('0', '9') , || 20+buf_to_u32(s)));
-named!(day_three <&[u8], u32>, chain!(tag!("3") ~ s:char_between!('0', '1') , || 30+buf_to_u32(s)));
+named!(day_zero <u32>,  chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
+named!(day_one <u32>,   chain!(tag!("1") ~ s:char_between!('0', '9') , || 10+buf_to_u32(s)));
+named!(day_two <u32>,   chain!(tag!("2") ~ s:char_between!('0', '9') , || 20+buf_to_u32(s)));
+named!(day_three <u32>, chain!(tag!("3") ~ s:char_between!('0', '1') , || 30+buf_to_u32(s)));
 
-named!(pub day <&[u8], u32>, alt!(day_zero | day_one | day_two | day_three));
+named!(pub day <u32>, alt!(day_zero | day_one | day_two | day_three));
 
-named!(pub date <&[u8], Date>, chain!(
+named!(pub date <Date>, chain!(
         y: year ~
         tag!("-") ~
         m: month ~
@@ -106,19 +106,19 @@ named!(pub date <&[u8], Date>, chain!(
         ));
 
 
-named!(lower_hour <&[u8], u32>, chain!(f:char_between!('0','1') ~ s:char_between!('0','9') ,
+named!(lower_hour <u32>, chain!(f:char_between!('0','1') ~ s:char_between!('0','9') ,
                                        || { buf_to_u32(f)*10 + buf_to_u32(s) } ));
-named!(upper_hour <&[u8], u32>, chain!(tag!("2") ~ s:char_between!('0','4') , || 20+buf_to_u32(s)));
-named!(pub hour <&[u8], u32>, alt!(lower_hour | upper_hour));
+named!(upper_hour <u32>, chain!(tag!("2") ~ s:char_between!('0','4') , || 20+buf_to_u32(s)));
+named!(pub hour <u32>, alt!(lower_hour | upper_hour));
 
-named!(below_sixty <&[u8], u32>, chain!(f:char_between!('0','5') ~ s:char_between!('0','9') ,
+named!(below_sixty <u32>, chain!(f:char_between!('0','5') ~ s:char_between!('0','9') ,
                                        || { buf_to_u32(f)*10 + buf_to_u32(s) } ));
-named!(upto_sixty <&[u8], u32>, alt!(below_sixty | map!(tag!("60"), |_| 60)));
+named!(upto_sixty <u32>, alt!(below_sixty | map!(tag!("60"), |_| 60)));
 
-named!(pub minute <&[u8], u32>, call!(below_sixty));
-named!(pub second <&[u8], u32>, call!(upto_sixty));
+named!(pub minute <u32>, call!(below_sixty));
+named!(pub second <u32>, call!(upto_sixty));
 
-named!(pub time <&[u8], Time>, chain!(
+named!(pub time <Time>, chain!(
         h: hour ~
         tag!(":") ~
         m: minute ~
@@ -136,7 +136,7 @@ named!(pub time <&[u8], Time>, chain!(
         }
         ));
 
-named!(timezone <&[u8], u32>, chain!(
+named!(timezone <u32>, chain!(
         tag!("+") ~
         h: hour ~
         empty_or!(
@@ -147,9 +147,9 @@ named!(timezone <&[u8], u32>, chain!(
         || { h }));
 
 named!(tz_z, tag!("Z"));
-named!(timezone_utc <&[u8], u32>, map!(tz_z, |_| 0));
+named!(timezone_utc <u32>, map!(tz_z, |_| 0));
 
-named!(pub time_with_timezone <&[u8], Time>, chain!(
+named!(pub time_with_timezone <Time>, chain!(
         t: time ~
         s: empty_or!(alt!(timezone_utc | timezone))
         ,
@@ -163,7 +163,7 @@ named!(pub time_with_timezone <&[u8], Time>, chain!(
         }
         ));
 
-named!(pub datetime <&[u8], DateTime>, chain!(
+named!(pub datetime <DateTime>, chain!(
         d: date ~
         tag!("T") ~
         t: time_with_timezone

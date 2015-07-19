@@ -6,14 +6,14 @@ use super::{Date,Time,DateTime};
 
 use macros::{take_2_digits,take_4_digits};
 
-named!(sign <&[u8], i32>, alt!(
+named!(sign <i32>, alt!(
         tag!("-") => { |_| -1 } |
         tag!("+") => { |_| 1 }
         )
     );
 
-named!(positive_year  <&[u8], i32>, map!(call!(take_4_digits), buf_to_i32));
-named!(pub year <&[u8], i32>, chain!(
+named!(positive_year  <i32>, map!(call!(take_4_digits), buf_to_i32));
+named!(pub year <i32>, chain!(
         pref: opt!(sign) ~
         y:    positive_year
         ,
@@ -21,20 +21,20 @@ named!(pub year <&[u8], i32>, chain!(
             pref.unwrap_or(1) * y
         }));
 
-named!(pub month <&[u8], u32>, map!(call!(take_2_digits), buf_to_u32));
-named!(pub day   <&[u8], u32>, map!(call!(take_2_digits), buf_to_u32));
+named!(pub month <u32>, map!(call!(take_2_digits), buf_to_u32));
+named!(pub day   <u32>, map!(call!(take_2_digits), buf_to_u32));
 
-named!(pub date <&[u8], Date>, chain!(
+named!(pub date <Date>, chain!(
         y: year ~ tag!("-") ~ m: month ~ tag!("-") ~ d: day
         , || { Date{ year: y, month: m, day: d }
         }
         ));
 
-named!(pub hour   <&[u8], u32>, map!(call!(take_2_digits), buf_to_u32));
-named!(pub minute <&[u8], u32>, map!(call!(take_2_digits), buf_to_u32));
-named!(pub second <&[u8], u32>, map!(call!(take_2_digits), buf_to_u32));
+named!(pub hour   <u32>, map!(call!(take_2_digits), buf_to_u32));
+named!(pub minute <u32>, map!(call!(take_2_digits), buf_to_u32));
+named!(pub second <u32>, map!(call!(take_2_digits), buf_to_u32));
 
-named!(pub time <&[u8], Time>, chain!(
+named!(pub time <Time>, chain!(
         h: hour      ~
            tag!(":") ~
         m: minute    ~
@@ -48,7 +48,7 @@ named!(pub time <&[u8], Time>, chain!(
            }
         ));
 
-named!(timezone_hour <&[u8], i32>, chain!(
+named!(timezone_hour <i32>, chain!(
         s: sign ~
         h: hour ~
         m: empty_or!(
@@ -59,10 +59,10 @@ named!(timezone_hour <&[u8], i32>, chain!(
         || { (s * (h as i32) * 3600) + (m.unwrap_or(0) * 60) as i32 }
         ));
 
-named!(timezone_utc <&[u8], i32>, map!(tag!("Z"), |_| 0));
-named!(timezone <&[u8], i32>, alt!(timezone_utc | timezone_hour));
+named!(timezone_utc <i32>, map!(tag!("Z"), |_| 0));
+named!(timezone <i32>, alt!(timezone_utc | timezone_hour));
 
-named!(pub datetime <&[u8], DateTime>, chain!(
+named!(pub datetime <DateTime>, chain!(
         d:   date      ~
              tag!("T") ~
         t:   time      ~
