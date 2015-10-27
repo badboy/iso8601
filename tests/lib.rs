@@ -29,7 +29,7 @@ fn parse_month() {
 
 #[test]
 fn parse_day() {
-    assert_eq!(Done(&[][..], 1), day(b"01"));
+    assert_eq!(Done(&[][..], 1),  day(b"01"));
     assert_eq!(Done(&[][..], 12), day(b"12"));
     assert_eq!(Done(&[][..], 20), day(b"20"));
     assert_eq!(Done(&[][..], 28), day(b"28"));
@@ -40,6 +40,14 @@ fn parse_day() {
     assert!(day(b"00").is_err());
     assert!(day(b"32").is_err());
 }
+
+//#[test]
+//fn parse_week() {
+//    assert_eq!(Done(&[][..],  1), month(b"01"));
+//    assert!(month(b"1").is_err());
+//    assert_eq!(Done(&[][..],  6), month(b"06"));
+//    assert_eq!(Done(&[][..], 12), month(b"12"));
+//}
 
 #[test]
 fn parse_date() {
@@ -127,7 +135,13 @@ fn parse_datetime_correct() {
     }
 
     let test_datetimes = vec![
+        ("20060831T16:47+00:00",       (2006,  08,  31,  16,  47,  0,   0*3600)),
+
         ("2007-08-31T16:47+00:00",     (2007,  08,  31,  16,  47,  0,   0*3600)),
+        ("20070831T1647+00:00",        (2007,  08,  31,  16,  47,  0,   0*3600)),
+        ("20070831T1647+0000",         (2007,  08,  31,  16,  47,  0,   0*3600)),
+        ("20070831T1647Z",             (2007,  08,  31,  16,  47,  0,   0*3600)),
+
         ("2007-12-24T18:21Z",          (2007,  12,  24,  18,  21,  0,   0*3600)),
         ("2008-02-01T09:00:22+05",     (2008,  02,  01,  9,   0,   22,  5*3600)),
         ("2009-01-01T12:00:00+01:00",  (2009,  1,   1,   12,  0,   0,   1*3600)),
@@ -154,9 +168,13 @@ fn parse_datetime_error() {
     }
 }
 
-
 #[test]
 fn disallows_notallowed() {
     assert!(time(b"30:90:90").is_err());
     assert!(date(b"0000-20-40").is_err());
 }
+
+//#[test]
+//fn iso_week_date(){
+//"2003-W05-6T04"
+//}

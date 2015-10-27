@@ -60,6 +60,7 @@ named!(upper_month <u32>, chain!(tag!("1") ~ s:char_between!('0', '2') , || 10+b
 
 named!(pub month <u32>, alt!(lower_month | upper_month));
 
+
 // DD
 named!(day_zero <u32>,  chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
 named!(day_one <u32>,   chain!(tag!("1") ~ s:char_between!('0', '9') , || 10+buf_to_u32(s)));
@@ -68,12 +69,15 @@ named!(day_three <u32>, chain!(tag!("3") ~ s:char_between!('0', '1') , || 30+buf
 
 named!(pub day <u32>, alt!(day_zero | day_one | day_two | day_three));
 
+// WW
+named!(pub week <u32>, alt!(lower_month | upper_month));
+
 // YYYY MM DD
 named!(pub date <Date>, chain!(
         y: year ~
-        tag!("-") ~
+        opt!(tag!("-")) ~
         m: month ~
-        tag!("-") ~
+        opt!(tag!("-")) ~
         d: day
         ,
         || { Date{ year: y, month: m, day: d } }
@@ -98,10 +102,12 @@ named!(pub second <u32>, call!(upto_sixty));
 // HH:MM:[SS]
 named!(pub time <Time>, chain!(
         h: hour ~
-        tag!(":") ~
+        opt!(tag!(":")) ~
         m: minute ~
         s: empty_or!(
-            chain!(tag!(":") ~ s:second , || s) // TODO does this require the chain?
+            chain!(
+                tag!(":") ~
+                s:second , || s) // TODO does this require the chain?
             )
         ,
         || {
