@@ -102,20 +102,14 @@ fn parse_time() {
 
 #[test]
 fn parse_time_with_timezone() {
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 0}),
-               time_with_timezone(b"16:43:16"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 0}),
-               time_with_timezone(b"16:43:16Z"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 0}),
-               time_with_timezone(b"16:43:16+00:00"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 5}),
-               time_with_timezone(b"16:43:16+05:00"));
-    assert_eq!(Done(&b"+"[..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 0}),
-               time_with_timezone(b"16:43:16+"));
-    assert_eq!(Done(&b"+0"[..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 0}),
-               time_with_timezone(b"16:43:16+0"));
-    assert_eq!(Done(&b"+05:"[..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 0}),
-               time_with_timezone(b"16:43:16+05:"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 0}),       time_with_timezone(b"16:43:16"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 0}),       time_with_timezone(b"16:43:16Z"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 0}),       time_with_timezone(b"16:43:16+00:00"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 0}),       time_with_timezone(b"16:43:16-00:00"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 5*60*60}), time_with_timezone(b"16:43:16+05:00"));
+    assert_eq!(Done(&b"+"[..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 0}),     time_with_timezone(b"16:43:16+"));
+    assert_eq!(Done(&b"+0"[..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 0}),    time_with_timezone(b"16:43:16+0"));
+    assert_eq!(Done(&b"+05:"[..], Time{ hour: 16, minute: 43, second: 16, tz_offset: 0}),  time_with_timezone(b"16:43:16+05:"));
 
     assert!(time_with_timezone(b"20:").is_incomplete());
     assert!(time_with_timezone(b"20p42p16").is_err());
@@ -133,13 +127,13 @@ fn parse_datetime_correct() {
     }
 
     let test_datetimes = vec![
-        ("2007-08-31T16:47+00:00",     (2007,  08,  31,  16,  47,  0,   0)),
-        ("2007-12-24T18:21Z",          (2007,  12,  24,  18,  21,  0,   0)),
-        ("2008-02-01T09:00:22+05",     (2008,  02,  01,  9,   0,   22,  5)),
-        ("2009-01-01T12:00:00+01:00",  (2009,  1,   1,   12,  0,   0,   1)),
-        ("2009-06-30T18:30:00+02:00",  (2009,  06,  30,  18,  30,  0,   2)),
-        ("2015-06-29T23:07+02:00",     (2015,  06,  29,  23,  07,  0,   2)),
-        ("2015-06-26T16:43:16",        (2015,  06,  26,  16,  43, 16,   0)),
+        ("2007-08-31T16:47+00:00",     (2007,  08,  31,  16,  47,  0,   0*3600)),
+        ("2007-12-24T18:21Z",          (2007,  12,  24,  18,  21,  0,   0*3600)),
+        ("2008-02-01T09:00:22+05",     (2008,  02,  01,  9,   0,   22,  5*3600)),
+        ("2009-01-01T12:00:00+01:00",  (2009,  1,   1,   12,  0,   0,   1*3600)),
+        ("2009-06-30T18:30:00+02:00",  (2009,  06,  30,  18,  30,  0,   2*3600)),
+        ("2015-06-29T23:07+02:00",     (2015,  06,  29,  23,  07,  0,   2*3600)),
+        ("2015-06-26T16:43:16",        (2015,  06,  26,  16,  43, 16,   0*3600)),
     ];
 
     for (iso_string, data) in test_datetimes {
@@ -159,6 +153,7 @@ fn parse_datetime_error() {
         assert!(res.is_err() || res.is_incomplete());
     }
 }
+
 
 #[test]
 fn disallows_notallowed() {

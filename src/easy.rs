@@ -59,8 +59,8 @@ named!(timezone_hour <i32>, chain!(
         || { (s * (h as i32) * 3600) + (m.unwrap_or(0) * 60) as i32 }
         ));
 
-named!(timezone_utc <i32>, map!(tag!("Z"), |_| 0));
-named!(timezone <i32>, alt!(timezone_utc | timezone_hour));
+named!(timezone_utc <i32>, map!(alt!(tag!("Z") | tag!("+")), |_| 0));
+named!(pub timezone <i32>, alt!(timezone_utc | timezone_hour));
 
 named!(pub datetime <DateTime>, chain!(
         d:   date      ~
@@ -73,5 +73,14 @@ named!(pub datetime <DateTime>, chain!(
                 date: d,
                 time: t.set_tz(tzo.unwrap_or(0)),
             }
+        }
+        ));
+
+named!(pub time_with_timezone <Time>, chain!(
+        t:   time      ~
+        tzo: empty_or!(call!(timezone))
+        ,
+        || {
+            t.set_tz(tzo.unwrap_or(0)); t
         }
         ));

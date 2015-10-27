@@ -1,11 +1,9 @@
+#![allow(dead_code)]
 #[macro_use]
 extern crate nom;
-extern crate chrono;
 
 use nom::IResult::*;
 use nom::Err::*;
-use chrono::{LocalResult,FixedOffset,TimeZone};
-use std::fmt;
 
 mod helper;
 use helper::*;
@@ -13,16 +11,14 @@ use helper::*;
 #[macro_use] mod macros;
 use macros::take_4_digits;
 
-pub mod easy;
-
-#[derive(Eq,PartialEq)]
+#[derive(Eq,PartialEq,Debug)]
 pub struct Date {
     pub year: i32,
     pub month: u32,
     pub day: u32,
 }
 
-#[derive(Clone,Eq,PartialEq)]
+#[derive(Clone,Eq,PartialEq,Debug)]
 pub struct Time {
     pub hour: u32,
     pub minute: u32,
@@ -30,28 +26,10 @@ pub struct Time {
     pub tz_offset: i32,
 }
 
-#[derive(Eq,PartialEq)]
+#[derive(Eq,PartialEq,Debug)]
 pub struct DateTime {
     pub date: Date,
     pub time: Time,
-}
-
-impl fmt::Debug for Date {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:0>4?}-{:0>2?}-{:0>2?}",
-               self.year, self.month, self.day)
-    }
-}
-impl fmt::Debug for Time {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:0>2?}:{:0>2?}:{:0>2?}Z{:0>4?}",
-               self.hour, self.minute, self.second, 0)
-    }
-}
-impl fmt::Debug for DateTime {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}T{:?}", self.date, self.time)
-    }
 }
 
 impl Time {
@@ -62,14 +40,7 @@ impl Time {
     }
 }
 
-impl DateTime {
-    pub fn to_chrono(&self) -> LocalResult<chrono::DateTime<FixedOffset>> {
-        chrono::FixedOffset::east(self.time.tz_offset)
-            .ymd_opt(self.date.year, self.date.month, self.date.day)
-            .and_hms_opt(self.time.hour, self.time.minute, self.time.second)
-    }
-}
-
+// YYYY
 named!(year_prefix, alt!(tag!("+") | tag!("-")));
 
 named!(pub year <i32>, chain!(
@@ -83,11 +54,13 @@ named!(pub year <i32>, chain!(
             }
         }));
 
+// MM
 named!(lower_month <u32>, chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
 named!(upper_month <u32>, chain!(tag!("1") ~ s:char_between!('0', '2') , || 10+buf_to_u32(s)));
 
 named!(pub month <u32>, alt!(lower_month | upper_month));
 
+// DD
 named!(day_zero <u32>,  chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
 named!(day_one <u32>,   chain!(tag!("1") ~ s:char_between!('0', '9') , || 10+buf_to_u32(s)));
 named!(day_two <u32>,   chain!(tag!("2") ~ s:char_between!('0', '9') , || 20+buf_to_u32(s)));
@@ -95,6 +68,7 @@ named!(day_three <u32>, chain!(tag!("3") ~ s:char_between!('0', '1') , || 30+buf
 
 named!(pub day <u32>, alt!(day_zero | day_one | day_two | day_three));
 
+// YYYY MM DD
 named!(pub date <Date>, chain!(
         y: year ~
         tag!("-") ~
@@ -105,12 +79,15 @@ named!(pub date <Date>, chain!(
         || { Date{ year: y, month: m, day: d } }
         ));
 
+//    TIME
 
+// HH
 named!(lower_hour <u32>, chain!(f:char_between!('0','1') ~ s:char_between!('0','9') ,
                                        || { buf_to_u32(f)*10 + buf_to_u32(s) } ));
 named!(upper_hour <u32>, chain!(tag!("2") ~ s:char_between!('0','4') , || 20+buf_to_u32(s)));
 named!(pub hour <u32>, alt!(lower_hour | upper_hour));
 
+// MM
 named!(below_sixty <u32>, chain!(f:char_between!('0','5') ~ s:char_between!('0','9') ,
                                        || { buf_to_u32(f)*10 + buf_to_u32(s) } ));
 named!(upto_sixty <u32>, alt!(below_sixty | map!(tag!("60"), |_| 60)));
@@ -118,12 +95,13 @@ named!(upto_sixty <u32>, alt!(below_sixty | map!(tag!("60"), |_| 60)));
 named!(pub minute <u32>, call!(below_sixty));
 named!(pub second <u32>, call!(upto_sixty));
 
+// HH:MM:[SS]
 named!(pub time <Time>, chain!(
         h: hour ~
         tag!(":") ~
         m: minute ~
         s: empty_or!(
-            chain!(tag!(":") ~ s:second , || s)
+            chain!(tag!(":") ~ s:second , || s) // TODO does this require the chain?
             )
         ,
         || {
@@ -136,22 +114,33 @@ named!(pub time <Time>, chain!(
         }
         ));
 
-named!(timezone <u32>, chain!(
-        tag!("+") ~
+named!(sign <i32>, alt!(
+        tag!("-") => { |_| -1 } |
+        tag!("+") => { |_| 1 }
+        )
+    );
+
+named!(timezone_hour <i32>, chain!(
+        s: sign ~
         h: hour ~
-        empty_or!(
+        m: empty_or!(
             chain!(
                 tag!(":")? ~ m: minute , || { m }
             ))
         ,
-        || { h }));
+        || { (s * (h as i32) * 3600) + (m.unwrap_or(0) * 60) as i32 }
+        ));
 
-named!(tz_z, tag!("Z"));
-named!(timezone_utc <u32>, map!(tz_z, |_| 0));
+named!(tz_z, tag!("Z")); // TODO inline below
+named!(timezone_utc <i32>, map!(tz_z, |_| 0));
 
 named!(pub time_with_timezone <Time>, chain!(
         t: time ~
-        s: empty_or!(alt!(timezone_utc | timezone))
+        s: opt!(
+            alt!(
+                timezone_hour | timezone_utc
+                )
+            )
         ,
         || {
             Time {
@@ -163,6 +152,7 @@ named!(pub time_with_timezone <Time>, chain!(
         }
         ));
 
+// Full ISO8601
 named!(pub datetime <DateTime>, chain!(
         d: date ~
         tag!("T") ~

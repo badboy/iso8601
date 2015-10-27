@@ -3,8 +3,6 @@ name = "iso8601"
 version = "0.1.0"
 authors = ["Jan-Erik Rediger <janerik@fnordig.de>"]
 
-[dependencies.nom]
-git = "https://github.com/Geal/nom"
 
 [dependencies]
-chrono = "*"
+nom = "0.5"
