@@ -51,8 +51,8 @@ fn parse_day() {
 
 #[test]
 fn parse_date() {
-    assert_eq!(Done(&[][..], Date{ year: 2015, month: 6, day: 26 }), date(b"2015-06-26"));
-    assert_eq!(Done(&[][..], Date{ year: -333, month: 7, day: 11 }), date(b"-0333-07-11"));
+    assert_eq!(Done(&[][..], Date::YMD{ year: 2015, month: 6, day: 26 }), date(b"2015-06-26"));
+    assert_eq!(Done(&[][..], Date::YMD{ year: -333, month: 7, day: 11 }), date(b"-0333-07-11"));
 
     assert!(date(b"201").is_incomplete());
     assert!(date(b"2015p00p00").is_err());
@@ -129,7 +129,7 @@ fn parse_time_with_timezone() {
 fn parse_datetime_correct() {
     fn make_datetime((year, month, day, hour, minute, second, tz_offset): (i32, u32, u32, u32, u32, u32, i32)) -> DateTime {
         DateTime {
-            date: Date{ year: year, month: month, day: day },
+            date: Date::YMD{ year: year, month: month, day: day },
             time: Time{ hour: hour, minute: minute, second: second, tz_offset: tz_offset },
         }
     }

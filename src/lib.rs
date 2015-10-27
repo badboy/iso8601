@@ -12,10 +12,21 @@ use helper::*;
 use macros::take_4_digits;
 
 #[derive(Eq,PartialEq,Debug)]
-pub struct Date {
-    pub year: i32,
-    pub month: u32,
-    pub day: u32,
+pub enum Date {
+    YMD{
+        year:  i32,
+        month: u32,
+        day:   u32
+    },
+    YWeek{
+        yyyy:  i32,
+        ww:    u32,
+        d:     u32
+    },
+    YOrd{
+        yyyy: i32,
+        ddd: u32
+    }
 }
 
 #[derive(Clone,Eq,PartialEq,Debug)]
@@ -80,7 +91,7 @@ named!(pub date <Date>, chain!(
         opt!(tag!("-")) ~
         d: day
         ,
-        || { Date{ year: y, month: m, day: d } }
+        || { Date::YMD{ year: y, month: m, day: d } }
         ));
 
 //    TIME
