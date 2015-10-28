@@ -19,12 +19,12 @@ pub enum Date {
         day:   u32
     },
     YWeek{
-        yyyy:  i32,
+        year:  i32,
         ww:    u32,
         d:     u32
     },
     YOrd{
-        yyyy: i32,
+        year: i32,
         ddd: u32
     }
 }
@@ -51,7 +51,7 @@ impl Time {
     }
 }
 
-// YYYY
+// year
 named!(year_prefix, alt!(tag!("+") | tag!("-")));
 
 named!(pub year <i32>, chain!(
@@ -68,7 +68,6 @@ named!(pub year <i32>, chain!(
 // MM
 named!(lower_month <u32>, chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
 named!(upper_month <u32>, chain!(tag!("1") ~ s:char_between!('0', '2') , || 10+buf_to_u32(s)));
-
 named!(pub month <u32>, alt!(lower_month | upper_month));
 
 
@@ -77,14 +76,19 @@ named!(day_zero <u32>,  chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to
 named!(day_one <u32>,   chain!(tag!("1") ~ s:char_between!('0', '9') , || 10+buf_to_u32(s)));
 named!(day_two <u32>,   chain!(tag!("2") ~ s:char_between!('0', '9') , || 20+buf_to_u32(s)));
 named!(day_three <u32>, chain!(tag!("3") ~ s:char_between!('0', '1') , || 30+buf_to_u32(s)));
-
 named!(pub day <u32>, alt!(day_zero | day_one | day_two | day_three));
 
 // WW
-named!(pub week <u32>, alt!(lower_month | upper_month));
+// reusing day_N parsers, sorry
+named!(week_three <u32>, chain!(tag!("3") ~ s:char_between!('0', '1') , || 30+buf_to_u32(s)));
+named!(week_four  <u32>, chain!(tag!("4") ~ s:char_between!('0', '1') , || 40+buf_to_u32(s)));
+named!(week_five  <u32>, chain!(tag!("5") ~ s:char_between!('0', '3') , || 50+buf_to_u32(s)));
+named!(pub week <u32>, alt!(day_zero | day_one | day_two | week_three| week_four | week_five ));
 
-// YYYY MM DD
-named!(pub date <Date>, chain!(
+named!(week_day <u32>, chain!(s:char_between!('1', '7') , || buf_to_u32(s)));
+
+// year MM DD
+named!(pub ymd_date <Date>, chain!(
         y: year ~
         opt!(tag!("-")) ~
         m: month ~
@@ -93,6 +97,20 @@ named!(pub date <Date>, chain!(
         ,
         || { Date::YMD{ year: y, month: m, day: d } }
         ));
+
+// year "W"WW DDD
+named!(pub iso_week_date <Date>, chain!(
+        y: year ~
+        opt!(tag!("-")) ~
+        tag!("W") ~
+        w: week ~
+        tag!("-") ~
+        d: week_day
+        ,
+        || { Date::YWeek{ year: y, ww: w, d: d } }
+        ));
+
+named!(pub date <Date>, alt!(iso_week_date | ymd_date ) );
 
 //    TIME
 

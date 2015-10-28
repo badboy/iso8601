@@ -126,32 +126,39 @@ fn parse_time_with_timezone() {
 }
 
 #[test]
+fn parse_iso_week_date() {
+    assert_eq!(Done(&[][..], Date::YWeek{ year: 2015,ww:5, d: 7 }),
+                                iso_week_date(b"2015-W05-7"));
+    assert_eq!(Done(&[][..], Date::YWeek{ year: 2015,ww:6, d: 6 }),
+                                iso_week_date(b"2015-W06-6"));
+    assert!( iso_week_date(b"2015-W06-8").is_err());
+    assert!( iso_week_date(b"2015-W06-0").is_err());
+    assert!( iso_week_date(b"2015-W00-2").is_err());
+    assert!( iso_week_date(b"2015-W54-2").is_err());
+}
+
+#[test]
 fn parse_datetime_correct() {
-    fn make_datetime((year, month, day, hour, minute, second, tz_offset): (i32, u32, u32, u32, u32, u32, i32)) -> DateTime {
-        DateTime {
-            date: Date::YMD{ year: year, month: month, day: day },
-            time: Time{ hour: hour, minute: minute, second: second, tz_offset: tz_offset },
-        }
-    }
 
+    // TODO add milliseconds format to seconds (SS.mmm)
     let test_datetimes = vec![
-        ("20060831T16:47+00:00",       (2006,  08,  31,  16,  47,  0,   0*3600)),
-
-        ("2007-08-31T16:47+00:00",     (2007,  08,  31,  16,  47,  0,   0*3600)),
-        ("20070831T1647+00:00",        (2007,  08,  31,  16,  47,  0,   0*3600)),
-        ("20070831T1647+0000",         (2007,  08,  31,  16,  47,  0,   0*3600)),
-        ("20070831T1647Z",             (2007,  08,  31,  16,  47,  0,   0*3600)),
-
-        ("2007-12-24T18:21Z",          (2007,  12,  24,  18,  21,  0,   0*3600)),
-        ("2008-02-01T09:00:22+05",     (2008,  02,  01,  9,   0,   22,  5*3600)),
-        ("2009-01-01T12:00:00+01:00",  (2009,  1,   1,   12,  0,   0,   1*3600)),
-        ("2009-06-30T18:30:00+02:00",  (2009,  06,  30,  18,  30,  0,   2*3600)),
-        ("2015-06-29T23:07+02:00",     (2015,  06,  29,  23,  07,  0,   2*3600)),
-        ("2015-06-26T16:43:16",        (2015,  06,  26,  16,  43, 16,   0*3600)),
+        ("20060831T16:47+00:00",       DateTime{ date: Date::YMD  { year: 2006,  month:08,  day:31},  time: Time{ hour: 16,  minute:47,  second:0,   tz_offset:0*3600}}),
+        ("2007-08-31T16:47+00:00",     DateTime{ date: Date::YMD  { year: 2007,  month:08,  day:31},  time: Time{ hour: 16,  minute:47,  second:0,   tz_offset:0*3600}}),
+        ("20070831T1647+00:00",        DateTime{ date: Date::YMD  { year: 2007,  month:08,  day:31},  time: Time{ hour: 16,  minute:47,  second:0,   tz_offset:0*3600}}),
+        ("20070831T1647+0000",         DateTime{ date: Date::YMD  { year: 2007,  month:08,  day:31},  time: Time{ hour: 16,  minute:47,  second:0,   tz_offset:0*3600}}),
+        ("20070831T1647Z",             DateTime{ date: Date::YMD  { year: 2007,  month:08,  day:31},  time: Time{ hour: 16,  minute:47,  second:0,   tz_offset:0*3600}}),
+        ("2008-12-24T18:21Z",          DateTime{ date: Date::YMD  { year: 2008,  month:12,  day:24},  time: Time{ hour: 18,  minute:21,  second:0,   tz_offset:0*3600}}),
+        ("2009-02-01T09:00:22+05",     DateTime{ date: Date::YMD  { year: 2009,  month:02,  day:01},  time: Time{ hour: 9,   minute:0,   second:22,  tz_offset:5*3600}}),
+        ("2010-01-01T12:00:00+01:00",  DateTime{ date: Date::YMD  { year: 2010,  month:1,   day:1},   time: Time{ hour: 12,  minute:0,   second:0,   tz_offset:1*3600}}),
+        ("2011-06-30T18:30:00+02:00",  DateTime{ date: Date::YMD  { year: 2011,  month:06,  day:30},  time: Time{ hour: 18,  minute:30,  second:0,   tz_offset:2*3600}}),
+        ("2015-06-29T23:07+02:00",     DateTime{ date: Date::YMD  { year: 2015,  month:06,  day:29},  time: Time{ hour: 23,  minute:07,  second:0,   tz_offset:2*3600}}),
+        ("2015-06-26T16:43:16",        DateTime{ date: Date::YMD  { year: 2015,  month:06,  day:26},  time: Time{ hour: 16,  minute:43,  second:16,  tz_offset:0*3600}}),
+        ("2015-06-26T16:43:16",        DateTime{ date: Date::YMD  { year: 2015,  month:06,  day:26},  time: Time{ hour: 16,  minute:43,  second:16,  tz_offset:0*3600}}),
+        ("2015-W05-6T04:05:06+07:00",  DateTime{ date: Date::YWeek{ year: 2015,  ww:05,  d:6},      time: Time{ hour: 04,  minute:5,  second:6,  tz_offset:7*3600}})
     ];
 
     for (iso_string, data) in test_datetimes {
-        assert_eq!(Done(&[][..], make_datetime(data)), datetime(iso_string.as_bytes()));
+        assert_eq!(Done(&[][..], data), datetime(iso_string.as_bytes()));
     }
 }
 
@@ -173,8 +180,3 @@ fn disallows_notallowed() {
     assert!(time(b"30:90:90").is_err());
     assert!(date(b"0000-20-40").is_err());
 }
-
-//#[test]
-//fn iso_week_date(){
-//"2003-W05-6T04"
-//}
