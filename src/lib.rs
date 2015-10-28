@@ -79,9 +79,10 @@ named!(pub day <u32>, alt!(day_zero | day_one | day_two | day_three));
 
 // WW
 // reusing day_N parsers, sorry
-named!(week_three <u32>, chain!(tag!("3") ~ s:char_between!('0', '1') , || 30+buf_to_u32(s)));
-named!(week_four  <u32>, chain!(tag!("4") ~ s:char_between!('0', '1') , || 40+buf_to_u32(s)));
+named!(week_three <u32>, chain!(tag!("3") ~ s:char_between!('0', '9') , || 30+buf_to_u32(s)));
+named!(week_four  <u32>, chain!(tag!("4") ~ s:char_between!('0', '9') , || 40+buf_to_u32(s)));
 named!(week_five  <u32>, chain!(tag!("5") ~ s:char_between!('0', '3') , || 50+buf_to_u32(s)));
+
 named!(week <u32>, alt!(day_zero | day_one | day_two | week_three| week_four | week_five ));
 named!(week_day <u32>, chain!(s:char_between!('1', '7') , || buf_to_u32(s)));
 

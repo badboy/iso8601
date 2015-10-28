@@ -127,6 +127,9 @@ fn parse_iso_week_date() {
                                 iso_week_date(b"2015-W066"));
     assert_eq!(Done(&[][..], Date::Week{ year: 2015,ww:6, d: 6 }),
                                 iso_week_date(b"2015W066"));
+    assert_eq!(Done(&[][..], Date::Week{year: 2015, ww:43, d:6}),
+                                iso_week_date(b"2015-W43-6"));
+
     assert!( iso_week_date(b"2015-W06-8").is_err());
     assert!( iso_week_date(b"2015-W068").is_err());
     assert!( iso_week_date(b"2015-W06-0").is_err());
@@ -170,6 +173,10 @@ fn parse_datetime_correct() {
         ("2015W056T04:05:06+07:00",    DateTime{ date: Date::Week   { year: 2015,  ww:05,     d:6},     time: Time{ hour: 04,  minute:5,   second:6,   tz_offset:7*3600}}),
         ("2015-056T04:05:06+07:00",    DateTime{ date: Date::Ordinal{ year: 2015,  ddd:56},             time: Time{ hour: 04,  minute:5,   second:6,   tz_offset:7*3600}}),
         ("2015056T04:05:06+07:00",     DateTime{ date: Date::Ordinal{ year: 2015,  ddd:56},             time: Time{ hour: 04,  minute:5,   second:6,   tz_offset:7*3600}}),
+        ("2015-297T16:30:48Z",         DateTime{ date: Date::Ordinal{ year: 2015,  ddd:297},            time: Time{ hour: 16,  minute:30,  second:48,  tz_offset:0*3600}}),
+        ("2015-W43-6T16:30:48Z",       DateTime{ date: Date::Week   { year: 2015,  ww:43,     d:6},     time: Time{ hour: 16,  minute:30,  second:48,  tz_offset:0*3600}}),
+
+
     ];
 
     for (iso_string, data) in test_datetimes {
