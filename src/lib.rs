@@ -18,12 +18,12 @@ pub enum Date {
         month: u32,
         day:   u32
     },
-    YWeek{
+    Week{
         year:  i32,
         ww:    u32,
         d:     u32
     },
-    YOrd{
+    Ordinal{
         year: i32,
         ddd: u32
     }
@@ -53,7 +53,6 @@ impl Time {
 
 // year
 named!(year_prefix, alt!(tag!("+") | tag!("-")));
-
 named!(pub year <i32>, chain!(
         pref: opt!(year_prefix) ~
         year: call!(take_4_digits)
@@ -72,9 +71,9 @@ named!(pub month <u32>, alt!(lower_month | upper_month));
 
 
 // DD
-named!(day_zero <u32>,  chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
-named!(day_one <u32>,   chain!(tag!("1") ~ s:char_between!('0', '9') , || 10+buf_to_u32(s)));
-named!(day_two <u32>,   chain!(tag!("2") ~ s:char_between!('0', '9') , || 20+buf_to_u32(s)));
+named!(day_zero  <u32>, chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
+named!(day_one   <u32>, chain!(tag!("1") ~ s:char_between!('0', '9') , || 10+buf_to_u32(s)));
+named!(day_two   <u32>, chain!(tag!("2") ~ s:char_between!('0', '9') , || 20+buf_to_u32(s)));
 named!(day_three <u32>, chain!(tag!("3") ~ s:char_between!('0', '1') , || 30+buf_to_u32(s)));
 named!(pub day <u32>, alt!(day_zero | day_one | day_two | day_three));
 
@@ -83,11 +82,19 @@ named!(pub day <u32>, alt!(day_zero | day_one | day_two | day_three));
 named!(week_three <u32>, chain!(tag!("3") ~ s:char_between!('0', '1') , || 30+buf_to_u32(s)));
 named!(week_four  <u32>, chain!(tag!("4") ~ s:char_between!('0', '1') , || 40+buf_to_u32(s)));
 named!(week_five  <u32>, chain!(tag!("5") ~ s:char_between!('0', '3') , || 50+buf_to_u32(s)));
-named!(pub week <u32>, alt!(day_zero | day_one | day_two | week_three| week_four | week_five ));
-
+named!(week <u32>, alt!(day_zero | day_one | day_two | week_three| week_four | week_five ));
 named!(week_day <u32>, chain!(s:char_between!('1', '7') , || buf_to_u32(s)));
 
-// year MM DD
+// ordinal DDD
+named!(ord_day <u32>, chain!(
+        a:char_between!('0','3') ~
+        b:char_between!('0','9') ~
+        c:char_between!('0','9')
+        ,
+        || { buf_to_u32(a)*100 + buf_to_u32(b)*10 + buf_to_u32(c) }
+        ));
+
+// YYYY-MM-DD
 named!(pub ymd_date <Date>, chain!(
         y: year ~
         opt!(tag!("-")) ~
@@ -98,19 +105,28 @@ named!(pub ymd_date <Date>, chain!(
         || { Date::YMD{ year: y, month: m, day: d } }
         ));
 
-// year "W"WW DDD
+// YYYY-MM-DD
+named!(pub ordinal_date <Date>, chain!(
+        y: year ~
+        opt!(tag!("-")) ~
+        d: ord_day
+        ,
+        || { Date::Ordinal{ year: y, ddd: d } }
+        ));
+
+// YYYY-"W"WW-D
 named!(pub iso_week_date <Date>, chain!(
         y: year ~
         opt!(tag!("-")) ~
         tag!("W") ~
         w: week ~
-        tag!("-") ~
+        opt!(tag!("-")) ~
         d: week_day
         ,
-        || { Date::YWeek{ year: y, ww: w, d: d } }
+        || { Date::Week{ year: y, ww: w, d: d } }
         ));
 
-named!(pub date <Date>, alt!(iso_week_date | ymd_date ) );
+named!(pub date <Date>, alt!( ymd_date | iso_week_date | ordinal_date ) );
 
 //    TIME
 
