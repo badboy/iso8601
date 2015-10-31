@@ -52,11 +52,7 @@ macro_rules! char_between(
     );
 );
 
-
-named!(pub take_5_digits, flat_map!(take!(5), check!(is_digit)));
 named!(pub take_4_digits, flat_map!(take!(4), check!(is_digit)));
-named!(pub take_3_digits, flat_map!(take!(3), check!(is_digit)));
-named!(pub take_2_digits, flat_map!(take!(2), check!(is_digit)));
 
 // year
 named!(year_prefix, alt!(tag!("+") | tag!("-")));
@@ -145,12 +141,12 @@ named!(upper_hour <u32>, chain!(tag!("2") ~ s:char_between!('0','4') , || 20+buf
 named!(pub hour <u32>, alt!(lower_hour | upper_hour));
 
 // MM
-named!(below_sixty <u32>, chain!(f:char_between!('0','5') ~ s:char_between!('0','9') ,
-                                       || { buf_to_u32(f)*10 + buf_to_u32(s) } ));
+named!(below_sixty <u32>, chain!(f:char_between!('0','5') ~ s:char_between!('0','9'), || { buf_to_u32(f)*10 + buf_to_u32(s) } ));
 named!(upto_sixty <u32>, alt!(below_sixty | map!(tag!("60"), |_| 60)));
 
 named!(pub minute <u32>, call!(below_sixty));
 named!(pub second <u32>, call!(upto_sixty));
+named!(pub millisecond <u32>, chain!( ms: is_a!("0123456789"), || buf_to_u32(ms) ) );
 
 // HH:MM:[SS]
 named!(pub parse_time <Time>, chain!(
@@ -160,7 +156,12 @@ named!(pub parse_time <Time>, chain!(
         s: empty_or!(
             chain!(
                 tag!(":") ~
-                s:second                , || s) // TODO does this require the chain?
+                s:second, || s)
+            ) ~
+        ms: empty_or!(
+            chain!(
+                tag!(".") ~
+                ms:millisecond, || ms)
             )
         ,
         || {
@@ -168,7 +169,8 @@ named!(pub parse_time <Time>, chain!(
                 hour: h,
                 minute: m,
                 second: s.unwrap_or(0),
-                tz_offset: 0
+                millisecond: ms.unwrap_or(0),
+                tz_offset: (0,0)
             }
         }
         ));
@@ -179,7 +181,7 @@ named!(sign <i32>, alt!(
         )
     );
 
-named!(timezone_hour <i32>, chain!(
+named!(timezone_hour <(i32,i32)>, chain!(
         s: sign ~
         h: hour ~
         m: empty_or!(
@@ -187,11 +189,11 @@ named!(timezone_hour <i32>, chain!(
                 tag!(":")? ~ m: minute , || { m }
             ))
         ,
-        || { (s * (h as i32) * 3600) + (m.unwrap_or(0) * 60) as i32 }
+        || { (s * (h as i32) , s * (m.unwrap_or(0) as i32)) }
         ));
 
 named!(tz_z, tag!("Z")); // TODO inline below
-named!(timezone_utc <i32>, map!(tz_z, |_| 0));
+named!(timezone_utc <(i32,i32)>, map!(tz_z, |_| (0,0)));
 
 named!(pub parse_time_with_timezone <Time>, chain!(
         t: parse_time ~
@@ -206,7 +208,8 @@ named!(pub parse_time_with_timezone <Time>, chain!(
                 hour: t.hour,
                 minute: t.minute,
                 second: t.second,
-                tz_offset: s.unwrap_or(0) as i32
+                millisecond: t.millisecond,
+                tz_offset: s.unwrap_or((0,0))
             }
         }
         ));

@@ -31,7 +31,8 @@ pub struct Time {
     pub hour: u32,
     pub minute: u32,
     pub second: u32,
-    pub tz_offset: i32,
+    pub millisecond: u32,
+    pub tz_offset: (i32,i32),
 }
 
 #[derive(Eq,PartialEq,Debug)]
@@ -41,7 +42,7 @@ pub struct DateTime {
 }
 
 impl Time {
-    pub fn set_tz(&self, tzo: i32) -> Time {
+    pub fn set_tz(&self, tzo: (i32,i32)) -> Time {
         let mut t = self.clone();
         t.tz_offset = tzo;
         t
@@ -80,7 +81,7 @@ pub fn time(string:&str) -> Result<Time,String> {
 
 /// This parses a datetime string.
 pub fn datetime(string:&str) -> Result<DateTime,String> {
-    if let Done(_,parsed) =  macros::parse_datetime(string.as_bytes()){
+    if let Done(_left_overs,parsed) = macros::parse_datetime(string.as_bytes()){
         Ok(parsed)
     }
     else {

@@ -92,9 +92,23 @@ fn test_second() {
 }
 
 #[test]
+fn test_millisecond() {
+    //assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 1,  tz_offset: (0,0)}), parse_time(b"16:43:00.1"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 12,   tz_offset: (0,0)}), parse_time(b"16:43:00.12"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 123,  tz_offset: (0,0)}), parse_time(b"16:43:00.123"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 4321, tz_offset: (0,0)}), parse_time(b"16:43:00.4321"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 11,  millisecond: 4321, tz_offset: (0,0)}), parse_time(b"16:43:11.4321"));
+
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 123, tz_offset: (0,0)}),  parse_time_with_timezone(b"16:43:16.123"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 123, tz_offset: (0,0)}),  parse_time_with_timezone(b"16:43:16.123+00:00"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 123, tz_offset: (0,0)}),  parse_time_with_timezone(b"16:43:16.123-00:00"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 123, tz_offset: (5,0)}),  parse_time_with_timezone(b"16:43:16.123+05:00"));
+}
+
+#[test]
 fn test_time() {
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  tz_offset: 0}), parse_time(b"16:43:16"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  tz_offset: 0}), parse_time(b"16:43"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}), parse_time(b"16:43:16"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 0, tz_offset: (0,0)}), parse_time(b"16:43"));
 
     assert!(parse_time(b"20:").is_incomplete());
     assert!(parse_time(b"20p42p16").is_err());
@@ -103,14 +117,14 @@ fn test_time() {
 
 #[test]
 fn test_time_with_timezone() {
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  tz_offset: 0}),       parse_time_with_timezone(b"16:43:16"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  tz_offset: 0}),       parse_time_with_timezone(b"16:43:16Z"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  tz_offset: 0}),       parse_time_with_timezone(b"16:43:16+00:00"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  tz_offset: 0}),       parse_time_with_timezone(b"16:43:16-00:00"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  tz_offset: 5*60*60}), parse_time_with_timezone(b"16:43:16+05:00"));
-    assert_eq!(Done(&b"+"[..], Time{ hour: 16, minute: 43, second: 16,  tz_offset: 0}),     parse_time_with_timezone(b"16:43:16+"));
-    assert_eq!(Done(&b"+0"[..], Time{ hour: 16, minute: 43, second: 16,  tz_offset: 0}),    parse_time_with_timezone(b"16:43:16+0"));
-    assert_eq!(Done(&b"+05:"[..], Time{ hour: 16, minute: 43, second: 16,  tz_offset: 0}),  parse_time_with_timezone(b"16:43:16+05:"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),       parse_time_with_timezone(b"16:43:16"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),       parse_time_with_timezone(b"16:43:16Z"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),       parse_time_with_timezone(b"16:43:16+00:00"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),       parse_time_with_timezone(b"16:43:16-00:00"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (5,0)}), parse_time_with_timezone(b"16:43:16+05:00"));
+    assert_eq!(Done(&b"+"[..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),     parse_time_with_timezone(b"16:43:16+"));
+    assert_eq!(Done(&b"+0"[..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),    parse_time_with_timezone(b"16:43:16+0"));
+    assert_eq!(Done(&b"+05:"[..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),  parse_time_with_timezone(b"16:43:16+05:"));
 
     assert!(parse_time_with_timezone(b"20:").is_incomplete());
     assert!(parse_time_with_timezone(b"20p42p16").is_err());
@@ -158,24 +172,25 @@ fn test_datetime_correct() {
 
     // TODO add milliseconds format to seconds (SS.mmm)
     let test_datetimes = vec![
-        ("20060831T16:47+00:00",       DateTime{ date: Date::YMD    { year: 2006,  month:08,  day:31},  time: Time{ hour: 16,  minute:47,  second:0,   tz_offset:0*3600}}),
-        ("2007-08-31T16:47+00:00",     DateTime{ date: Date::YMD    { year: 2007,  month:08,  day:31},  time: Time{ hour: 16,  minute:47,  second:0,   tz_offset:0*3600}}),
-        ("20070831T1647+00:00",        DateTime{ date: Date::YMD    { year: 2007,  month:08,  day:31},  time: Time{ hour: 16,  minute:47,  second:0,   tz_offset:0*3600}}),
-        ("20070831T1647+0000",         DateTime{ date: Date::YMD    { year: 2007,  month:08,  day:31},  time: Time{ hour: 16,  minute:47,  second:0,   tz_offset:0*3600}}),
-        ("20070831T1647Z",             DateTime{ date: Date::YMD    { year: 2007,  month:08,  day:31},  time: Time{ hour: 16,  minute:47,  second:0,   tz_offset:0*3600}}),
-        ("2008-12-24T18:21Z",          DateTime{ date: Date::YMD    { year: 2008,  month:12,  day:24},  time: Time{ hour: 18,  minute:21,  second:0,   tz_offset:0*3600}}),
-        ("2009-02-01T09:00:22+05",     DateTime{ date: Date::YMD    { year: 2009,  month:02,  day:01},  time: Time{ hour: 9,   minute:0,   second:22,  tz_offset:5*3600}}),
-        ("2010-01-01T12:00:00+01:00",  DateTime{ date: Date::YMD    { year: 2010,  month:1,   day:1},   time: Time{ hour: 12,  minute:0,   second:0,   tz_offset:1*3600}}),
-        ("2011-06-30T18:30:00+02:00",  DateTime{ date: Date::YMD    { year: 2011,  month:06,  day:30},  time: Time{ hour: 18,  minute:30,  second:0,   tz_offset:2*3600}}),
-        ("2015-06-29T23:07+02:00",     DateTime{ date: Date::YMD    { year: 2015,  month:06,  day:29},  time: Time{ hour: 23,  minute:07,  second:0,   tz_offset:2*3600}}),
-        ("2015-06-26T16:43:16",        DateTime{ date: Date::YMD    { year: 2015,  month:06,  day:26},  time: Time{ hour: 16,  minute:43,  second:16,  tz_offset:0*3600}}),
-        ("2015-06-26T16:43:16",        DateTime{ date: Date::YMD    { year: 2015,  month:06,  day:26},  time: Time{ hour: 16,  minute:43,  second:16,  tz_offset:0*3600}}),
-        ("2015-W05-6T04:05:06+07:00",  DateTime{ date: Date::Week   { year: 2015,  ww:05,     d:6},     time: Time{ hour: 04,  minute:5,   second:6,   tz_offset:7*3600}}),
-        ("2015W056T04:05:06+07:00",    DateTime{ date: Date::Week   { year: 2015,  ww:05,     d:6},     time: Time{ hour: 04,  minute:5,   second:6,   tz_offset:7*3600}}),
-        ("2015-056T04:05:06+07:00",    DateTime{ date: Date::Ordinal{ year: 2015,  ddd:56},             time: Time{ hour: 04,  minute:5,   second:6,   tz_offset:7*3600}}),
-        ("2015056T04:05:06+07:00",     DateTime{ date: Date::Ordinal{ year: 2015,  ddd:56},             time: Time{ hour: 04,  minute:5,   second:6,   tz_offset:7*3600}}),
-        ("2015-297T16:30:48Z",         DateTime{ date: Date::Ordinal{ year: 2015,  ddd:297},            time: Time{ hour: 16,  minute:30,  second:48,  tz_offset:0*3600}}),
-        ("2015-W43-6T16:30:48Z",       DateTime{ date: Date::Week   { year: 2015,  ww:43,     d:6},     time: Time{ hour: 16,  minute:30,  second:48,  tz_offset:0*3600}}),
+        ("20060831T16:47+00:00",       DateTime{ date: Date::YMD    { year: 2006,  month:08,  day:31},  time: Time{ hour: 16,  minute:47,  second:0,   millisecond: 0, tz_offset: (0,0)}}),
+        ("2007-08-31T16:47+00:00",     DateTime{ date: Date::YMD    { year: 2007,  month:08,  day:31},  time: Time{ hour: 16,  minute:47,  second:0,   millisecond: 0, tz_offset: (0,0)}}),
+        ("20070831T1647+00:00",        DateTime{ date: Date::YMD    { year: 2007,  month:08,  day:31},  time: Time{ hour: 16,  minute:47,  second:0,   millisecond: 0, tz_offset: (0,0)}}),
+        ("20070831T1647+0000",         DateTime{ date: Date::YMD    { year: 2007,  month:08,  day:31},  time: Time{ hour: 16,  minute:47,  second:0,   millisecond: 0, tz_offset: (0,0)}}),
+        ("20070831T1647Z",             DateTime{ date: Date::YMD    { year: 2007,  month:08,  day:31},  time: Time{ hour: 16,  minute:47,  second:0,   millisecond: 0, tz_offset: (0,0)}}),
+        ("2008-12-24T18:21Z",          DateTime{ date: Date::YMD    { year: 2008,  month:12,  day:24},  time: Time{ hour: 18,  minute:21,  second:0,   millisecond: 0, tz_offset: (0,0)}}),
+        ("2009-02-01T09:00:22+05",     DateTime{ date: Date::YMD    { year: 2009,  month:02,  day:01},  time: Time{ hour: 9,   minute:0,   second:22,  millisecond: 0, tz_offset: (5,0)}}),
+        ("2010-01-01T12:00:00+01:00",  DateTime{ date: Date::YMD    { year: 2010,  month:1,   day:1},   time: Time{ hour: 12,  minute:0,   second:0,   millisecond: 0, tz_offset: (1,0)}}),
+        ("2011-06-30T18:30:00+02:00",  DateTime{ date: Date::YMD    { year: 2011,  month:06,  day:30},  time: Time{ hour: 18,  minute:30,  second:0,   millisecond: 0, tz_offset: (2,0)}}),
+        ("2015-06-29T23:07+02:00",     DateTime{ date: Date::YMD    { year: 2015,  month:06,  day:29},  time: Time{ hour: 23,  minute:07,  second:0,   millisecond: 0, tz_offset: (2,0)}}),
+        ("2015-06-26T16:43:16",        DateTime{ date: Date::YMD    { year: 2015,  month:06,  day:26},  time: Time{ hour: 16,  minute:43,  second:16,  millisecond: 0, tz_offset: (0,0)}}),
+        ("2015-06-26T16:43:16",        DateTime{ date: Date::YMD    { year: 2015,  month:06,  day:26},  time: Time{ hour: 16,  minute:43,  second:16,  millisecond: 0, tz_offset: (0,0)}}),
+        ("2015-W05-6T04:05:06+07:00",  DateTime{ date: Date::Week   { year: 2015,  ww:05,     d:6},     time: Time{ hour: 04,  minute:5,   second:6,   millisecond: 0, tz_offset: (7,0)}}),
+        ("2015W056T04:05:06+07:00",    DateTime{ date: Date::Week   { year: 2015,  ww:05,     d:6},     time: Time{ hour: 04,  minute:5,   second:6,   millisecond: 0, tz_offset: (7,0)}}),
+        ("2015-056T04:05:06+07:00",    DateTime{ date: Date::Ordinal{ year: 2015,  ddd:56},             time: Time{ hour: 04,  minute:5,   second:6,   millisecond: 0, tz_offset: (7,0)}}),
+        ("2015056T04:05:06+07:00",     DateTime{ date: Date::Ordinal{ year: 2015,  ddd:56},             time: Time{ hour: 04,  minute:5,   second:6,   millisecond: 0, tz_offset: (7,0)}}),
+        ("2015-297T16:30:48Z",         DateTime{ date: Date::Ordinal{ year: 2015,  ddd:297},            time: Time{ hour: 16,  minute:30,  second:48,  millisecond: 0, tz_offset: (0,0)}}),
+        ("2015-W43-6T16:30:48Z",       DateTime{ date: Date::Week   { year: 2015,  ww:43,     d:6},     time: Time{ hour: 16,  minute:30,  second:48,  millisecond: 0, tz_offset: (0,0)}}),
+        ("2015-W43-6T16:30:48Z",       DateTime{ date: Date::Week   { year: 2015,  ww:43,     d:6},     time: Time{ hour: 16,  minute:30,  second:48,  millisecond: 0, tz_offset: (0,0)}}),
 
 
     ];
@@ -202,4 +217,18 @@ fn test_datetime_error() {
 fn disallows_notallowed() {
     assert!(parse_time(b"30:90:90").is_err());
     assert!(parse_date(b"0000-20-40").is_err());
+    assert!(parse_datetime(b"2001-w05-6t04:05:06.123z").is_err());
+
 }
+
+//#[test]
+//fn corner_cases() {
+//    // how to deal with left overs?
+//    assert!(parse_datetime(b"2015-06-26T22:57:09Z00:00").is_done());
+//    assert!(date("2015-06-26T22:57:09Z00:00").is_err());
+//
+//    assert!(parse_datetime(b"2015-06-26T22:57:09Z+00:00").is_done());
+//    assert!(datetime("2015-06-26T22:57:09Z+00:00").is_err());
+//    assert!(parse_datetime(b"2001-W05-6T04:05:06.123455Z").is_err());
+//    assert!(parse_datetime(b"2015-06-26TZ").is_err());
+//}
