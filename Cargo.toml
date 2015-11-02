@@ -6,3 +6,9 @@ authors = ["Jan-Erik Rediger <janerik@fnordig.de>"]
 
 [dependencies]
 nom = "0.5"
+
+clippy = {version = "0.0.21", optional = true}
+
+[features]
+default = []
+dev = ["clippy"]
