@@ -160,7 +160,8 @@ named!(pub parse_time <Time>, chain!(
                 minute: m,
                 second: s.unwrap_or(0),
                 millisecond: ms.unwrap_or(0),
-                tz_offset: z.unwrap_or((0,0))
+                tz_offset_hours: z.unwrap_or((0,0)).0,
+                tz_offset_minutes: z.unwrap_or((0,0)).1
             }
         }
         ));

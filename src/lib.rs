@@ -12,8 +12,8 @@ extern crate nom;
 use nom::IResult::*;
 
 #[macro_use]
-mod macros;
 mod helper;
+pub mod parsers;
 
 /// A date, can hold three different formats.
 #[derive(Eq,PartialEq,Debug,Copy,Clone)]
@@ -49,7 +49,8 @@ pub struct Time {
     /// everything after a `.`
     pub millisecond: u32,
     /// depends on where you're at
-    pub tz_offset: (i32,i32),
+    pub tz_offset_hours: i32,
+    pub tz_offset_minutes: i32,
 }
 
 /// Compound struct, hold Date and Time
@@ -64,7 +65,8 @@ pub struct DateTime {
 impl Time {
     pub fn set_tz(&self, tzo: (i32,i32)) -> Time {
         let mut t = self.clone();
-        t.tz_offset = tzo;
+        t.tz_offset_hours = tzo.0;
+        t.tz_offset_hours = tzo.1;
         t
     }
 }
@@ -79,7 +81,7 @@ impl Time {
 /// 3. `2015-306` or `2015306`
 ///
 pub fn date(string:&str) -> Result<Date,String> {
-    if let Done(_,parsed) =  macros::parse_date(string.as_bytes()){
+    if let Done(_,parsed) =  parsers::parse_date(string.as_bytes()){
         Ok(parsed)
     }
     else {
@@ -97,7 +99,7 @@ pub fn date(string:&str) -> Result<Date,String> {
 /// 1. `0735[00][.123][(Z|(+|-)00:00)]`
 /// 1. `0735[00][.123][(Z|(+|-)0000)]`
 pub fn time(string:&str) -> Result<Time,String> {
-    if let Done(_,parsed) =  macros::parse_time(string.as_bytes()){
+    if let Done(_,parsed) =  parsers::parse_time(string.as_bytes()){
         Ok(parsed)
     }
     else {
@@ -113,7 +115,7 @@ pub fn time(string:&str) -> Result<Time,String> {
 /// *A Date* `T` *a time* ( see `date()` and `time()` )
 ///
 pub fn datetime(string:&str) -> Result<DateTime,String> {
-    if let Done(_left_overs,parsed) = macros::parse_datetime(string.as_bytes()){
+    if let Done(_left_overs,parsed) = parsers::parse_datetime(string.as_bytes()){
         Ok(parsed)
     }
     else {
