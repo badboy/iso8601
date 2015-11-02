@@ -1,6 +1,5 @@
 use helper::*;
 use nom::{self,is_digit};
-
 use super::{Time, DateTime, Date};
 
 macro_rules! empty_or(
@@ -183,8 +182,7 @@ named!(timezone_hour <(i32,i32)>, chain!(
         || { (s * (h as i32) , s * (m.unwrap_or(0) as i32)) }
         ));
 
-named!(tz_z, tag!("Z")); // TODO inline below
-named!(timezone_utc <(i32,i32)>, map!(tz_z, |_| (0,0)));
+named!(timezone_utc <(i32,i32)>, map!(tag!("Z"), |_| (0,0)));
 
 // Full ISO8601
 named!(pub parse_datetime <DateTime>, chain!(
