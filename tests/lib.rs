@@ -93,16 +93,16 @@ fn test_second() {
 
 #[test]
 fn test_millisecond() {
-    //assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 1,  tz_offset: (0,0)}), parse_time(b"16:43:00.1"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 1,    tz_offset: (0,0)}), parse_time(b"16:43:00.1"));
     assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 12,   tz_offset: (0,0)}), parse_time(b"16:43:00.12"));
     assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 123,  tz_offset: (0,0)}), parse_time(b"16:43:00.123"));
     assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 4321, tz_offset: (0,0)}), parse_time(b"16:43:00.4321"));
     assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 11,  millisecond: 4321, tz_offset: (0,0)}), parse_time(b"16:43:11.4321"));
 
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 123, tz_offset: (0,0)}),  parse_time_with_timezone(b"16:43:16.123"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 123, tz_offset: (0,0)}),  parse_time_with_timezone(b"16:43:16.123+00:00"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 123, tz_offset: (0,0)}),  parse_time_with_timezone(b"16:43:16.123-00:00"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 123, tz_offset: (5,0)}),  parse_time_with_timezone(b"16:43:16.123+05:00"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 123, tz_offset: (0,0)}),  parse_time(b"16:43:16.123"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 123, tz_offset: (0,0)}),  parse_time(b"16:43:16.123+00:00"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 123, tz_offset: (0,0)}),  parse_time(b"16:43:16.123-00:00"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 123, tz_offset: (5,0)}),  parse_time(b"16:43:16.123+05:00"));
 }
 
 #[test]
@@ -110,6 +110,36 @@ fn test_time() {
     assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}), parse_time(b"16:43:16"));
     assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 0, tz_offset: (0,0)}), parse_time(b"16:43"));
 
+    assert!(parse_time(b"20:").is_incomplete());
+    assert!(parse_time(b"20p42p16").is_err());
+    assert!(parse_time(b"pppp").is_err());
+}
+
+#[test]fn short_time1(){ assert_eq!(parse_time(b"1648"),              Done(&[][..], Time{ hour: 16, minute:48, second:0, millisecond: 0, tz_offset: (0,0)})); }
+#[test]fn short_time2(){ assert_eq!(parse_time(b"16:48"),             Done(&[][..], Time{ hour: 16, minute:48, second:0, millisecond: 0, tz_offset: (0,0)})); }
+#[test]fn short_time3(){ assert_eq!(parse_time(b"16:48Z"),            Done(&[][..], Time{ hour: 16, minute:48, second:0, millisecond: 0, tz_offset: (0,0)})); }
+#[test]fn short_time4(){ assert_eq!(parse_time(b"164800"),            Done(&[][..], Time{ hour: 16, minute:48, second:0, millisecond: 0, tz_offset: (0,0)})); }
+#[test]fn short_time5(){ assert_eq!(parse_time(b"164800.1"),          Done(&[][..], Time{ hour: 16, minute:48, second:0, millisecond: 1, tz_offset: (0,0)})); }
+#[test]fn short_time6(){ assert_eq!(parse_time(b"164800.1Z"),         Done(&[][..], Time{ hour: 16, minute:48, second:0, millisecond: 1, tz_offset: (0,0)})); }
+#[test]fn short_time7(){ assert_eq!(parse_time(b"16:48:00"),          Done(&[][..], Time{ hour: 16, minute:48, second:0, millisecond: 0, tz_offset: (0,0)})); }
+
+#[test]fn short_twtz1(){ assert_eq!(parse_time(b"1648Z"),   Done(&[][..], Time{ hour: 16, minute:48, second:0, millisecond: 0, tz_offset: (0,0)})); }
+#[test]fn short_twtz2(){ assert_eq!(parse_time(b"16:48Z"),  Done(&[][..], Time{ hour: 16, minute:48, second:0, millisecond: 0, tz_offset: (0,0)})); }
+
+#[test]fn short_dtim1(){ assert_eq!(parse_datetime(b"20070831T1648"),     Done(&[][..], DateTime{date:Date::YMD{year:2007, month: 08, day: 31}, time:Time{ hour: 16, minute:48, second:0, millisecond: 0, tz_offset: (0,0)}})); }
+#[test]fn short_dtim2(){ assert_eq!(parse_datetime(b"20070831T1648Z"),    Done(&[][..], DateTime{date:Date::YMD{year:2007, month: 08, day: 31}, time:Time{ hour: 16, minute:48, second:0, millisecond: 0, tz_offset: (0,0)}})); }
+#[test]fn short_dtim3(){ assert_eq!(parse_datetime(b"2008-12-24T18:21Z"), Done(&[][..], DateTime{date:Date::YMD{year:2008, month: 12, day: 24}, time:Time{ hour: 18, minute:21, second:0, millisecond: 0, tz_offset: (0,0)}})); }
+
+#[test]
+fn test_time_with_timezone() {
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),       parse_time(b"16:43:16"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),       parse_time(b"16:43:16Z"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),       parse_time(b"16:43:16+00:00"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),       parse_time(b"16:43:16-00:00"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (5,0)}), parse_time(b"16:43:16+05:00"));
+    assert_eq!(Done(&b"+"[..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),     parse_time(b"16:43:16+"));
+    assert_eq!(Done(&b"+0"[..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),    parse_time(b"16:43:16+0"));
+    assert_eq!(Done(&b"+05:"[..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),  parse_time(b"16:43:16+05:"));
 
     assert!(parse_time(b"20:").is_incomplete());
     assert!(parse_time(b"20p42p16").is_err());
@@ -117,40 +147,12 @@ fn test_time() {
 }
 
 #[test]
-fn test_short_time(){
-    assert_eq!(parse_time(b"20070831T1648Z"),    Done(&[][..],  Time{ hour: 16, minute:48, second:0, millisecond: 0, tz_offset: (0,0)}));
-    assert_eq!(parse_time(b"2008-12-24T18:21Z"), Done(&[][..],  Time{ hour: 18, minute:21, second:0, millisecond: 0, tz_offset: (0,0)}));
-}
-
-#[test]
-fn test_time_with_timezone() {
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),       parse_time_with_timezone(b"16:43:16"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),       parse_time_with_timezone(b"16:43:16Z"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),       parse_time_with_timezone(b"16:43:16+00:00"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),       parse_time_with_timezone(b"16:43:16-00:00"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (5,0)}), parse_time_with_timezone(b"16:43:16+05:00"));
-    assert_eq!(Done(&b"+"[..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),     parse_time_with_timezone(b"16:43:16+"));
-    assert_eq!(Done(&b"+0"[..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),    parse_time_with_timezone(b"16:43:16+0"));
-    assert_eq!(Done(&b"+05:"[..], Time{ hour: 16, minute: 43, second: 16,  millisecond: 0, tz_offset: (0,0)}),  parse_time_with_timezone(b"16:43:16+05:"));
-
-    assert!(parse_time_with_timezone(b"20:").is_incomplete());
-    assert!(parse_time_with_timezone(b"20p42p16").is_err());
-    assert!(parse_time_with_timezone(b"pppp").is_err());
-
-}
-
-#[test]
 fn test_iso_week_date() {
-    assert_eq!(Done(&[][..], Date::Week{ year: 2015,ww:5, d: 7 }),
-                                iso_week_date(b"2015-W05-7"));
-    assert_eq!(Done(&[][..], Date::Week{ year: 2015,ww:6, d: 6 }),
-                                iso_week_date(b"2015-W06-6"));
-    assert_eq!(Done(&[][..], Date::Week{ year: 2015,ww:6, d: 6 }),
-                                iso_week_date(b"2015-W066"));
-    assert_eq!(Done(&[][..], Date::Week{ year: 2015,ww:6, d: 6 }),
-                                iso_week_date(b"2015W066"));
-    assert_eq!(Done(&[][..], Date::Week{year: 2015, ww:43, d:6}),
-                                iso_week_date(b"2015-W43-6"));
+    assert_eq!(Done(&[][..], Date::Week{ year: 2015,ww:5, d: 7 }), iso_week_date(b"2015-W05-7"));
+    assert_eq!(Done(&[][..], Date::Week{ year: 2015,ww:6, d: 6 }), iso_week_date(b"2015-W06-6"));
+    assert_eq!(Done(&[][..], Date::Week{ year: 2015,ww:6, d: 6 }), iso_week_date(b"2015-W066"));
+    assert_eq!(Done(&[][..], Date::Week{ year: 2015,ww:6, d: 6 }), iso_week_date(b"2015W066"));
+    assert_eq!(Done(&[][..], Date::Week{year: 2015, ww:43, d:6}), iso_week_date(b"2015-W43-6"));
 
     assert!( iso_week_date(b"2015-W06-8").is_err());
     assert!( iso_week_date(b"2015-W068").is_err());
@@ -171,12 +173,11 @@ fn test_ordinal_date() {
 
     // not valid here either
     assert!(ordinal_date(b"2015-400").is_err());
-
 }
 
 #[test]
 fn format_equivalence(){
-    //assert_eq!(parse_datetime(b"2001-02-03T04:05:06+07:00"), parse_datetime(b"20010203T040506+0700"));
+    assert_eq!(parse_datetime(b"2001-02-03T04:05:06+07:00"), parse_datetime(b"20010203T040506+0700"));
     assert_eq!(parse_datetime(b"2001-02-03T04:05:06+07:00"), parse_datetime(b"20010203T04:05:06+0700"));
     assert_eq!(parse_datetime(b"2001-02-03T04:05:00+07:00"), parse_datetime(b"20010203T0405+0700"));
     assert_eq!(parse_datetime(b"20010203T0405+0700"),        parse_datetime(b"2001-02-03T0405+0700"));
@@ -187,7 +188,6 @@ fn format_equivalence(){
 
 #[test]
 fn test_datetime_correct() {
-
     assert_eq!(parse_datetime(b"20060831T16:44+00:00"),       Done(&[][..], DateTime{ date: Date::YMD    { year: 2006,  month:08,  day:31},  time: Time{ hour: 16,  minute:44,  second:0,   millisecond: 0, tz_offset: (0,0)}}));
     assert_eq!(parse_datetime(b"2007-08-31T16:45+00:00"),     Done(&[][..], DateTime{ date: Date::YMD    { year: 2007,  month:08,  day:31},  time: Time{ hour: 16,  minute:45,  second:0,   millisecond: 0, tz_offset: (0,0)}}));
     assert_eq!(parse_datetime(b"20070831T1646+00:00"),        Done(&[][..], DateTime{ date: Date::YMD    { year: 2007,  month:08,  day:31},  time: Time{ hour: 16,  minute:46,  second:0,   millisecond: 0, tz_offset: (0,0)}}));
@@ -205,7 +205,6 @@ fn test_datetime_correct() {
     assert_eq!(parse_datetime(b"2015-297T16:30:48Z"),         Done(&[][..], DateTime{ date: Date::Ordinal{ year: 2015,  ddd:297},            time: Time{ hour: 16,  minute:30,  second:48,  millisecond: 0, tz_offset: (0,0)}}));
     assert_eq!(parse_datetime(b"2015-W43-6T16:30:48Z"),       Done(&[][..], DateTime{ date: Date::Week   { year: 2015,  ww:43,     d:6},     time: Time{ hour: 16,  minute:30,  second:48,  millisecond: 0, tz_offset: (0,0)}}));
     assert_eq!(parse_datetime(b"2015-W43-6T16:30:48Z"),       Done(&[][..], DateTime{ date: Date::Week   { year: 2015,  ww:43,     d:6},     time: Time{ hour: 16,  minute:30,  second:48,  millisecond: 0, tz_offset: (0,0)}}));
-
 }
 
 #[test]
@@ -226,7 +225,6 @@ fn disallows_notallowed() {
     assert!(parse_time(b"30:90:90").is_err());
     assert!(parse_date(b"0000-20-40").is_err());
     assert!(parse_datetime(b"2001-w05-6t04:05:06.123z").is_err());
-
 }
 
 //#[test]

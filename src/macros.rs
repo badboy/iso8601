@@ -148,29 +148,21 @@ named!(pub minute <u32>, call!(below_sixty));
 named!(pub second <u32>, call!(upto_sixty));
 named!(pub millisecond <u32>, chain!( ms: is_a!("0123456789"), || buf_to_u32(ms) ) );
 
-// HH:MM:[SS]
+// HH:MM:[SS][.(m*)][(Z|+...|-...)]
 named!(pub parse_time <Time>, chain!(
         h: hour ~
         opt!(tag!(":")) ~
         m: minute ~
-        s: empty_or!(
-            chain!(
-                tag!(":") ~
-                s:second, || s)
-            ) ~
-        ms: empty_or!(
-            chain!(
-                tag!(".") ~
-                ms:millisecond, || ms)
-            )
-        ,
+        s:  opt!( chain!( opt!(tag!(":")) ~ s:second, || s)) ~
+        ms: opt!( chain!( tag!(".") ~ ms:millisecond, || ms)) ~
+        z:  opt!( alt!( timezone_hour | timezone_utc) ) ,
         || {
             Time {
                 hour: h,
                 minute: m,
                 second: s.unwrap_or(0),
                 millisecond: ms.unwrap_or(0),
-                tz_offset: (0,0)
+                tz_offset: z.unwrap_or((0,0))
             }
         }
         ));
@@ -195,30 +187,11 @@ named!(timezone_hour <(i32,i32)>, chain!(
 named!(tz_z, tag!("Z")); // TODO inline below
 named!(timezone_utc <(i32,i32)>, map!(tz_z, |_| (0,0)));
 
-named!(pub parse_time_with_timezone <Time>, chain!(
-        t: parse_time ~
-        s: opt!(
-            alt!(
-                timezone_hour | timezone_utc
-                )
-            )
-        ,
-        || {
-            Time {
-                hour: t.hour,
-                minute: t.minute,
-                second: t.second,
-                millisecond: t.millisecond,
-                tz_offset: s.unwrap_or((0,0))
-            }
-        }
-        ));
-
 // Full ISO8601
 named!(pub parse_datetime <DateTime>, chain!(
         d: parse_date ~
         tag!("T") ~
-        t: parse_time_with_timezone
+        t: parse_time
         ,
         || {
             DateTime{
