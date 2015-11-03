@@ -1,7 +1,14 @@
 [package]
 name = "iso8601"
 version = "0.1.0"
-authors = ["Jan-Erik Rediger <janerik@fnordig.de>"]
+authors = ["Jan-Erik Rediger <janerik@fnordig.de>", "Hendrik Sollich"]
+
+description = "Parsing ISO8601 dates using nom"
+
+homepage = "https://github.com/badboy/iso8601"
+documentation = "http://badboy.github.io/iso8601/"
+license = "MIT"
+readme = "README.md"
 
 
 [dependencies]
