@@ -1,6 +1,6 @@
 [package]
 name = "iso8601"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Jan-Erik Rediger <janerik@fnordig.de>", "Hendrik Sollich <hendrik@hoodie.de>"]
 
 description = "Parsing ISO8601 dates using nom"
@@ -11,12 +11,8 @@ documentation = "http://badboy.github.io/iso8601/"
 license = "MIT"
 readme = "README.md"
 
-
 [dependencies]
 nom = "0.5"
 
-clippy = {version = "0.0.21", optional = true}
-
-[features]
-default = []
-dev = ["clippy"]
+[dev-dependencies]
+clippy = "0.0.22"
