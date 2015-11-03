@@ -29,7 +29,7 @@ macro_rules! check(
         }
       }
       if failed {
-        nom::IResult::Error(nom::Err::Position(nom::ErrorCode::Filter as u32,$input))
+        nom::IResult::Error(nom::Err::Position(nom::ErrorKind::Custom(20),$input))
       } else {
         nom::IResult::Done(&b""[..], $input)
       }

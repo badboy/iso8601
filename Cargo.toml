@@ -12,7 +12,7 @@ license = "MIT"
 readme = "README.md"
 
 [dependencies]
-nom = "0.5"
+nom = "1.0.0"
 
 [dev-dependencies]
 clippy = "0.0.22"
