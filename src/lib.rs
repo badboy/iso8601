@@ -1,177 +1,124 @@
+//! ISO8601 is a parser library for the for [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) and partially RFC3339.
+//!
+//! Validity of a given date is not guaranteed, this parser will happily 2015.02.29 as a valid
+//! date, even though 2015 was no leap year.
+
+#![cfg_attr(feature = "dev", allow(unstable_features))]
+#![cfg_attr(feature = "dev", feature(plugin))]
+#![cfg_attr(feature = "dev", plugin(clippy))]
+
 #[macro_use]
 extern crate nom;
-extern crate chrono;
-
 use nom::IResult::*;
-use nom::Err::*;
-use chrono::{LocalResult,FixedOffset,TimeZone};
-use std::fmt;
 
+#[macro_use]
 mod helper;
-use helper::*;
+pub mod parsers;
 
-#[macro_use] mod macros;
-use macros::take_4_digits;
-
-pub mod easy;
-
-#[derive(Eq,PartialEq)]
-pub struct Date {
-    pub year: i32,
-    pub month: u32,
-    pub day: u32,
+/// A date, can hold three different formats.
+#[derive(Eq,PartialEq,Debug,Copy,Clone)]
+pub enum Date {
+    /// consists of year, month and day of month
+    YMD{
+        year:  i32,
+        month: u32,
+        day:   u32
+    },
+    /// consists of year, week and day of week
+    Week{
+        year:  i32,
+        ww:    u32,
+        d:     u32
+    },
+    /// consists of year and day of year
+    Ordinal{
+        year: i32,
+        ddd: u32
+    }
 }
 
-#[derive(Clone,Eq,PartialEq)]
+/// A time object
+#[derive(Eq,PartialEq,Debug,Copy,Clone)]
 pub struct Time {
+    /// a 24th of a day
     pub hour: u32,
+    /// 60 discrete parts of an hour 
     pub minute: u32,
+    /// a minute are 60 of these
     pub second: u32,
-    pub tz_offset: i32,
+    /// everything after a `.`
+    pub millisecond: u32,
+    /// depends on where you're at
+    pub tz_offset_hours: i32,
+    pub tz_offset_minutes: i32,
 }
 
-#[derive(Eq,PartialEq)]
+/// Compound struct, hold Date and Time
+///
+/// duh!
+#[derive(Eq,PartialEq,Debug,Copy,Clone)]
 pub struct DateTime {
     pub date: Date,
     pub time: Time,
 }
 
-impl fmt::Debug for Date {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:0>4?}-{:0>2?}-{:0>2?}",
-               self.year, self.month, self.day)
-    }
-}
-impl fmt::Debug for Time {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:0>2?}:{:0>2?}:{:0>2?}Z{:0>4?}",
-               self.hour, self.minute, self.second, 0)
-    }
-}
-impl fmt::Debug for DateTime {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}T{:?}", self.date, self.time)
-    }
-}
-
 impl Time {
-    pub fn set_tz(&self, tzo: i32) -> Time {
+    pub fn set_tz(&self, tzo: (i32,i32)) -> Time {
         let mut t = self.clone();
-        t.tz_offset = tzo;
+        t.tz_offset_hours = tzo.0;
+        t.tz_offset_hours = tzo.1;
         t
     }
 }
 
-impl DateTime {
-    pub fn to_chrono(&self) -> LocalResult<chrono::DateTime<FixedOffset>> {
-        chrono::FixedOffset::east(self.time.tz_offset)
-            .ymd_opt(self.date.year, self.date.month, self.date.day)
-            .and_hms_opt(self.time.hour, self.time.minute, self.time.second)
+
+/// Parses a date string.
+///
+/// A string can have either of the following formats:
+///
+/// 1. `2015-11-02` or `20151102`
+/// 2. `2015-W45-01` or `2015W451`
+/// 3. `2015-306` or `2015306`
+///
+pub fn date(string:&str) -> Result<Date,String> {
+    if let Done(_,parsed) =  parsers::parse_date(string.as_bytes()){
+        Ok(parsed)
+    }
+    else {
+        Err(format!("Parser Error: {}", string))
     }
 }
 
-named!(year_prefix, alt!(tag!("+") | tag!("-")));
 
-named!(pub year <i32>, chain!(
-        pref: opt!(year_prefix) ~
-        year: call!(take_4_digits)
-        ,
-        || {
-            match pref {
-                Some(b"-") => -buf_to_i32(year),
-                _ => buf_to_i32(year)
-            }
-        }));
-
-named!(lower_month <u32>, chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
-named!(upper_month <u32>, chain!(tag!("1") ~ s:char_between!('0', '2') , || 10+buf_to_u32(s)));
-
-named!(pub month <u32>, alt!(lower_month | upper_month));
-
-named!(day_zero <u32>,  chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
-named!(day_one <u32>,   chain!(tag!("1") ~ s:char_between!('0', '9') , || 10+buf_to_u32(s)));
-named!(day_two <u32>,   chain!(tag!("2") ~ s:char_between!('0', '9') , || 20+buf_to_u32(s)));
-named!(day_three <u32>, chain!(tag!("3") ~ s:char_between!('0', '1') , || 30+buf_to_u32(s)));
-
-named!(pub day <u32>, alt!(day_zero | day_one | day_two | day_three));
-
-named!(pub date <Date>, chain!(
-        y: year ~
-        tag!("-") ~
-        m: month ~
-        tag!("-") ~
-        d: day
-        ,
-        || { Date{ year: y, month: m, day: d } }
-        ));
+/// Parses a time string.
+///
+/// A string can have either of the following formats:
+///
+/// 1. `07:35:[00][.123]` or `0735[00][.123]`
+/// 1. `07:35:[00][.123][(Z|(+|-)00:00)]`
+/// 1. `0735[00][.123][(Z|(+|-)00:00)]`
+/// 1. `0735[00][.123][(Z|(+|-)0000)]`
+pub fn time(string:&str) -> Result<Time,String> {
+    if let Done(_,parsed) =  parsers::parse_time(string.as_bytes()){
+        Ok(parsed)
+    }
+    else {
+        Err(format!("Parser Error: {}", string))
+    }
+}
 
 
-named!(lower_hour <u32>, chain!(f:char_between!('0','1') ~ s:char_between!('0','9') ,
-                                       || { buf_to_u32(f)*10 + buf_to_u32(s) } ));
-named!(upper_hour <u32>, chain!(tag!("2") ~ s:char_between!('0','4') , || 20+buf_to_u32(s)));
-named!(pub hour <u32>, alt!(lower_hour | upper_hour));
-
-named!(below_sixty <u32>, chain!(f:char_between!('0','5') ~ s:char_between!('0','9') ,
-                                       || { buf_to_u32(f)*10 + buf_to_u32(s) } ));
-named!(upto_sixty <u32>, alt!(below_sixty | map!(tag!("60"), |_| 60)));
-
-named!(pub minute <u32>, call!(below_sixty));
-named!(pub second <u32>, call!(upto_sixty));
-
-named!(pub time <Time>, chain!(
-        h: hour ~
-        tag!(":") ~
-        m: minute ~
-        s: empty_or!(
-            chain!(tag!(":") ~ s:second , || s)
-            )
-        ,
-        || {
-            Time {
-                hour: h,
-                minute: m,
-                second: s.unwrap_or(0),
-                tz_offset: 0
-            }
-        }
-        ));
-
-named!(timezone <u32>, chain!(
-        tag!("+") ~
-        h: hour ~
-        empty_or!(
-            chain!(
-                tag!(":")? ~ m: minute , || { m }
-            ))
-        ,
-        || { h }));
-
-named!(tz_z, tag!("Z"));
-named!(timezone_utc <u32>, map!(tz_z, |_| 0));
-
-named!(pub time_with_timezone <Time>, chain!(
-        t: time ~
-        s: empty_or!(alt!(timezone_utc | timezone))
-        ,
-        || {
-            Time {
-                hour: t.hour,
-                minute: t.minute,
-                second: t.second,
-                tz_offset: s.unwrap_or(0) as i32
-            }
-        }
-        ));
-
-named!(pub datetime <DateTime>, chain!(
-        d: date ~
-        tag!("T") ~
-        t: time_with_timezone
-        ,
-        || {
-            DateTime{
-                date: d,
-                time: t,
-            }
-        }
-        ));
+/// This parses a datetime string.
+///
+/// A string can have either of the following formats:
+///
+/// *A Date* `T` *a time* ( see `date()` and `time()` )
+///
+pub fn datetime(string:&str) -> Result<DateTime,String> {
+    if let Done(_left_overs,parsed) = parsers::parse_datetime(string.as_bytes()){
+        Ok(parsed)
+    }
+    else {
+        Err(format!("Parser Error: {}", string))
+    }
+}
