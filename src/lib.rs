@@ -5,6 +5,12 @@
 //! Validity of a given date is not guaranteed, this parser will happily parse
 //! 2015.02.29 as a valid date,
 //! even though 2015 was no leap year.
+//!
+//! # Example
+//!
+//! ```rust
+//! let datetime = iso8601::datetime("2015-06-26T16:43:23+0200").unwrap();
+//! ```
 
 #![cfg_attr(feature = "dev", allow(unstable_features))]
 #![cfg_attr(feature = "dev", feature(plugin))]
