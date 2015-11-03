@@ -1,5 +1,5 @@
 use helper::*;
-use nom::{self,is_digit};
+use nom::{self, is_digit};
 use super::{Time, DateTime, Date};
 
 macro_rules! empty_or(
@@ -129,7 +129,7 @@ named!(pub iso_week_date <Date>, chain!(
 
 named!(pub parse_date <Date>, alt!( ymd_date | iso_week_date | ordinal_date ) );
 
-//    TIME
+// TIME
 
 // HH
 named!(lower_hour <u32>, chain!(f:char_between!('0','1') ~ s:char_between!('0','9') ,
@@ -197,4 +197,3 @@ named!(pub parse_datetime <DateTime>, chain!(
             }
         }
         ));
-
