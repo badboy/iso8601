@@ -142,7 +142,7 @@ named!(below_sixty <u32>, chain!(f:char_between!('0','5') ~ s:char_between!('0',
 named!(upto_sixty <u32>, alt!(below_sixty | map!(tag!("60"), |_| 60)));
 
 named!(pub minute <u32>, call!(below_sixty));
-named!(pub second <u32>, call!(upto_sixty);
+named!(pub second <u32>, call!(upto_sixty));
 named!(pub millisecond <u32>, map!( is_a!("0123456789"), |ms| buf_to_u32(ms) ) );
 
 // HH:MM:[SS][.(m*)][(Z|+...|-...)]
