@@ -59,11 +59,11 @@ macro_rules! char_between(
     );
 );
 
-named!(pub take_4_digits, flat_map!(take!(4), check!(is_digit)));
+named!(take_4_digits, flat_map!(take!(4), check!(is_digit)));
 
 // year
 named!(year_prefix, alt!(tag!("+") | tag!("-")));
-named!(pub year <i32>, chain!(
+named!(year <i32>, chain!(
         pref: opt!(year_prefix) ~
         year: call!(take_4_digits)
         ,
@@ -77,7 +77,7 @@ named!(pub year <i32>, chain!(
 // MM
 named!(lower_month <u32>, chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
 named!(upper_month <u32>, chain!(tag!("1") ~ s:char_between!('0', '2') , || 10+buf_to_u32(s)));
-named!(pub month <u32>, alt!(lower_month | upper_month));
+named!(month <u32>, alt!(lower_month | upper_month));
 
 
 // DD
@@ -85,7 +85,7 @@ named!(day_zero  <u32>, chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to
 named!(day_one   <u32>, chain!(tag!("1") ~ s:char_between!('0', '9') , || 10+buf_to_u32(s)));
 named!(day_two   <u32>, chain!(tag!("2") ~ s:char_between!('0', '9') , || 20+buf_to_u32(s)));
 named!(day_three <u32>, chain!(tag!("3") ~ s:char_between!('0', '1') , || 30+buf_to_u32(s)));
-named!(pub day <u32>, alt!(day_zero | day_one | day_two | day_three));
+named!(day <u32>, alt!(day_zero | day_one | day_two | day_three));
 
 // WW
 // reusing day_N parsers, sorry
@@ -145,15 +145,15 @@ named!(pub parse_date <Date>, alt!( ymd_date | iso_week_date | ordinal_date ) );
 named!(lower_hour <u32>, chain!(f:char_between!('0','1') ~ s:char_between!('0','9') ,
                                        || { buf_to_u32(f)*10 + buf_to_u32(s) } ));
 named!(upper_hour <u32>, chain!(tag!("2") ~ s:char_between!('0','4') , || 20+buf_to_u32(s)));
-named!(pub hour <u32>, alt!(lower_hour | upper_hour));
+named!(hour <u32>, alt!(lower_hour | upper_hour));
 
 // MM
 named!(below_sixty <u32>, chain!(f:char_between!('0','5') ~ s:char_between!('0','9'), || { buf_to_u32(f)*10 + buf_to_u32(s) } ));
 named!(upto_sixty <u32>, alt!(below_sixty | map!(tag!("60"), |_| 60)));
 
-named!(pub minute <u32>, call!(below_sixty));
-named!(pub second <u32>, call!(upto_sixty));
-named!(pub millisecond <u32>, map!( is_a!("0123456789"), |ms| buf_to_u32(ms) ) );
+named!(minute <u32>, call!(below_sixty));
+named!(second <u32>, call!(upto_sixty));
+named!(millisecond <u32>, map!( is_a!("0123456789"), |ms| buf_to_u32(ms) ) );
 
 // HH:MM:[SS][.(m*)][(Z|+...|-...)]
 named!(pub parse_time <Time>, chain!(
@@ -207,3 +207,85 @@ named!(pub parse_datetime <DateTime>, chain!(
             }
         }
         ));
+
+#[cfg(test)]
+mod tests{
+
+    use super::{year, month, day};
+    use super::{hour, minute, second};
+    use nom::IResult::*;
+
+    #[test]
+    fn test_year() {
+        assert_eq!(Done(&[][..],   2015), year(b"2015"));
+        assert_eq!(Done(&[][..],  -0333), year(b"-0333"));
+        assert_eq!(Done(&b"-"[..], 2015), year(b"2015-"));
+        assert!(year(b"abcd").is_err());
+        assert!(year(b"2a03").is_err());
+    }
+
+    #[test]
+    fn test_month() {
+        assert_eq!(Done(&[][..], 1),    month(b"01"));
+        assert_eq!(Done(&[][..], 6),    month(b"06"));
+        assert_eq!(Done(&[][..], 12),   month(b"12"));
+        assert_eq!(Done(&b"-"[..], 12), month(b"12-"));
+
+        assert!(month(b"13").is_err());
+        assert!(month(b"00").is_err());
+    }
+
+    #[test]
+    fn test_day() {
+        assert_eq!(Done(&[][..], 1),    day(b"01"));
+        assert_eq!(Done(&[][..], 12),   day(b"12"));
+        assert_eq!(Done(&[][..], 20),   day(b"20"));
+        assert_eq!(Done(&[][..], 28),   day(b"28"));
+        assert_eq!(Done(&[][..], 30),   day(b"30"));
+        assert_eq!(Done(&[][..], 31),   day(b"31"));
+        assert_eq!(Done(&b"-"[..], 31), day(b"31-"));
+
+        assert!(day(b"00").is_err());
+        assert!(day(b"32").is_err());
+    }
+
+    #[test]
+    fn test_hour() {
+        assert_eq!(Done(&[][..], 0),  hour(b"00"));
+        assert_eq!(Done(&[][..], 1),  hour(b"01"));
+        assert_eq!(Done(&[][..], 6),  hour(b"06"));
+        assert_eq!(Done(&[][..], 12), hour(b"12"));
+        assert_eq!(Done(&[][..], 13), hour(b"13"));
+        assert_eq!(Done(&[][..], 20), hour(b"20"));
+        assert_eq!(Done(&[][..], 24), hour(b"24"));
+
+        assert!(hour(b"25").is_err());
+        assert!(hour(b"30").is_err());
+        assert!(hour(b"ab").is_err());
+    }
+
+    #[test]
+    fn test_minute() {
+        assert_eq!(Done(&[][..], 0),  minute(b"00"));
+        assert_eq!(Done(&[][..], 1),  minute(b"01"));
+        assert_eq!(Done(&[][..], 30), minute(b"30"));
+        assert_eq!(Done(&[][..], 59), minute(b"59"));
+
+        assert!(minute(b"60").is_err());
+        assert!(minute(b"61").is_err());
+        assert!(minute(b"ab").is_err());
+    }
+
+    #[test]
+    fn test_second() {
+        assert_eq!(Done(&[][..], 0),  second(b"00"));
+        assert_eq!(Done(&[][..], 1),  second(b"01"));
+        assert_eq!(Done(&[][..], 30), second(b"30"));
+        assert_eq!(Done(&[][..], 59), second(b"59"));
+        assert_eq!(Done(&[][..], 60), second(b"60"));
+
+        assert!(second(b"61").is_err());
+        assert!(second(b"ab").is_err());
+    }
+
+}
