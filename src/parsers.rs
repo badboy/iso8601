@@ -1,3 +1,13 @@
+//! This module is strictly internal.
+//!
+//! These functions are used by `date()`, `time()` and `datetime()`.
+//! They are currently not private, because the need to be accessible,
+//! but are not useful by themselves.
+//!
+//! Please refer to the top-level functions instead, as they offer a better abstraction.
+//!
+//! **These functions may be made private later.**
+
 use helper::*;
 use nom::{self, is_digit};
 use super::{Time, DateTime, Date};
