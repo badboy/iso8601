@@ -3,7 +3,7 @@
 //! and partially RFC3339.
 //!
 //! Validity of a given date is not guaranteed, this parser will happily parse
-//! 2015.02.29 as a valid date,
+//! `"2015-02-29"` as a valid date,
 //! even though 2015 was no leap year.
 //!
 //! # Example
