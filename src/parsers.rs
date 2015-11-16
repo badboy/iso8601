@@ -64,7 +64,7 @@ named!(take_4_digits, flat_map!(take!(4), check!(is_digit)));
 // year
 named!(year_prefix, alt!(tag!("+") | tag!("-")));
 named!(year <i32>, chain!(
-        pref: opt!(year_prefix) ~
+        pref: opt!(complete!(year_prefix)) ~
         year: call!(take_4_digits)
         ,
         || {
@@ -108,9 +108,9 @@ named!(ord_day <u32>, chain!(
 // YYYY-MM-DD
 named!(pub ymd_date <Date>, chain!(
         y: year ~
-        opt!(tag!("-")) ~
+        opt!(complete!(tag!("-"))) ~
         m: month ~
-        opt!(tag!("-")) ~
+        opt!(complete!(tag!("-"))) ~
         d: day
         ,
         || { Date::YMD{ year: y, month: m, day: d } }
@@ -119,7 +119,7 @@ named!(pub ymd_date <Date>, chain!(
 // YYYY-MM-DD
 named!(pub ordinal_date <Date>, chain!(
         y: year ~
-        opt!(tag!("-")) ~
+        opt!(complete!(tag!("-"))) ~
         d: ord_day
         ,
         || { Date::Ordinal{ year: y, ddd: d } }
@@ -128,10 +128,10 @@ named!(pub ordinal_date <Date>, chain!(
 // YYYY-"W"WW-D
 named!(pub iso_week_date <Date>, chain!(
         y: year ~
-        opt!(tag!("-")) ~
+        opt!(complete!(tag!("-"))) ~
         tag!("W") ~
         w: week ~
-        opt!(tag!("-")) ~
+        opt!(complete!(tag!("-"))) ~
         d: week_day
         ,
         || { Date::Week{ year: y, ww: w, d: d } }
@@ -158,11 +158,11 @@ named!(millisecond <u32>, map!( is_a!("0123456789"), |ms| buf_to_u32(ms) ) );
 // HH:MM:[SS][.(m*)][(Z|+...|-...)]
 named!(pub parse_time <Time>, chain!(
         h: hour ~
-        opt!(tag!(":")) ~
+        opt!(complete!(tag!(":"))) ~
         m: minute ~
-        s:  opt!( chain!( opt!(tag!(":")) ~ s:second, || s)) ~
-        ms: opt!( chain!( tag!(".") ~ ms:millisecond, || ms)) ~
-        z:  opt!( alt!( timezone_hour | timezone_utc) ) ,
+        s:  opt!(complete!( chain!( opt!(tag!(":")) ~ s:second, || s))) ~
+        ms: opt!(complete!( chain!( tag!(".") ~ ms:millisecond, || ms))) ~
+        z:  opt!(complete!( alt!( timezone_hour | timezone_utc) )) ,
         || {
             Time {
                 hour: h,
