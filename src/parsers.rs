@@ -32,8 +32,8 @@ macro_rules! check(
 
     {
       let mut failed = false;
-      for idx in 0..$input.len() {
-        if !$submac!($input[idx], $($args)*) {
+      for &idx in $input {
+        if !$submac!(idx, $($args)*) {
             failed = true;
             break;
         }
