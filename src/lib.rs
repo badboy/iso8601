@@ -12,9 +12,8 @@
 //! let datetime = iso8601::datetime("2015-06-26T16:43:23+0200").unwrap();
 //! ```
 
-#![cfg_attr(feature = "dev", allow(unstable_features))]
-#![cfg_attr(feature = "dev", feature(plugin))]
-#![cfg_attr(feature = "dev", plugin(clippy))]
+#![cfg_attr(feature = "clippy", feature(plugin))]
+#![cfg_attr(feature = "clippy", plugin(clippy))]
 
 #[macro_use]
 extern crate nom;
@@ -73,7 +72,7 @@ pub struct DateTime {
 
 impl Time {
     pub fn set_tz(&self, tzo: (i32, i32)) -> Time {
-        let mut t = self.clone();
+        let mut t = *self;
         t.tz_offset_hours = tzo.0;
         t.tz_offset_hours = tzo.1;
         t
