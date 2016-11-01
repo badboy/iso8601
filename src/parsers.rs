@@ -160,8 +160,8 @@ named!(pub parse_time <Time>, do_parse!(
         h: hour >>
         opt!(complete!(tag!(":"))) >>
         m: minute >>
-        s:  opt!(complete!( do_parse!( opt!(tag!(":")) >> s:second >> (s)))) >>
-        ms: opt!(complete!( do_parse!( tag!(".") >> ms:millisecond >> (ms)))) >>
+        s:  opt!(complete!( preceded!(opt!(tag!(":")), second))) >>
+        ms: opt!(complete!( preceded!(tag!("."), millisecond))) >>
         z:  opt!(complete!( alt!( timezone_hour | timezone_utc) )) >>
         (
             Time {
@@ -185,7 +185,7 @@ named!(timezone_hour <(i32,i32)>, do_parse!(
         s: sign >>
         h: hour >>
         m: empty_or!(
-            do_parse!(opt!(tag!(":")) >> m: minute >> ( m ))
+            preceded!(opt!(tag!(":")), minute)
            ) >>
         ( (s * (h as i32) , s * (m.unwrap_or(0) as i32)) )
         ));
