@@ -63,78 +63,73 @@ named!(take_4_digits, flat_map!(take!(4), check!(is_digit)));
 
 // year
 named!(year_prefix, alt!(tag!("+") | tag!("-")));
-named!(year <i32>, chain!(
-        pref: opt!(complete!(year_prefix)) ~
-        year: call!(take_4_digits)
-        ,
-        || {
+named!(year <i32>, do_parse!(
+        pref: opt!(complete!(year_prefix)) >>
+        year: call!(take_4_digits) >>
+        (
             match pref {
                 Some(b"-") => -buf_to_i32(year),
                 _ => buf_to_i32(year)
             }
-        }));
+        )));
 
 // MM
-named!(lower_month <u32>, chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
-named!(upper_month <u32>, chain!(tag!("1") ~ s:char_between!('0', '2') , || 10+buf_to_u32(s)));
+named!(lower_month <u32>, do_parse!(tag!("0") >> s:char_between!('1', '9') >> (buf_to_u32(s))));
+named!(upper_month <u32>, do_parse!(tag!("1") >> s:char_between!('0', '2') >> (10+buf_to_u32(s))));
 named!(month <u32>, alt!(lower_month | upper_month));
 
 
 // DD
-named!(day_zero  <u32>, chain!(tag!("0") ~ s:char_between!('1', '9') , || buf_to_u32(s)));
-named!(day_one   <u32>, chain!(tag!("1") ~ s:char_between!('0', '9') , || 10+buf_to_u32(s)));
-named!(day_two   <u32>, chain!(tag!("2") ~ s:char_between!('0', '9') , || 20+buf_to_u32(s)));
-named!(day_three <u32>, chain!(tag!("3") ~ s:char_between!('0', '1') , || 30+buf_to_u32(s)));
+named!(day_zero  <u32>, do_parse!(tag!("0") >> s:char_between!('1', '9') >> (buf_to_u32(s))));
+named!(day_one   <u32>, do_parse!(tag!("1") >> s:char_between!('0', '9') >> (10+buf_to_u32(s))));
+named!(day_two   <u32>, do_parse!(tag!("2") >> s:char_between!('0', '9') >> (20+buf_to_u32(s))));
+named!(day_three <u32>, do_parse!(tag!("3") >> s:char_between!('0', '1') >> (30+buf_to_u32(s))));
 named!(day <u32>, alt!(day_zero | day_one | day_two | day_three));
 
 // WW
 // reusing day_N parsers, sorry
-named!(week_three <u32>, chain!(tag!("3") ~ s:char_between!('0', '9') , || 30+buf_to_u32(s)));
-named!(week_four  <u32>, chain!(tag!("4") ~ s:char_between!('0', '9') , || 40+buf_to_u32(s)));
-named!(week_five  <u32>, chain!(tag!("5") ~ s:char_between!('0', '3') , || 50+buf_to_u32(s)));
+named!(week_three <u32>, do_parse!(tag!("3") >> s:char_between!('0', '9') >> (30+buf_to_u32(s))));
+named!(week_four  <u32>, do_parse!(tag!("4") >> s:char_between!('0', '9') >> (40+buf_to_u32(s))));
+named!(week_five  <u32>, do_parse!(tag!("5") >> s:char_between!('0', '3') >> (50+buf_to_u32(s))));
 
 named!(week <u32>, alt!(day_zero | day_one | day_two | week_three| week_four | week_five ));
-named!(week_day <u32>, chain!(s:char_between!('1', '7') , || buf_to_u32(s)));
+named!(week_day <u32>, map!(char_between!('1', '7') , |s| buf_to_u32(s)));
 
 // ordinal DDD
-named!(ord_day <u32>, chain!(
-        a:char_between!('0','3') ~
-        b:char_between!('0','9') ~
-        c:char_between!('0','9')
-        ,
-        || { buf_to_u32(a)*100 + buf_to_u32(b)*10 + buf_to_u32(c) }
+named!(ord_day <u32>, do_parse!(
+        a:char_between!('0','3') >>
+        b:char_between!('0','9') >>
+        c:char_between!('0','9') >>
+        ( buf_to_u32(a)*100 + buf_to_u32(b)*10 + buf_to_u32(c) )
         ));
 
 // YYYY-MM-DD
-named!(pub ymd_date <Date>, chain!(
-        y: year ~
-        opt!(complete!(tag!("-"))) ~
-        m: month ~
-        opt!(complete!(tag!("-"))) ~
-        d: day
-        ,
-        || { Date::YMD{ year: y, month: m, day: d } }
+named!(pub ymd_date <Date>, do_parse!(
+        y: year >>
+        opt!(complete!(tag!("-"))) >>
+        m: month >>
+        opt!(complete!(tag!("-"))) >>
+        d: day >>
+        ( Date::YMD{ year: y, month: m, day: d } )
         ));
 
 // YYYY-MM-DD
-named!(pub ordinal_date <Date>, chain!(
-        y: year ~
-        opt!(complete!(tag!("-"))) ~
-        d: ord_day
-        ,
-        || { Date::Ordinal{ year: y, ddd: d } }
+named!(pub ordinal_date <Date>, do_parse!(
+        y: year >>
+        opt!(complete!(tag!("-"))) >>
+        d: ord_day >>
+        ( Date::Ordinal{ year: y, ddd: d } )
         ));
 
 // YYYY-"W"WW-D
-named!(pub iso_week_date <Date>, chain!(
-        y: year ~
-        opt!(complete!(tag!("-"))) ~
-        tag!("W") ~
-        w: week ~
-        opt!(complete!(tag!("-"))) ~
-        d: week_day
-        ,
-        || { Date::Week{ year: y, ww: w, d: d } }
+named!(pub iso_week_date <Date>, do_parse!(
+        y: year >>
+        opt!(complete!(tag!("-"))) >>
+        tag!("W") >>
+        w: week >>
+        opt!(complete!(tag!("-"))) >>
+        d: week_day >>
+        ( Date::Week{ year: y, ww: w, d: d } )
         ));
 
 named!(pub parse_date <Date>, alt!( ymd_date | iso_week_date | ordinal_date ) );
@@ -142,13 +137,18 @@ named!(pub parse_date <Date>, alt!( ymd_date | iso_week_date | ordinal_date ) );
 // TIME
 
 // HH
-named!(lower_hour <u32>, chain!(f:char_between!('0','1') ~ s:char_between!('0','9') ,
-                                       || { buf_to_u32(f)*10 + buf_to_u32(s) } ));
-named!(upper_hour <u32>, chain!(tag!("2") ~ s:char_between!('0','4') , || 20+buf_to_u32(s)));
+named!(lower_hour <u32>, do_parse!(f:char_between!('0','1') >>
+                                   s:char_between!('0','9') >>
+                                   ( buf_to_u32(f)*10 + buf_to_u32(s) )));
+named!(upper_hour <u32>, do_parse!(tag!("2") >>
+                                   s:char_between!('0','4') >>
+                                   (20+buf_to_u32(s))));
 named!(hour <u32>, alt!(lower_hour | upper_hour));
 
 // MM
-named!(below_sixty <u32>, chain!(f:char_between!('0','5') ~ s:char_between!('0','9'), || { buf_to_u32(f)*10 + buf_to_u32(s) } ));
+named!(below_sixty <u32>, do_parse!(f:char_between!('0','5') >>
+                                    s:char_between!('0','9') >>
+                                    ( buf_to_u32(f)*10 + buf_to_u32(s) ) ));
 named!(upto_sixty <u32>, alt!(below_sixty | map!(tag!("60"), |_| 60)));
 
 named!(minute <u32>, call!(below_sixty));
@@ -156,14 +156,14 @@ named!(second <u32>, call!(upto_sixty));
 named!(millisecond <u32>, map!( is_a!("0123456789"), |ms| buf_to_u32(ms) ) );
 
 // HH:MM:[SS][.(m*)][(Z|+...|-...)]
-named!(pub parse_time <Time>, chain!(
-        h: hour ~
-        opt!(complete!(tag!(":"))) ~
-        m: minute ~
-        s:  opt!(complete!( chain!( opt!(tag!(":")) ~ s:second, || s))) ~
-        ms: opt!(complete!( chain!( tag!(".") ~ ms:millisecond, || ms))) ~
-        z:  opt!(complete!( alt!( timezone_hour | timezone_utc) )) ,
-        || {
+named!(pub parse_time <Time>, do_parse!(
+        h: hour >>
+        opt!(complete!(tag!(":"))) >>
+        m: minute >>
+        s:  opt!(complete!( do_parse!( opt!(tag!(":")) >> s:second >> (s)))) >>
+        ms: opt!(complete!( do_parse!( tag!(".") >> ms:millisecond >> (ms)))) >>
+        z:  opt!(complete!( alt!( timezone_hour | timezone_utc) )) >>
+        (
             Time {
                 hour: h,
                 minute: m,
@@ -172,7 +172,7 @@ named!(pub parse_time <Time>, chain!(
                 tz_offset_hours: z.unwrap_or((0,0)).0,
                 tz_offset_minutes: z.unwrap_or((0,0)).1
             }
-        }
+        )
         ));
 
 named!(sign <i32>, alt!(
@@ -181,31 +181,28 @@ named!(sign <i32>, alt!(
         )
     );
 
-named!(timezone_hour <(i32,i32)>, chain!(
-        s: sign ~
-        h: hour ~
+named!(timezone_hour <(i32,i32)>, do_parse!(
+        s: sign >>
+        h: hour >>
         m: empty_or!(
-            chain!(
-                tag!(":")? ~ m: minute , || { m }
-            ))
-        ,
-        || { (s * (h as i32) , s * (m.unwrap_or(0) as i32)) }
+            do_parse!(opt!(tag!(":")) >> m: minute >> ( m ))
+           ) >>
+        ( (s * (h as i32) , s * (m.unwrap_or(0) as i32)) )
         ));
 
 named!(timezone_utc <(i32,i32)>, map!(tag!("Z"), |_| (0,0)));
 
 // Full ISO8601
-named!(pub parse_datetime <DateTime>, chain!(
-        d: parse_date ~
-        tag!("T") ~
-        t: parse_time
-        ,
-        || {
+named!(pub parse_datetime <DateTime>, do_parse!(
+        d: parse_date >>
+        tag!("T") >>
+        t: parse_time >>
+        (
             DateTime{
                 date: d,
                 time: t,
             }
-        }
+        )
         ));
 
 #[cfg(test)]
