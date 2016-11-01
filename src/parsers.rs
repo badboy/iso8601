@@ -39,7 +39,7 @@ macro_rules! check(
         }
       }
       if failed {
-        nom::IResult::Error(nom::Err::Position(nom::ErrorKind::Custom(20),$input))
+        nom::IResult::Error(nom::ErrorKind::Custom(20))
       } else {
         nom::IResult::Done(&b""[..], $input)
       }
