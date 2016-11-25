@@ -8,7 +8,7 @@ description = "Parsing ISO8601 dates using nom"
 homepage = "http://badboy.github.io/iso8601/"
 repository = "https://github.com/badboy/iso8601"
 documentation = "http://badboy.github.io/iso8601/"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 readme = "README.md"
 
 
