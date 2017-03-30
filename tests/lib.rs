@@ -225,3 +225,10 @@ fn disallows_notallowed() {
 //    assert!(parse_datetime(b"2001-W05-6T04:05:06.123455Z").is_err());
 //    assert!(parse_datetime(b"2015-06-26TZ").is_err());
 // }
+
+#[test]
+fn issue12_regression_1() {
+    let input = "164801.";
+
+    assert_eq!(Ok(Time { hour: 16, minute: 48, second: 1, millisecond: 0, tz_offset_hours: 0, tz_offset_minutes: 0 }), time(input));
+}

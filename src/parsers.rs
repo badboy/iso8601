@@ -151,9 +151,19 @@ named!(below_sixty <u32>, do_parse!(f:char_between!('0','5') >>
                                     ( buf_to_u32(f)*10 + buf_to_u32(s) ) ));
 named!(upto_sixty <u32>, alt!(below_sixty | map!(tag!("60"), |_| 60)));
 
+macro_rules! nonempty (
+  ($i: expr, $submac:ident!( $($args:tt)* )) => {
+    match ($i).len() {
+        //0 => nom::IResult::Incomplete(nom::Needed::Unknown),
+        0 => nom::IResult::Error(error_position!(nom::ErrorKind::NonEmpty, $i)),
+        _ => $submac!($i, $($args)*)
+    }
+  }
+);
+
 named!(minute <u32>, call!(below_sixty));
 named!(second <u32>, call!(upto_sixty));
-named!(millisecond <u32>, map!( is_a!("0123456789"), |ms| buf_to_u32(ms) ) );
+named!(millisecond <u32>, map!( nonempty!( is_a!("0123456789") ), |ms| buf_to_u32(ms) ) );
 
 // HH:MM:[SS][.(m*)][(Z|+...|-...)]
 named!(pub parse_time <Time>, do_parse!(
