@@ -232,3 +232,10 @@ fn issue12_regression_1() {
 
     assert_eq!(Ok(Time { hour: 16, minute: 48, second: 1, millisecond: 0, tz_offset_hours: 0, tz_offset_minutes: 0 }), time(input));
 }
+
+#[test]
+fn issue12_regression_2() {
+    let input = "04:05:06.1226001015632)*450";
+
+    assert_eq!(Ok(Time { hour: 4, minute: 5, second: 6, millisecond: 0, tz_offset_hours: 0, tz_offset_minutes: 0 }), time(input));
+}

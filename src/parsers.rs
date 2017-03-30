@@ -9,8 +9,9 @@
 //! **These functions may be made private later.**
 
 use helper::*;
-use nom::{self, is_digit};
+use nom::{self, is_digit, digit};
 use super::{Time, DateTime, Date};
+use std::str::{self, FromStr};
 
 macro_rules! empty_or(
     ($i:expr, $submac:ident!( $($args:tt)* )) => (
@@ -161,9 +162,18 @@ macro_rules! nonempty (
   }
 );
 
+named!(pub number<u32>, map_res!(
+  map_res!(
+    digit,
+    str::from_utf8
+  ),
+  FromStr::from_str
+));
+
+
 named!(minute <u32>, call!(below_sixty));
 named!(second <u32>, call!(upto_sixty));
-named!(millisecond <u32>, map!( nonempty!( is_a!("0123456789") ), |ms| buf_to_u32(ms) ) );
+named!(millisecond <u32>, call!(number));
 
 // HH:MM:[SS][.(m*)][(Z|+...|-...)]
 named!(pub parse_time <Time>, do_parse!(
