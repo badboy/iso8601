@@ -173,7 +173,7 @@ named!(pub parse_time <Time>, do_parse!(
         opt!(complete!(tag!(":"))) >>
         m: minute >>
         s:  opt!(complete!( preceded!(opt!(tag!(":")), second))) >>
-        ms: opt!(complete!( map!(preceded!(tag!("."), fractions), millisecond))) >>
+        ms: opt!(complete!( map!(preceded!(one_of!(",."), fractions), millisecond))) >>
         z:  opt!(complete!( alt!( timezone_hour | timezone_utc) )) >>
         (
             Time {

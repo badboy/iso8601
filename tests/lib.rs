@@ -26,6 +26,8 @@ fn test_millisecond() {
     assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 432, tz_offset_hours: 0, tz_offset_minutes: 0}), parse_time(b"16:43.4321"));
     assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 11,  millisecond: 432, tz_offset_hours: 0, tz_offset_minutes: 0}), parse_time(b"16:43:11.4321"));
 
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 100,    tz_offset_hours: 0, tz_offset_minutes: 0}), parse_time(b"16:43:00,1"));
+
     assert_eq!(
         Done(&[][..],  Time{ hour: 04,  minute:05,  second:06,  millisecond: 123, tz_offset_hours: 0, tz_offset_minutes: 0}),
         parse_time(b"04:05:06.12345")
