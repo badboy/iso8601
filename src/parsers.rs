@@ -152,28 +152,20 @@ named!(below_sixty <u32>, do_parse!(f:char_between!('0','5') >>
                                     ( buf_to_u32(f)*10 + buf_to_u32(s) ) ));
 named!(upto_sixty <u32>, alt!(below_sixty | map!(tag!("60"), |_| 60)));
 
-macro_rules! nonempty (
-  ($i: expr, $submac:ident!( $($args:tt)* )) => {
-    match ($i).len() {
-        //0 => nom::IResult::Incomplete(nom::Needed::Unknown),
-        0 => nom::IResult::Error(error_position!(nom::ErrorKind::NonEmpty, $i)),
-        _ => $submac!($i, $($args)*)
-    }
-  }
-);
-
-named!(pub number<u32>, map_res!(
-  map_res!(
-    digit,
-    str::from_utf8
-  ),
-  FromStr::from_str
-));
+fn into_fraction_string(digits: &[u8]) -> Result<f32, ::std::num::ParseFloatError> {
+    let mut s = String::from("0.");
+    s += str::from_utf8(digits).unwrap();
+    FromStr::from_str(&s)
+}
 
 
 named!(minute <u32>, call!(below_sixty));
 named!(second <u32>, call!(upto_sixty));
-named!(millisecond <u32>, call!(number));
+named!(fractions <f32>, map_res!(digit, into_fraction_string));
+
+fn millisecond(fraction: f32) -> u32 {
+    (1000.0 * fraction) as u32
+}
 
 // HH:MM:[SS][.(m*)][(Z|+...|-...)]
 named!(pub parse_time <Time>, do_parse!(
@@ -181,7 +173,7 @@ named!(pub parse_time <Time>, do_parse!(
         opt!(complete!(tag!(":"))) >>
         m: minute >>
         s:  opt!(complete!( preceded!(opt!(tag!(":")), second))) >>
-        ms: opt!(complete!( preceded!(tag!("."), millisecond))) >>
+        ms: opt!(complete!( map!(preceded!(tag!("."), fractions), millisecond))) >>
         z:  opt!(complete!( alt!( timezone_hour | timezone_utc) )) >>
         (
             Time {
