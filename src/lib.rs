@@ -74,7 +74,7 @@ impl Time {
     pub fn set_tz(&self, tzo: (i32, i32)) -> Time {
         let mut t = *self;
         t.tz_offset_hours = tzo.0;
-        t.tz_offset_hours = tzo.1;
+        t.tz_offset_minutes = tzo.1;
         t
     }
 }

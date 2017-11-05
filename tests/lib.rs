@@ -53,6 +53,28 @@ fn test_time() {
 }
 
 #[test]
+fn test_time_set_tz() {
+    let original = Time {
+        hour: 0,
+        minute: 0,
+        second: 0,
+        millisecond: 0,
+        tz_offset_hours: 0,
+        tz_offset_minutes: 0
+    };
+    let expected = Time {
+        hour: 0,
+        minute: 0,
+        second: 0,
+        millisecond: 0,
+        tz_offset_hours: 2,
+        tz_offset_minutes: 30
+    };
+
+    assert_eq!(expected, original.set_tz((2, 30)));
+}
+
+#[test]
 fn short_time1() {
     assert_eq!(parse_time(b"1648"), Done(&[][..], Time { hour: 16, minute: 48, second: 0, millisecond: 0, tz_offset_hours: 0, tz_offset_minutes: 0, }));
 }
