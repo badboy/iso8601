@@ -20,10 +20,12 @@ extern crate nom;
 use nom::IResult::*;
 
 use std::default::Default;
+use std::str::FromStr;
 
 #[macro_use]
 mod helper;
 pub mod parsers;
+mod display;
 
 /// A date, can hold three different formats.
 #[derive(Eq,PartialEq,Debug,Copy,Clone)]
@@ -84,6 +86,30 @@ impl Time {
 impl Default for Date {
     fn default() -> Date {
         Date::YMD { year: 0, month: 0, day: 0 }
+    }
+}
+
+impl FromStr for Date {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        date(s)
+    }
+}
+
+impl FromStr for Time {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        time(s)
+    }
+}
+
+impl FromStr for DateTime {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        datetime(s)
     }
 }
 

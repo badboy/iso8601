@@ -1,3 +1,5 @@
+#![cfg_attr(any(feature = "cargo-clippy", feature = "clippy"), allow(zero_prefixed_literal))]
+
 extern crate iso8601;
 extern crate nom;
 
