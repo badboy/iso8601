@@ -13,7 +13,7 @@ readme = "README.md"
 
 
 [dependencies]
-nom = "2.0"
+nom = "3.2"
 clippy = {version = "*", optional = true}
 
 [features]
