@@ -19,20 +19,22 @@ fn test_date() {
 
 #[test]
 fn test_millisecond() {
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 1,    tz_offset_hours: 0, tz_offset_minutes: 0}), parse_time(b"16:43:00.1"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 12,   tz_offset_hours: 0, tz_offset_minutes: 0}), parse_time(b"16:43:00.12"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 100,    tz_offset_hours: 0, tz_offset_minutes: 0}), parse_time(b"16:43:00.1"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 120,   tz_offset_hours: 0, tz_offset_minutes: 0}), parse_time(b"16:43:00.12"));
     assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 123,  tz_offset_hours: 0, tz_offset_minutes: 0}), parse_time(b"16:43:00.123"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 4321, tz_offset_hours: 0, tz_offset_minutes: 0}), parse_time(b"16:43:00.4321"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 4321, tz_offset_hours: 0, tz_offset_minutes: 0}), parse_time(b"16:43.4321"));
-    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 11,  millisecond: 4321, tz_offset_hours: 0, tz_offset_minutes: 0}), parse_time(b"16:43:11.4321"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 432, tz_offset_hours: 0, tz_offset_minutes: 0}), parse_time(b"16:43:00.4321"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 432, tz_offset_hours: 0, tz_offset_minutes: 0}), parse_time(b"16:43.4321"));
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second: 11,  millisecond: 432, tz_offset_hours: 0, tz_offset_minutes: 0}), parse_time(b"16:43:11.4321"));
+
+    assert_eq!(Done(&[][..], Time{ hour: 16, minute: 43, second:  0,  millisecond: 100,    tz_offset_hours: 0, tz_offset_minutes: 0}), parse_time(b"16:43:00,1"));
 
     assert_eq!(
-        Done(&[][..],  Time{ hour: 04,  minute:05,  second:06,  millisecond: 12345, tz_offset_hours: 0, tz_offset_minutes: 0}),
+        Done(&[][..],  Time{ hour: 04,  minute:05,  second:06,  millisecond: 123, tz_offset_hours: 0, tz_offset_minutes: 0}),
         parse_time(b"04:05:06.12345")
         );
 
     assert_eq!(
-        Done(&[][..], DateTime{ date: Date::Week   { year: 2001,  ww:05,     d:6},     time: Time{ hour: 04,  minute:05,  second:06,  millisecond: 12345, tz_offset_hours: 0, tz_offset_minutes: 0}}),
+        Done(&[][..], DateTime{ date: Date::Week   { year: 2001,  ww:05,     d:6},     time: Time{ hour: 04,  minute:05,  second:06,  millisecond: 123, tz_offset_hours: 0, tz_offset_minutes: 0}}),
         parse_datetime(b"2001-W05-6T04:05:06.12345Z")
         );
 
@@ -92,11 +94,11 @@ fn short_time4() {
 }
 #[test]
 fn short_time5() {
-    assert_eq!(parse_time(b"164800.1"), Done(&[][..], Time { hour: 16, minute: 48, second: 0, millisecond: 1, tz_offset_hours: 0, tz_offset_minutes: 0, }));
+    assert_eq!(parse_time(b"164800.1"), Done(&[][..], Time { hour: 16, minute: 48, second: 0, millisecond: 100, tz_offset_hours: 0, tz_offset_minutes: 0, }));
 }
 #[test]
 fn short_time6() {
-    assert_eq!(parse_time(b"164800.1Z"), Done(&[][..], Time { hour: 16, minute: 48, second: 0, millisecond: 1, tz_offset_hours: 0, tz_offset_minutes: 0, }));
+    assert_eq!(parse_time(b"164800.1Z"), Done(&[][..], Time { hour: 16, minute: 48, second: 0, millisecond: 100, tz_offset_hours: 0, tz_offset_minutes: 0, }));
 }
 #[test]
 fn short_time7() {
@@ -215,8 +217,8 @@ fn test_datetime_correct() {
     assert_eq!(parse_datetime(b"2015056T04:05:06+07:00"),     Done(&[][..], DateTime{ date: Date::Ordinal{ year: 2015,  ddd:56},             time: Time{ hour: 04,  minute:5,   second:6,   millisecond: 0, tz_offset_hours: 7, tz_offset_minutes: 0}}));
     assert_eq!(parse_datetime(b"2015-297T16:30:48Z"),         Done(&[][..], DateTime{ date: Date::Ordinal{ year: 2015,  ddd:297},            time: Time{ hour: 16,  minute:30,  second:48,  millisecond: 0, tz_offset_hours: 0, tz_offset_minutes: 0}}));
     assert_eq!(parse_datetime(b"2015-W43-6T16:30:48Z"),       Done(&[][..], DateTime{ date: Date::Week   { year: 2015,  ww:43,     d:6},     time: Time{ hour: 16,  minute:30,  second:48,  millisecond: 0, tz_offset_hours: 0, tz_offset_minutes: 0}}));
-    assert_eq!(parse_datetime(b"2001-W05-6T04:05:06.1234Z"),  Done(&[][..], DateTime{ date: Date::Week   { year: 2001,  ww:05,     d:6},     time: Time{ hour: 04,  minute:05,  second:06,  millisecond: 1234, tz_offset_hours: 0, tz_offset_minutes: 0}}));
-    assert_eq!(parse_datetime(b"2001-W05-6T04:05:06.12345Z"), Done(&[][..], DateTime{ date: Date::Week   { year: 2001,  ww:05,     d:6},     time: Time{ hour: 04,  minute:05,  second:06,  millisecond: 12345, tz_offset_hours: 0, tz_offset_minutes: 0}}));
+    assert_eq!(parse_datetime(b"2001-W05-6T04:05:06.1234Z"),  Done(&[][..], DateTime{ date: Date::Week   { year: 2001,  ww:05,     d:6},     time: Time{ hour: 04,  minute:05,  second:06,  millisecond: 123, tz_offset_hours: 0, tz_offset_minutes: 0}}));
+    assert_eq!(parse_datetime(b"2001-W05-6T04:05:06.12345Z"), Done(&[][..], DateTime{ date: Date::Week   { year: 2001,  ww:05,     d:6},     time: Time{ hour: 04,  minute:05,  second:06,  millisecond: 123, tz_offset_hours: 0, tz_offset_minutes: 0}}));
 }
 
 #[test]
@@ -247,3 +249,17 @@ fn disallows_notallowed() {
 //    assert!(parse_datetime(b"2001-W05-6T04:05:06.123455Z").is_err());
 //    assert!(parse_datetime(b"2015-06-26TZ").is_err());
 // }
+
+#[test]
+fn issue12_regression_1() {
+    let input = "164801.";
+
+    assert_eq!(Ok(Time { hour: 16, minute: 48, second: 1, millisecond: 0, tz_offset_hours: 0, tz_offset_minutes: 0 }), time(input));
+}
+
+#[test]
+fn issue12_regression_2() {
+    let input = "04:05:06.1226001015632)*450";
+
+    assert_eq!(Ok(Time { hour: 4, minute: 5, second: 6, millisecond: 122, tz_offset_hours: 0, tz_offset_minutes: 0 }), time(input));
+}

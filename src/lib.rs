@@ -19,6 +19,8 @@
 extern crate nom;
 use nom::IResult::*;
 
+use std::default::Default;
+
 #[macro_use]
 mod helper;
 pub mod parsers;
@@ -46,7 +48,7 @@ pub enum Date {
 }
 
 /// A time object
-#[derive(Eq,PartialEq,Debug,Copy,Clone)]
+#[derive(Eq,PartialEq,Debug,Copy,Clone,Default)]
 pub struct Time {
     /// a 24th of a day
     pub hour: u32,
@@ -64,7 +66,7 @@ pub struct Time {
 /// Compound struct, hold Date and Time
 ///
 /// duh!
-#[derive(Eq,PartialEq,Debug,Copy,Clone)]
+#[derive(Eq,PartialEq,Debug,Copy,Clone,Default)]
 pub struct DateTime {
     pub date: Date,
     pub time: Time,
@@ -79,6 +81,11 @@ impl Time {
     }
 }
 
+impl Default for Date {
+    fn default() -> Date {
+        Date::YMD { year: 0, month: 0, day: 0 }
+    }
+}
 
 /// Parses a date string.
 ///
