@@ -20,3 +20,7 @@ members = ["."]
 [[bin]]
 name = "parse_dates"
 path = "fuzzers/parse_dates.rs"
+
+[[bin]]
+name = "parse_and_print_dates_roundtrip"
+path = "fuzzers/parse_and_print_dates_roundtrip.rs"
