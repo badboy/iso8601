@@ -24,6 +24,7 @@ use std::default::Default;
 #[macro_use]
 mod helper;
 pub mod parsers;
+mod display;
 
 /// A date, can hold three different formats.
 #[derive(Eq,PartialEq,Debug,Copy,Clone)]
