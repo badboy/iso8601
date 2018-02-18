@@ -126,7 +126,7 @@ impl FromStr for DateTime {
 /// let date = iso8601::date("2015-11-02").unwrap();
 /// ```
 pub fn date(string: &str) -> Result<Date, String> {
-    if let Ok((_, parsed)) = parsers::parse_date(string.as_bytes()) {
+    if let Ok((_, parsed)) = parsers::parse_date(nom::types::CompleteByteSlice(string.as_bytes())) {
         Ok(parsed)
     } else {
         Err(format!("Parser Error: {}", string))
@@ -149,7 +149,7 @@ pub fn date(string: &str) -> Result<Date, String> {
 /// let time = iso8601::time("21:56:42").unwrap();
 /// ```
 pub fn time(string: &str) -> Result<Time, String> {
-    if let Ok((_, parsed)) = parsers::parse_time(string.as_bytes()) {
+    if let Ok((_, parsed)) = parsers::parse_time(nom::types::CompleteByteSlice(string.as_bytes())) {
         Ok(parsed)
     } else {
         Err(format!("Parser Error: {}", string))
@@ -169,7 +169,7 @@ pub fn time(string: &str) -> Result<Time, String> {
 /// let dt = iso8601::datetime("2015-11-03T21:56").unwrap();
 /// ```
 pub fn datetime(string: &str) -> Result<DateTime, String> {
-    if let Ok((_left_overs, parsed)) = parsers::parse_datetime(string.as_bytes()) {
+    if let Ok((_left_overs, parsed)) = parsers::parse_datetime(nom::types::CompleteByteSlice(string.as_bytes())) {
         Ok(parsed)
     } else {
         Err(format!("Parser Error: {}", string))
