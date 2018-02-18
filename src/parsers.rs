@@ -10,12 +10,14 @@
 
 use helper::*;
 use nom::{self, is_digit, digit};
+use nom::types::CompleteByteSlice;
 use super::{Time, DateTime, Date};
 use std::str::{self, FromStr};
 
 macro_rules! empty_or(
-    ($i:expr, $submac:ident!( $($args:tt)* )) => (
-        if $i.len() == 0 {
+    ($i:expr, $submac:ident!( $($args:tt)* )) => ({
+        use nom::InputLength;
+        if $i.input_len() == 0 {
             Ok(($i, None))
         } else {
             match $submac!($i, $($args)*) {
@@ -26,7 +28,7 @@ macro_rules! empty_or(
 
             }
         }
-    );
+    });
 );
 
 macro_rules! check(
@@ -34,7 +36,7 @@ macro_rules! check(
 
     {
       let mut failed = false;
-      for &idx in $input {
+      for &idx in $input.0 {
         if !$submac!(idx, $($args)*) {
             failed = true;
             break;
@@ -43,7 +45,7 @@ macro_rules! check(
       if failed {
         Err(nom::Err::Error(error_position!($input, nom::ErrorKind::Custom(20u32))))
       } else {
-        Ok((&b""[..], $input))
+        Ok((CompleteByteSlice(&b""[..]), $input))
       }
     }
   );
@@ -61,52 +63,52 @@ macro_rules! char_between(
     );
 );
 
-named!(take_4_digits, flat_map!(take!(4), check!(is_digit)));
+named!(take_4_digits<CompleteByteSlice,CompleteByteSlice>, flat_map!(take!(4), check!(is_digit)));
 
 // year
-named!(year_prefix, alt!(tag!("+") | tag!("-")));
-named!(year <i32>, do_parse!(
+named!(year_prefix<CompleteByteSlice, CompleteByteSlice>, alt!(tag!("+") | tag!("-")));
+named!(year <CompleteByteSlice, i32>, do_parse!(
         pref: opt!(year_prefix) >>
         year: call!(take_4_digits) >>
         (
             match pref {
-                Some(b"-") => -buf_to_i32(year),
-                _ => buf_to_i32(year)
+                Some(CompleteByteSlice(b"-")) => -buf_to_i32(year.0),
+                _ => buf_to_i32(year.0)
             }
         )));
 
 // MM
-named!(lower_month <u32>, do_parse!(tag!("0") >> s:char_between!('1', '9') >> (buf_to_u32(s))));
-named!(upper_month <u32>, do_parse!(tag!("1") >> s:char_between!('0', '2') >> (10+buf_to_u32(s))));
-named!(month <u32>, alt!(lower_month | upper_month));
+named!(lower_month <CompleteByteSlice,u32>, do_parse!(tag!("0") >> s:char_between!('1', '9') >> (buf_to_u32(s.0))));
+named!(upper_month <CompleteByteSlice,u32>, do_parse!(tag!("1") >> s:char_between!('0', '2') >> (10+buf_to_u32(s.0))));
+named!(month <CompleteByteSlice,u32>, alt!(lower_month | upper_month));
 
 
 // DD
-named!(day_zero  <u32>, do_parse!(tag!("0") >> s:char_between!('1', '9') >> (buf_to_u32(s))));
-named!(day_one   <u32>, do_parse!(tag!("1") >> s:char_between!('0', '9') >> (10+buf_to_u32(s))));
-named!(day_two   <u32>, do_parse!(tag!("2") >> s:char_between!('0', '9') >> (20+buf_to_u32(s))));
-named!(day_three <u32>, do_parse!(tag!("3") >> s:char_between!('0', '1') >> (30+buf_to_u32(s))));
-named!(day <u32>, alt!(day_zero | day_one | day_two | day_three));
+named!(day_zero  <CompleteByteSlice,u32>, do_parse!(tag!("0") >> s:char_between!('1', '9') >> (buf_to_u32(s.0))));
+named!(day_one   <CompleteByteSlice,u32>, do_parse!(tag!("1") >> s:char_between!('0', '9') >> (10+buf_to_u32(s.0))));
+named!(day_two   <CompleteByteSlice,u32>, do_parse!(tag!("2") >> s:char_between!('0', '9') >> (20+buf_to_u32(s.0))));
+named!(day_three <CompleteByteSlice,u32>, do_parse!(tag!("3") >> s:char_between!('0', '1') >> (30+buf_to_u32(s.0))));
+named!(day <CompleteByteSlice,u32>, alt!(day_zero | day_one | day_two | day_three));
 
 // WW
 // reusing day_N parsers, sorry
-named!(week_three <u32>, do_parse!(tag!("3") >> s:char_between!('0', '9') >> (30+buf_to_u32(s))));
-named!(week_four  <u32>, do_parse!(tag!("4") >> s:char_between!('0', '9') >> (40+buf_to_u32(s))));
-named!(week_five  <u32>, do_parse!(tag!("5") >> s:char_between!('0', '3') >> (50+buf_to_u32(s))));
+named!(week_three <CompleteByteSlice,u32>, do_parse!(tag!("3") >> s:char_between!('0', '9') >> (30+buf_to_u32(s.0))));
+named!(week_four  <CompleteByteSlice,u32>, do_parse!(tag!("4") >> s:char_between!('0', '9') >> (40+buf_to_u32(s.0))));
+named!(week_five  <CompleteByteSlice,u32>, do_parse!(tag!("5") >> s:char_between!('0', '3') >> (50+buf_to_u32(s.0))));
 
-named!(week <u32>, alt!(day_zero | day_one | day_two | week_three| week_four | week_five ));
-named!(week_day <u32>, map!(char_between!('1', '7') , |s| buf_to_u32(s)));
+named!(week <CompleteByteSlice,u32>, alt!(day_zero | day_one | day_two | week_three| week_four | week_five ));
+named!(week_day <CompleteByteSlice,u32>, map!(char_between!('1', '7') , |s| buf_to_u32(s.0)));
 
 // ordinal DDD
-named!(ord_day <u32>, do_parse!(
+named!(ord_day <CompleteByteSlice,u32>, do_parse!(
         a:char_between!('0','3') >>
         b:char_between!('0','9') >>
         c:char_between!('0','9') >>
-        ( buf_to_u32(a)*100 + buf_to_u32(b)*10 + buf_to_u32(c) )
+        ( buf_to_u32(a.0)*100 + buf_to_u32(b.0)*10 + buf_to_u32(c.0) )
         ));
 
 // YYYY-MM-DD
-named!(pub ymd_date <Date>, do_parse!(
+named!(pub ymd_date <CompleteByteSlice,Date>, do_parse!(
         y: year >>
         opt!(tag!("-")) >>
         m: month >>
@@ -116,7 +118,7 @@ named!(pub ymd_date <Date>, do_parse!(
         ));
 
 // YYYY-MM-DD
-named!(pub ordinal_date <Date>, do_parse!(
+named!(pub ordinal_date <CompleteByteSlice,Date>, do_parse!(
         y: year >>
         opt!(tag!("-")) >>
         d: ord_day >>
@@ -124,7 +126,7 @@ named!(pub ordinal_date <Date>, do_parse!(
         ));
 
 // YYYY-"W"WW-D
-named!(pub iso_week_date <Date>, do_parse!(
+named!(pub iso_week_date <CompleteByteSlice,Date>, do_parse!(
         y: year >>
         opt!(tag!("-")) >>
         tag!("W") >>
@@ -134,42 +136,42 @@ named!(pub iso_week_date <Date>, do_parse!(
         ( Date::Week{ year: y, ww: w, d: d } )
         ));
 
-named!(pub parse_date <Date>, alt!( ymd_date | iso_week_date | ordinal_date ) );
+named!(pub parse_date <CompleteByteSlice,Date>, alt!( ymd_date | iso_week_date | ordinal_date ) );
 
 // TIME
 
 // HH
-named!(lower_hour <u32>, do_parse!(f:char_between!('0','1') >>
+named!(lower_hour <CompleteByteSlice,u32>, do_parse!(f:char_between!('0','1') >>
                                    s:char_between!('0','9') >>
-                                   ( buf_to_u32(f)*10 + buf_to_u32(s) )));
-named!(upper_hour <u32>, do_parse!(tag!("2") >>
+                                   ( buf_to_u32(f.0)*10 + buf_to_u32(s.0) )));
+named!(upper_hour <CompleteByteSlice,u32>, do_parse!(tag!("2") >>
                                    s:char_between!('0','4') >>
-                                   (20+buf_to_u32(s))));
-named!(hour <u32>, alt!(lower_hour | upper_hour));
+                                   (20+buf_to_u32(s.0))));
+named!(hour <CompleteByteSlice,u32>, alt!(lower_hour | upper_hour));
 
 // MM
-named!(below_sixty <u32>, do_parse!(f:char_between!('0','5') >>
+named!(below_sixty <CompleteByteSlice,u32>, do_parse!(f:char_between!('0','5') >>
                                     s:char_between!('0','9') >>
-                                    ( buf_to_u32(f)*10 + buf_to_u32(s) ) ));
-named!(upto_sixty <u32>, alt!(below_sixty | map!(tag!("60"), |_| 60)));
+                                    ( buf_to_u32(f.0)*10 + buf_to_u32(s.0) ) ));
+named!(upto_sixty <CompleteByteSlice,u32>, alt!(below_sixty | map!(tag!("60"), |_| 60)));
 
-fn into_fraction_string(digits: &[u8]) -> Result<f32, ::std::num::ParseFloatError> {
+fn into_fraction_string(digits: CompleteByteSlice) -> Result<f32, ::std::num::ParseFloatError> {
     let mut s = String::from("0.");
-    s += str::from_utf8(digits).unwrap();
+    s += str::from_utf8(digits.0).unwrap();
     FromStr::from_str(&s)
 }
 
 
-named!(minute <u32>, call!(below_sixty));
-named!(second <u32>, call!(upto_sixty));
-named!(fractions <f32>, map_res!(digit, into_fraction_string));
+named!(minute <CompleteByteSlice,u32>, call!(below_sixty));
+named!(second <CompleteByteSlice,u32>, call!(upto_sixty));
+named!(fractions <CompleteByteSlice,f32>, map_res!(digit, into_fraction_string));
 
 fn millisecond(fraction: f32) -> u32 {
     (1000.0 * fraction) as u32
 }
 
 // HH:MM:[SS][.(m*)][(Z|+...|-...)]
-named!(pub parse_time <Time>, do_parse!(
+named!(pub parse_time <CompleteByteSlice, Time>, do_parse!(
         h: hour >>
         opt!(tag!(":")) >>
         m: minute >>
@@ -188,13 +190,13 @@ named!(pub parse_time <Time>, do_parse!(
         )
         ));
 
-named!(sign <i32>, alt!(
+named!(sign <CompleteByteSlice,i32>, alt!(
         tag!("-") => { |_| -1 } |
         tag!("+") => { |_| 1 }
         )
     );
 
-named!(timezone_hour <(i32,i32)>, do_parse!(
+named!(timezone_hour <CompleteByteSlice,(i32,i32)>, do_parse!(
         s: sign >>
         h: hour >>
         m: empty_or!(
@@ -203,10 +205,10 @@ named!(timezone_hour <(i32,i32)>, do_parse!(
         ( (s * (h as i32) , s * (m.unwrap_or(0) as i32)) )
         ));
 
-named!(timezone_utc <(i32,i32)>, map!(tag!("Z"), |_| (0,0)));
+named!(timezone_utc <CompleteByteSlice,(i32,i32)>, map!(tag!("Z"), |_| (0,0)));
 
 // Full ISO8601
-named!(pub parse_datetime <DateTime>, do_parse!(
+named!(pub parse_datetime <CompleteByteSlice,DateTime>, do_parse!(
         d: parse_date >>
         tag!("T") >>
         t: parse_time >>
@@ -218,83 +220,86 @@ named!(pub parse_datetime <DateTime>, do_parse!(
         )
         ));
 
+
 #[cfg(test)]
 mod tests{
 
     use super::{year, month, day};
     use super::{hour, minute, second};
 
+    use nom::types::CompleteByteSlice;
+
     #[test]
     fn test_year() {
-        assert_eq!(Ok((&[][..],   2015)), year(b"2015"));
-        assert_eq!(Ok((&[][..],  -0333)), year(b"-0333"));
-        assert_eq!(Ok((&b"-"[..], 2015)), year(b"2015-"));
-        assert!(year(b"abcd").is_err());
-        assert!(year(b"2a03").is_err());
+        assert_eq!(Ok((CompleteByteSlice(&[][..]),   2015)), year(CompleteByteSlice(b"2015")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]),  -0333)), year(CompleteByteSlice(b"-0333")));
+        assert_eq!(Ok((CompleteByteSlice(&b"-"[..]), 2015)), year(CompleteByteSlice(b"2015-")));
+        assert!(year(CompleteByteSlice(b"abcd")).is_err());
+        assert!(year(CompleteByteSlice(b"2a03")).is_err());
     }
 
     #[test]
     fn test_month() {
-        assert_eq!(Ok((&[][..], 1)),    month(b"01"));
-        assert_eq!(Ok((&[][..], 6)),    month(b"06"));
-        assert_eq!(Ok((&[][..], 12)),   month(b"12"));
-        assert_eq!(Ok((&b"-"[..], 12)), month(b"12-"));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 1)),    month(CompleteByteSlice(b"01")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 6)),    month(CompleteByteSlice(b"06")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 12)),   month(CompleteByteSlice(b"12")));
+        assert_eq!(Ok((CompleteByteSlice(&b"-"[..]), 12)), month(CompleteByteSlice(b"12-")));
 
-        assert!(month(b"13").is_err());
-        assert!(month(b"00").is_err());
+        assert!(month(CompleteByteSlice(b"13")).is_err());
+        assert!(month(CompleteByteSlice(b"00")).is_err());
     }
 
     #[test]
     fn test_day() {
-        assert_eq!(Ok((&[][..], 1)),    day(b"01"));
-        assert_eq!(Ok((&[][..], 12)),   day(b"12"));
-        assert_eq!(Ok((&[][..], 20)),   day(b"20"));
-        assert_eq!(Ok((&[][..], 28)),   day(b"28"));
-        assert_eq!(Ok((&[][..], 30)),   day(b"30"));
-        assert_eq!(Ok((&[][..], 31)),   day(b"31"));
-        assert_eq!(Ok((&b"-"[..], 31)), day(b"31-"));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 1)),    day(CompleteByteSlice(b"01")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 12)),   day(CompleteByteSlice(b"12")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 20)),   day(CompleteByteSlice(b"20")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 28)),   day(CompleteByteSlice(b"28")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 30)),   day(CompleteByteSlice(b"30")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 31)),   day(CompleteByteSlice(b"31")));
+        assert_eq!(Ok((CompleteByteSlice(&b"-"[..]), 31)), day(CompleteByteSlice(b"31-")));
 
-        assert!(day(b"00").is_err());
-        assert!(day(b"32").is_err());
+        assert!(day(CompleteByteSlice(b"00")).is_err());
+        assert!(day(CompleteByteSlice(b"32")).is_err());
     }
 
     #[test]
     fn test_hour() {
-        assert_eq!(Ok((&[][..], 0)),  hour(b"00"));
-        assert_eq!(Ok((&[][..], 1)),  hour(b"01"));
-        assert_eq!(Ok((&[][..], 6)),  hour(b"06"));
-        assert_eq!(Ok((&[][..], 12)), hour(b"12"));
-        assert_eq!(Ok((&[][..], 13)), hour(b"13"));
-        assert_eq!(Ok((&[][..], 20)), hour(b"20"));
-        assert_eq!(Ok((&[][..], 24)), hour(b"24"));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 0)),  hour(CompleteByteSlice(b"00")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 1)),  hour(CompleteByteSlice(b"01")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 6)),  hour(CompleteByteSlice(b"06")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 12)), hour(CompleteByteSlice(b"12")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 13)), hour(CompleteByteSlice(b"13")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 20)), hour(CompleteByteSlice(b"20")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 24)), hour(CompleteByteSlice(b"24")));
 
-        assert!(hour(b"25").is_err());
-        assert!(hour(b"30").is_err());
-        assert!(hour(b"ab").is_err());
+        assert!(hour(CompleteByteSlice(b"25")).is_err());
+        assert!(hour(CompleteByteSlice(b"30")).is_err());
+        assert!(hour(CompleteByteSlice(b"ab")).is_err());
     }
 
     #[test]
     fn test_minute() {
-        assert_eq!(Ok((&[][..], 0)),  minute(b"00"));
-        assert_eq!(Ok((&[][..], 1)),  minute(b"01"));
-        assert_eq!(Ok((&[][..], 30)), minute(b"30"));
-        assert_eq!(Ok((&[][..], 59)), minute(b"59"));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 0)),  minute(CompleteByteSlice(b"00")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 1)),  minute(CompleteByteSlice(b"01")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 30)), minute(CompleteByteSlice(b"30")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 59)), minute(CompleteByteSlice(b"59")));
 
-        assert!(minute(b"60").is_err());
-        assert!(minute(b"61").is_err());
-        assert!(minute(b"ab").is_err());
+        assert!(minute(CompleteByteSlice(b"60")).is_err());
+        assert!(minute(CompleteByteSlice(b"61")).is_err());
+        assert!(minute(CompleteByteSlice(b"ab")).is_err());
     }
 
     #[test]
     fn test_second() {
-        assert_eq!(Ok((&[][..], 0)),  second(b"00"));
-        assert_eq!(Ok((&[][..], 1)),  second(b"01"));
-        assert_eq!(Ok((&[][..], 30)), second(b"30"));
-        assert_eq!(Ok((&[][..], 59)), second(b"59"));
-        assert_eq!(Ok((&[][..], 60)), second(b"60"));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 0)),  second(CompleteByteSlice(b"00")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 1)),  second(CompleteByteSlice(b"01")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 30)), second(CompleteByteSlice(b"30")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 59)), second(CompleteByteSlice(b"59")));
+        assert_eq!(Ok((CompleteByteSlice(&[][..]), 60)), second(CompleteByteSlice(b"60")));
 
-        assert!(second(b"61").is_err());
-        assert!(second(b"ab").is_err());
+        assert!(second(CompleteByteSlice(b"61")).is_err());
+        assert!(second(CompleteByteSlice(b"ab")).is_err());
     }
 
 }
