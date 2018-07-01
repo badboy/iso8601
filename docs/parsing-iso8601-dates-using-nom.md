@@ -1,5 +1,19 @@
 # omnomnom - Parsing ISO8601 dates using nom
 
+--
+
+Authors:
+
+- Jan-Erik Rediger
+- Chris Couzens
+
+History:
+
+- 2015-07-16: [Original blog article](https://fnordig.de/2015/07/16/omnomnom-parsing-iso8601-dates-using-nom/)
+- 2018-07-01: Imported into crate repository & updated article to work with nom 4.
+
+--
+
 There are thousands of ways to note down a date and time.
 The international date format is standardized as [ISO8601][iso], though it still allows a widespread of different formats.
 
@@ -588,7 +602,7 @@ The current parser is hand-made. It's fast, it's working, but it provides a limi
 I hope to get a proper parser done with nom, that I can build on to provide all necessary methods, while still being super-fast and memory-safe.
 Work [already started][rdb-rs-nom], but I'm far from done for now
 
----
+--
 
 Thanks to [Geoffroy][gcouprie] for the discussions, the help and for reading a draft of this post.
 
