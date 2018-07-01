@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Date","A date, can hold three different formats."]],"fn":[["date","Parses a date string."],["datetime","This parses a datetime string."],["time","Parses a time string."]],"mod":[["parsers","This module is strictly internal."]],"struct":[["DateTime","Compound struct, hold Date and Time"],["Time","A time object"]]});
