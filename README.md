@@ -2,7 +2,6 @@
 
 [![crates.io](http://meritbadge.herokuapp.com/iso8601)](https://crates.io/crates/iso8601)
 [![Build Status](https://travis-ci.org/badboy/iso8601.svg?branch=master)](https://travis-ci.org/badboy/iso8601)
-[![Clippy Linting Result](https://clippy.bashy.io/github/badboy/iso8601/master/badge.svg)](https://clippy.bashy.io/github/badboy/iso8601/master/log)
 
 [iso]: https://en.wikipedia.org/wiki/ISO_8601
 [nom]: https://github.com/Geal/nom
@@ -40,4 +39,4 @@ It's also safe for kittens now.
 
 MIT Licensed. See [LICENSE]()
 
-[docs]: http://badboy.github.io/iso8601/iso8601/
+[docs]: https://docs.rs/iso8601/
