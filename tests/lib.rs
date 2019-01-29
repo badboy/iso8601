@@ -9,6 +9,7 @@ use nom::types::CompleteByteSlice;
 
 // alias the type for readability
 type Input<'a> = CompleteByteSlice<'a>;
+#[allow(non_snake_case)]
 pub fn Input<'a>(input:&'a[u8]) -> Input<'a> {
   CompleteByteSlice(input)
 }
@@ -158,9 +159,9 @@ fn test_time_with_timezone() {
     assert_eq!(Ok((Input(&[][..]), Time { hour: 16, minute: 43, second: 16, millisecond: 0, tz_offset_hours: 5, tz_offset_minutes: 0, })), parse_time(Input(b"16:43:16+05:00")));
     assert_eq!(Ok((Input(&b"+"[..]), Time { hour: 16, minute: 43, second: 16, millisecond: 0, tz_offset_hours: 0, tz_offset_minutes: 0, })), parse_time(Input(b"16:43:16+")));
     assert_eq!(Ok((Input(&b"+0"[..]), Time { hour: 16, minute: 43, second: 16, millisecond: 0, tz_offset_hours: 0, tz_offset_minutes: 0, })), parse_time(Input(b"16:43:16+0")));
-    assert_eq!(Ok((Input(&b"+05:"[..]), Time { hour: 16, minute: 43, second: 16, millisecond: 0, tz_offset_hours: 0, tz_offset_minutes: 0, })), parse_time(Input(b"16:43:16+05:")));
+    assert_eq!(Ok((Input(&b":"[..]), Time { hour: 16, minute: 43, second: 16, millisecond: 0, tz_offset_hours: 5, tz_offset_minutes: 0, })), parse_time(Input(b"16:43:16+05:")));
 
-    assert!(parse_time(Input(b"20:")).unwrap_err().is_incomplete());
+    assert!(parse_time(Input(b"20:")).is_err());
     assert!(parse_time(Input(b"20p42p16")).is_err());
     assert!(parse_time(Input(b"pppp")).is_err());
 }
