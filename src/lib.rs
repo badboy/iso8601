@@ -12,9 +12,6 @@
 //! let datetime = iso8601::datetime("2015-06-26T16:43:23+0200").unwrap();
 //! ```
 
-#![cfg_attr(feature = "clippy", feature(plugin))]
-#![cfg_attr(feature = "clippy", plugin(clippy))]
-
 #[macro_use]
 extern crate nom;
 
