@@ -14,6 +14,9 @@ use nom::types::CompleteByteSlice;
 use super::{Time, DateTime, Date};
 use std::str::{self, FromStr};
 
+#[cfg(test)]
+mod tests;
+
 macro_rules! empty_or(
     ($i:expr, $submac:ident!( $($args:tt)* )) => ({
         use nom::InputLength;
@@ -219,87 +222,3 @@ named!(pub parse_datetime <CompleteByteSlice,DateTime>, do_parse!(
             }
         )
         ));
-
-
-#[cfg(test)]
-mod tests{
-
-    use super::{year, month, day};
-    use super::{hour, minute, second};
-
-    use nom::types::CompleteByteSlice;
-
-    #[test]
-    fn test_year() {
-        assert_eq!(Ok((CompleteByteSlice(&[][..]),   2015)), year(CompleteByteSlice(b"2015")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]),  -0333)), year(CompleteByteSlice(b"-0333")));
-        assert_eq!(Ok((CompleteByteSlice(&b"-"[..]), 2015)), year(CompleteByteSlice(b"2015-")));
-        assert!(year(CompleteByteSlice(b"abcd")).is_err());
-        assert!(year(CompleteByteSlice(b"2a03")).is_err());
-    }
-
-    #[test]
-    fn test_month() {
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 1)),    month(CompleteByteSlice(b"01")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 6)),    month(CompleteByteSlice(b"06")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 12)),   month(CompleteByteSlice(b"12")));
-        assert_eq!(Ok((CompleteByteSlice(&b"-"[..]), 12)), month(CompleteByteSlice(b"12-")));
-
-        assert!(month(CompleteByteSlice(b"13")).is_err());
-        assert!(month(CompleteByteSlice(b"00")).is_err());
-    }
-
-    #[test]
-    fn test_day() {
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 1)),    day(CompleteByteSlice(b"01")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 12)),   day(CompleteByteSlice(b"12")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 20)),   day(CompleteByteSlice(b"20")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 28)),   day(CompleteByteSlice(b"28")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 30)),   day(CompleteByteSlice(b"30")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 31)),   day(CompleteByteSlice(b"31")));
-        assert_eq!(Ok((CompleteByteSlice(&b"-"[..]), 31)), day(CompleteByteSlice(b"31-")));
-
-        assert!(day(CompleteByteSlice(b"00")).is_err());
-        assert!(day(CompleteByteSlice(b"32")).is_err());
-    }
-
-    #[test]
-    fn test_hour() {
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 0)),  hour(CompleteByteSlice(b"00")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 1)),  hour(CompleteByteSlice(b"01")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 6)),  hour(CompleteByteSlice(b"06")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 12)), hour(CompleteByteSlice(b"12")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 13)), hour(CompleteByteSlice(b"13")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 20)), hour(CompleteByteSlice(b"20")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 24)), hour(CompleteByteSlice(b"24")));
-
-        assert!(hour(CompleteByteSlice(b"25")).is_err());
-        assert!(hour(CompleteByteSlice(b"30")).is_err());
-        assert!(hour(CompleteByteSlice(b"ab")).is_err());
-    }
-
-    #[test]
-    fn test_minute() {
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 0)),  minute(CompleteByteSlice(b"00")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 1)),  minute(CompleteByteSlice(b"01")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 30)), minute(CompleteByteSlice(b"30")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 59)), minute(CompleteByteSlice(b"59")));
-
-        assert!(minute(CompleteByteSlice(b"60")).is_err());
-        assert!(minute(CompleteByteSlice(b"61")).is_err());
-        assert!(minute(CompleteByteSlice(b"ab")).is_err());
-    }
-
-    #[test]
-    fn test_second() {
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 0)),  second(CompleteByteSlice(b"00")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 1)),  second(CompleteByteSlice(b"01")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 30)), second(CompleteByteSlice(b"30")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 59)), second(CompleteByteSlice(b"59")));
-        assert_eq!(Ok((CompleteByteSlice(&[][..]), 60)), second(CompleteByteSlice(b"60")));
-
-        assert!(second(CompleteByteSlice(b"61")).is_err());
-        assert!(second(CompleteByteSlice(b"ab")).is_err());
-    }
-
-}
