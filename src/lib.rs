@@ -20,33 +20,22 @@ use std::str::FromStr;
 
 #[macro_use]
 mod helper;
-mod parsers;
 mod display;
+mod parsers;
 
 /// A date, can hold three different formats.
-#[derive(Eq,PartialEq,Debug,Copy,Clone)]
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum Date {
     /// consists of year, month and day of month
-    YMD {
-        year: i32,
-        month: u32,
-        day: u32,
-    },
+    YMD { year: i32, month: u32, day: u32 },
     /// consists of year, week and day of week
-    Week {
-        year: i32,
-        ww: u32,
-        d: u32,
-    },
+    Week { year: i32, ww: u32, d: u32 },
     /// consists of year and day of year
-    Ordinal {
-        year: i32,
-        ddd: u32,
-    },
+    Ordinal { year: i32, ddd: u32 },
 }
 
 /// A time object
-#[derive(Eq,PartialEq,Debug,Copy,Clone,Default)]
+#[derive(Eq, PartialEq, Debug, Copy, Clone, Default)]
 pub struct Time {
     /// a 24th of a day
     pub hour: u32,
@@ -64,7 +53,7 @@ pub struct Time {
 /// Compound struct, hold Date and Time
 ///
 /// duh!
-#[derive(Eq,PartialEq,Debug,Copy,Clone,Default)]
+#[derive(Eq, PartialEq, Debug, Copy, Clone, Default)]
 pub struct DateTime {
     pub date: Date,
     pub time: Time,
@@ -81,7 +70,11 @@ impl Time {
 
 impl Default for Date {
     fn default() -> Date {
-        Date::YMD { year: 0, month: 0, day: 0 }
+        Date::YMD {
+            year: 0,
+            month: 0,
+            day: 0,
+        }
     }
 }
 
@@ -130,7 +123,6 @@ pub fn date(string: &str) -> Result<Date, String> {
     }
 }
 
-
 /// Parses a time string.
 ///
 /// A string can have one of the following formats:
@@ -153,7 +145,6 @@ pub fn time(string: &str) -> Result<Time, String> {
     }
 }
 
-
 /// This parses a datetime string.
 ///
 /// A datetime string is a combination of the valid formats for the date and time.
@@ -166,7 +157,9 @@ pub fn time(string: &str) -> Result<Time, String> {
 /// let dt = iso8601::datetime("2015-11-03T21:56").unwrap();
 /// ```
 pub fn datetime(string: &str) -> Result<DateTime, String> {
-    if let Ok((_left_overs, parsed)) = parsers::parse_datetime(nom::types::CompleteByteSlice(string.as_bytes())) {
+    if let Ok((_left_overs, parsed)) =
+        parsers::parse_datetime(nom::types::CompleteByteSlice(string.as_bytes()))
+    {
         Ok(parsed)
     } else {
         Err(format!("Parser Error: {}", string))

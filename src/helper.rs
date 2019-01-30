@@ -1,4 +1,4 @@
-use std::str::{FromStr, from_utf8_unchecked};
+use std::str::{from_utf8_unchecked, FromStr};
 
 pub fn to_string(s: &[u8]) -> &str {
     unsafe { from_utf8_unchecked(s) }

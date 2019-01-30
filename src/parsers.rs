@@ -8,10 +8,10 @@
 //!
 //! **These functions may be made private later.**
 
+use super::{Date, DateTime, Time};
 use helper::*;
-use nom::{self, is_digit, digit};
 use nom::types::CompleteByteSlice;
-use super::{Time, DateTime, Date};
+use nom::{self, digit, is_digit};
 use std::str::{self, FromStr};
 
 #[cfg(test)]
@@ -84,7 +84,6 @@ named!(year <CompleteByteSlice, i32>, do_parse!(
 named!(lower_month <CompleteByteSlice,u32>, do_parse!(tag!("0") >> s:char_between!('1', '9') >> (buf_to_u32(s.0))));
 named!(upper_month <CompleteByteSlice,u32>, do_parse!(tag!("1") >> s:char_between!('0', '2') >> (10+buf_to_u32(s.0))));
 named!(month <CompleteByteSlice,u32>, alt!(lower_month | upper_month));
-
 
 // DD
 named!(day_zero  <CompleteByteSlice,u32>, do_parse!(tag!("0") >> s:char_between!('1', '9') >> (buf_to_u32(s.0))));
@@ -163,7 +162,6 @@ fn into_fraction_string(digits: CompleteByteSlice) -> Result<f32, ::std::num::Pa
     s += str::from_utf8(digits.0).unwrap();
     FromStr::from_str(&s)
 }
-
 
 named!(minute <CompleteByteSlice,u32>, call!(below_sixty));
 named!(second <CompleteByteSlice,u32>, call!(upto_sixty));

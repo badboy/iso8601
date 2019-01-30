@@ -8,6 +8,8 @@ rust:
 
 script:
   - cargo test --all
+  - rustup component add rustfmt
+  - cargo fmt --all -- --check
   - cargo build --release
 
 notifications:
