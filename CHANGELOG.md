@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.0] (https://github.com/badboy/iso8601/compare/0.2.0...Unreleased) - ReleaseDate
+## [0.3.0] (https://github.com/badboy/iso8601/compare/0.2.0...0.3.0) - 2019-01-31
 
 * Add `Display` implementations for exported structures
 * Implemented `FromStr` for `Date`, `Time` and `DateTime`
