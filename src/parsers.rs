@@ -11,17 +11,17 @@
 use std::str::{self, FromStr};
 
 use nom::{
-    IResult,
-    bytes::complete::{tag, take_while, take_while_m_n},
-    character::is_digit,
     branch::alt,
-    combinator::{opt, map},
-    sequence::preceded,
+    bytes::complete::{tag, take_while, take_while_m_n},
     character::complete::one_of,
+    character::is_digit,
+    combinator::{map, opt},
+    sequence::preceded,
+    IResult,
 };
 
-use crate::{Date, DateTime, Time};
 use crate::helper::*;
+use crate::{Date, DateTime, Time};
 
 #[cfg(test)]
 mod tests;
@@ -43,7 +43,9 @@ fn year(i: &[u8]) -> IResult<&[u8], i32> {
     };
     let (i, year) = take_n_digits(i, 4)?;
     let mut year = year as i32;
-    if !is_pos { year = -year }
+    if !is_pos {
+        year = -year
+    }
 
     Ok((i, year))
 }
@@ -109,7 +111,14 @@ fn ymd_date(i: &[u8]) -> IResult<&[u8], Date> {
     let (i, m) = month(i)?;
     let (i, _) = opt(tag(b"-"))(i)?;
     let (i, d) = day(i)?;
-    Ok((i, Date::YMD { year: y, month: m, day: d }))
+    Ok((
+        i,
+        Date::YMD {
+            year: y,
+            month: m,
+            day: d,
+        },
+    ))
 }
 
 // YYYY-DDD
@@ -128,15 +137,18 @@ fn iso_week_date(i: &[u8]) -> IResult<&[u8], Date> {
     let (i, w) = week(i)?;
     let (i, _) = opt(tag(b"-"))(i)?;
     let (i, d) = week_day(i)?;
-    Ok((i, Date::Week { year: y, ww: w, d: d }))
+    Ok((
+        i,
+        Date::Week {
+            year: y,
+            ww: w,
+            d: d,
+        },
+    ))
 }
 
 pub fn parse_date(i: &[u8]) -> IResult<&[u8], Date> {
-    alt((
-            ymd_date,
-            iso_week_date,
-            ordinal_date
-    ))(i)
+    alt((ymd_date, iso_week_date, ordinal_date))(i)
 }
 
 // TIME
@@ -202,25 +214,24 @@ pub fn parse_time(i: &[u8]) -> IResult<&[u8], Time> {
         Err(e) => return Err(e),
     };
 
-    Ok((i, Time {
-        hour: h,
-        minute: m,
-        second: s.unwrap_or(0),
-        millisecond: ms.unwrap_or(0),
-        tz_offset_hours: z.unwrap_or((0, 0)).0,
-        tz_offset_minutes: z.unwrap_or((0, 0)).1,
-    }))
+    Ok((
+        i,
+        Time {
+            hour: h,
+            minute: m,
+            second: s.unwrap_or(0),
+            millisecond: ms.unwrap_or(0),
+            tz_offset_hours: z.unwrap_or((0, 0)).0,
+            tz_offset_minutes: z.unwrap_or((0, 0)).1,
+        },
+    ))
 }
 
 fn sign(i: &[u8]) -> IResult<&[u8], i32> {
-    map(
-        alt((tag(b"-"), tag(b"+"))),
-        |s: &[u8]| {
-            match s {
-                b"-" => -1,
-                _ => 1
-            }
-        })(i)
+    map(alt((tag(b"-"), tag(b"+"))), |s: &[u8]| match s {
+        b"-" => -1,
+        _ => 1,
+    })(i)
 }
 
 fn timezone_hour(i: &[u8]) -> IResult<&[u8], (i32, i32)> {
@@ -233,11 +244,7 @@ fn timezone_hour(i: &[u8]) -> IResult<&[u8], (i32, i32)> {
         minute(i)?
     };
 
-    Ok((i,
-        ( (s * (h as i32) ,
-           s * (m as i32))
-        )
-    ))
+    Ok((i, ((s * (h as i32), s * (m as i32)))))
 }
 
 fn timezone_utc(i: &[u8]) -> IResult<&[u8], (i32, i32)> {

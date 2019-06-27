@@ -15,8 +15,8 @@
 use std::default::Default;
 use std::str::FromStr;
 
-mod helper;
 mod display;
+mod helper;
 mod parsers;
 
 /// A date, can hold three different formats.
@@ -153,9 +153,7 @@ pub fn time(string: &str) -> Result<Time, String> {
 /// let dt = iso8601::datetime("2015-11-03T21:56").unwrap();
 /// ```
 pub fn datetime(string: &str) -> Result<DateTime, String> {
-    if let Ok((_left_overs, parsed)) =
-        parsers::parse_datetime(string.as_bytes())
-    {
+    if let Ok((_left_overs, parsed)) = parsers::parse_datetime(string.as_bytes()) {
         Ok(parsed)
     } else {
         Err(format!("Parser Error: {}", string))

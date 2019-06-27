@@ -560,13 +560,7 @@ fn test_ordinal_date() {
         }),
         date("2015-366")
     );
-    assert_eq!(
-        Ok(Date::Ordinal {
-            year: 2015,
-            ddd: 1,
-        }),
-        date("2015-001")
-    );
+    assert_eq!(Ok(Date::Ordinal { year: 2015, ddd: 1 }), date("2015-001"));
 
     // not valid here either
     assert!(date("2015-400").is_err());
