@@ -12,8 +12,6 @@
 //! let datetime = iso8601::datetime("2015-06-26T16:43:23+0200").unwrap();
 //! ```
 
-extern crate nom;
-
 use std::default::Default;
 use std::str::FromStr;
 

@@ -1,6 +1,3 @@
-extern crate iso8601;
-extern crate nom;
-
 use iso8601::*;
 
 #[test]

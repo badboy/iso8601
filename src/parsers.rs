@@ -8,8 +8,8 @@
 //!
 //! **These functions may be made private later.**
 
-use super::{Date, DateTime, Time};
-use helper::*;
+use std::str::{self, FromStr};
+
 use nom::{
     IResult,
     bytes::complete::{tag, take_while, take_while_m_n},
@@ -19,7 +19,9 @@ use nom::{
     sequence::preceded,
     character::complete::one_of,
 };
-use std::str::{self, FromStr};
+
+use crate::{Date, DateTime, Time};
+use crate::helper::*;
 
 #[cfg(test)]
 mod tests;
