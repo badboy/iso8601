@@ -45,9 +45,7 @@ pub struct Time {
     pub tz_offset_minutes: i32,
 }
 
-/// Compound struct, hold Date and Time
-///
-/// duh!
+/// Compound struct, holds Date and Time
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Default)]
 pub struct DateTime {
     pub date: Date,
@@ -140,9 +138,9 @@ pub fn time(string: &str) -> Result<Time, String> {
     }
 }
 
-/// This parses a datetime string.
+/// Parses a datetime string.
 ///
-/// A datetime string is a combination of the valid formats for the date and time.
+/// A datetime string is a combination of the valid formats for the date and time,
 /// separated by a literal `T`.
 /// See the respective functions for the correct format.
 ///
