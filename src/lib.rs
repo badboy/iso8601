@@ -16,7 +16,6 @@ use std::default::Default;
 use std::str::FromStr;
 
 mod display;
-mod helper;
 mod parsers;
 
 /// A date, can hold three different formats.

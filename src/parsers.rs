@@ -20,7 +20,6 @@ use nom::{
     IResult,
 };
 
-use crate::helper::*;
 use crate::{Date, DateTime, Time};
 
 #[cfg(test)]
@@ -28,7 +27,12 @@ mod tests;
 
 fn take_n_digits(i: &[u8], n: usize) -> IResult<&[u8], u32> {
     let (i, digits) = take_while_m_n(n, n, is_digit)(i)?;
-    Ok((i, buf_to_u32(digits)))
+
+    let s = str::from_utf8(digits).expect("Invalid data, expected UTF-8 string");
+    let res = s
+        .parse()
+        .expect("Invalid string, expected ASCII reprensation of a number");
+    Ok((i, res))
 }
 
 // year
