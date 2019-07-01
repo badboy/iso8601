@@ -8,7 +8,7 @@
 //!
 //! **These functions may be made private later.**
 
-use std::str::{self, FromStr};
+use std::str;
 
 use nom::{
     branch::alt,
@@ -189,14 +189,10 @@ fn second(i: &[u8]) -> IResult<&[u8], u32> {
     }
 }
 
-fn into_fraction_string(digits: &[u8]) -> Result<f32, ::std::num::ParseFloatError> {
-    let mut s = String::from("0.");
-    s += str::from_utf8(digits).unwrap();
-    FromStr::from_str(&s)
-}
 fn fractions(i: &[u8]) -> IResult<&[u8], f32> {
-    let (i, f) = take_while(is_digit)(i)?;
-    let f = into_fraction_string(f).unwrap();
+    let (i, digits) = take_while(is_digit)(i)?;
+    let digits = str::from_utf8(digits).unwrap(); // This can't panic, `digits` will only include digits.
+    let f = format!("0.{}", digits).parse().unwrap(); // This can't panic, the string is a valid `f32`.
 
     Ok((i, f))
 }
