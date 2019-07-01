@@ -52,58 +52,42 @@ fn year(i: &[u8]) -> IResult<&[u8], i32> {
     Ok((i, year))
 }
 
-// MM
-fn month(i: &[u8]) -> IResult<&[u8], u32> {
-    let (new_i, m) = take_n_digits(i, 2)?;
+fn n_digit_in_range(
+    i: &[u8],
+    n: usize,
+    range: impl std::ops::RangeBounds<u32>,
+) -> IResult<&[u8], u32> {
+    let (new_i, number) = take_n_digits(i, n)?;
 
-    if m >= 1 && m <= 12 {
-        Ok((new_i, m))
+    if range.contains(&number) {
+        Ok((new_i, number))
     } else {
         Err(nom::Err::Error((i, nom::error::ErrorKind::Eof)))
     }
+}
+
+// MM
+fn month(i: &[u8]) -> IResult<&[u8], u32> {
+    n_digit_in_range(i, 2, 1..=12)
 }
 
 // DD
 fn day(i: &[u8]) -> IResult<&[u8], u32> {
-    let (new_i, d) = take_n_digits(i, 2)?;
-
-    if d >= 1 && d <= 31 {
-        Ok((new_i, d))
-    } else {
-        Err(nom::Err::Error((i, nom::error::ErrorKind::Eof)))
-    }
+    n_digit_in_range(i, 2, 1..=31)
 }
 
 // WW
 fn week(i: &[u8]) -> IResult<&[u8], u32> {
-    let (new_i, w) = take_n_digits(i, 2)?;
-
-    if w >= 1 && w <= 52 {
-        Ok((new_i, w))
-    } else {
-        Err(nom::Err::Error((i, nom::error::ErrorKind::Eof)))
-    }
+    n_digit_in_range(i, 2, 1..=52)
 }
 
 fn week_day(i: &[u8]) -> IResult<&[u8], u32> {
-    let (new_i, d) = take_n_digits(i, 1)?;
-
-    if d >= 1 && d <= 7 {
-        Ok((new_i, d))
-    } else {
-        Err(nom::Err::Error((i, nom::error::ErrorKind::Eof)))
-    }
+    n_digit_in_range(i, 1, 1..=7)
 }
 
 // ordinal DDD
 fn ord_day(i: &[u8]) -> IResult<&[u8], u32> {
-    let (new_i, d) = take_n_digits(i, 3)?;
-
-    if d >= 1 && d <= 366 {
-        Ok((new_i, d))
-    } else {
-        Err(nom::Err::Error((i, nom::error::ErrorKind::Eof)))
-    }
+    n_digit_in_range(i, 3, 1..=366)
 }
 
 // YYYY-MM-DD
@@ -157,34 +141,16 @@ pub fn parse_date(i: &[u8]) -> IResult<&[u8], Date> {
 
 // HH
 fn hour(i: &[u8]) -> IResult<&[u8], u32> {
-    let (i, m) = take_n_digits(i, 2)?;
-
-    if m <= 24 {
-        Ok((i, m))
-    } else {
-        Err(nom::Err::Error((i, nom::error::ErrorKind::Eof)))
-    }
+    n_digit_in_range(i, 2, 0..=24)
 }
 
 // MM
 fn minute(i: &[u8]) -> IResult<&[u8], u32> {
-    let (i, m) = take_n_digits(i, 2)?;
-
-    if m <= 59 {
-        Ok((i, m))
-    } else {
-        Err(nom::Err::Error((i, nom::error::ErrorKind::Eof)))
-    }
+    n_digit_in_range(i, 2, 0..=59)
 }
 
 fn second(i: &[u8]) -> IResult<&[u8], u32> {
-    let (i, m) = take_n_digits(i, 2)?;
-
-    if m <= 60 {
-        Ok((i, m))
-    } else {
-        Err(nom::Err::Error((i, nom::error::ErrorKind::Eof)))
-    }
+    n_digit_in_range(i, 2, 0..=60)
 }
 
 fn fractions(i: &[u8]) -> IResult<&[u8], f32> {
