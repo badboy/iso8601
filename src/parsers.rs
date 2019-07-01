@@ -35,21 +35,19 @@ fn take_n_digits(i: &[u8], n: usize) -> IResult<&[u8], u32> {
     Ok((i, res))
 }
 
-// year
-fn year_prefix(i: &[u8]) -> IResult<&[u8], &[u8]> {
-    alt((tag(b"+"), tag(b"-")))(i)
+fn sign(i: &[u8]) -> IResult<&[u8], i32> {
+    map(alt((tag(b"-"), tag(b"+"))), |s: &[u8]| match s {
+        b"-" => -1,
+        _ => 1,
+    })(i)
 }
+
+// [+/-] year
 fn year(i: &[u8]) -> IResult<&[u8], i32> {
-    let (i, is_pos) = match opt(year_prefix)(i) {
-        Ok((i, Some(b))) if b == b"-" => (i, false),
-        Ok((i, _)) => (i, true),
-        Err(e) => return Err(e),
-    };
+    // The sign is optional, but defaults to `+`
+    let (i, s) = sign(i).unwrap_or((i, 1));
     let (i, year) = take_n_digits(i, 4)?;
-    let mut year = year as i32;
-    if !is_pos {
-        year = -year
-    }
+    let year = s * year as i32;
 
     Ok((i, year))
 }
@@ -225,13 +223,6 @@ pub fn parse_time(i: &[u8]) -> IResult<&[u8], Time> {
             tz_offset_minutes: z.unwrap_or((0, 0)).1,
         },
     ))
-}
-
-fn sign(i: &[u8]) -> IResult<&[u8], i32> {
-    map(alt((tag(b"-"), tag(b"+"))), |s: &[u8]| match s {
-        b"-" => -1,
-        _ => 1,
-    })(i)
 }
 
 fn timezone_hour(i: &[u8]) -> IResult<&[u8], (i32, i32)> {
