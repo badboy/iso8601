@@ -178,6 +178,8 @@ pub fn parse_time(i: &[u8]) -> IResult<&[u8], Time> {
         Err(e) => return Err(e),
     };
 
+    let (tz_offset_hours, tz_offset_minutes) = z.unwrap_or((0, 0));
+
     Ok((
         i,
         Time {
@@ -185,8 +187,8 @@ pub fn parse_time(i: &[u8]) -> IResult<&[u8], Time> {
             minute: m,
             second: s.unwrap_or(0),
             millisecond: ms.unwrap_or(0),
-            tz_offset_hours: z.unwrap_or((0, 0)).0,
-            tz_offset_minutes: z.unwrap_or((0, 0)).1,
+            tz_offset_hours,
+            tz_offset_minutes,
         },
     ))
 }
