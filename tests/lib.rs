@@ -1,6 +1,3 @@
-extern crate iso8601;
-extern crate nom;
-
 use iso8601::*;
 
 #[test]
@@ -549,7 +546,6 @@ fn test_ordinal_date() {
         date("2015-057")
     );
 
-    // not valid, but this should be tested elsewhere
     assert_eq!(
         Ok(Date::Ordinal {
             year: 2015,
@@ -560,17 +556,11 @@ fn test_ordinal_date() {
     assert_eq!(
         Ok(Date::Ordinal {
             year: 2015,
-            ddd: 399,
+            ddd: 366,
         }),
-        date("2015-399")
+        date("2015-366")
     );
-    assert_eq!(
-        Ok(Date::Ordinal {
-            year: 2015,
-            ddd: 000,
-        }),
-        date("2015-000")
-    );
+    assert_eq!(Ok(Date::Ordinal { year: 2015, ddd: 1 }), date("2015-001"));
 
     // not valid here either
     assert!(date("2015-400").is_err());

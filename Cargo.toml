@@ -10,9 +10,10 @@ documentation = "https://docs.rs/iso8601/"
 license = "MIT"
 readme = "README.md"
 
+edition = "2018"
 
 [dependencies]
-nom = "4.0.0"
+nom = "5.0.0"
 
 [features]
 default = []

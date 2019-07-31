@@ -12,14 +12,9 @@
 //! let datetime = iso8601::datetime("2015-06-26T16:43:23+0200").unwrap();
 //! ```
 
-#[macro_use]
-extern crate nom;
-
 use std::default::Default;
 use std::str::FromStr;
 
-#[macro_use]
-mod helper;
 mod display;
 mod parsers;
 
@@ -50,9 +45,7 @@ pub struct Time {
     pub tz_offset_minutes: i32,
 }
 
-/// Compound struct, hold Date and Time
-///
-/// duh!
+/// Compound struct, holds Date and Time
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Default)]
 pub struct DateTime {
     pub date: Date,
@@ -116,7 +109,7 @@ impl FromStr for DateTime {
 /// let date = iso8601::date("2015-11-02").unwrap();
 /// ```
 pub fn date(string: &str) -> Result<Date, String> {
-    if let Ok((_, parsed)) = parsers::parse_date(nom::types::CompleteByteSlice(string.as_bytes())) {
+    if let Ok((_, parsed)) = parsers::parse_date(string.as_bytes()) {
         Ok(parsed)
     } else {
         Err(format!("Parser Error: {}", string))
@@ -138,16 +131,16 @@ pub fn date(string: &str) -> Result<Date, String> {
 /// let time = iso8601::time("21:56:42").unwrap();
 /// ```
 pub fn time(string: &str) -> Result<Time, String> {
-    if let Ok((_, parsed)) = parsers::parse_time(nom::types::CompleteByteSlice(string.as_bytes())) {
+    if let Ok((_, parsed)) = parsers::parse_time(string.as_bytes()) {
         Ok(parsed)
     } else {
         Err(format!("Parser Error: {}", string))
     }
 }
 
-/// This parses a datetime string.
+/// Parses a datetime string.
 ///
-/// A datetime string is a combination of the valid formats for the date and time.
+/// A datetime string is a combination of the valid formats for the date and time,
 /// separated by a literal `T`.
 /// See the respective functions for the correct format.
 ///
@@ -157,9 +150,7 @@ pub fn time(string: &str) -> Result<Time, String> {
 /// let dt = iso8601::datetime("2015-11-03T21:56").unwrap();
 /// ```
 pub fn datetime(string: &str) -> Result<DateTime, String> {
-    if let Ok((_left_overs, parsed)) =
-        parsers::parse_datetime(nom::types::CompleteByteSlice(string.as_bytes()))
-    {
+    if let Ok((_left_overs, parsed)) = parsers::parse_datetime(string.as_bytes()) {
         Ok(parsed)
     } else {
         Err(format!("Parser Error: {}", string))

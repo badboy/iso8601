@@ -8,215 +8,213 @@
 //!
 //! **These functions may be made private later.**
 
-use super::{Date, DateTime, Time};
-use helper::*;
-use nom::types::CompleteByteSlice;
-use nom::{self, digit, is_digit};
-use std::str::{self, FromStr};
+use std::str;
+
+use nom::{
+    branch::alt,
+    bytes::complete::{tag, take_while, take_while_m_n},
+    character::complete::one_of,
+    character::is_digit,
+    combinator::{map, opt},
+    sequence::preceded,
+    IResult,
+};
+
+use crate::{Date, DateTime, Time};
 
 #[cfg(test)]
 mod tests;
 
-macro_rules! empty_or(
-    ($i:expr, $submac:ident!( $($args:tt)* )) => ({
-        use nom::InputLength;
-        if $i.input_len() == 0 {
-            Ok(($i, None))
-        } else {
-            match $submac!($i, $($args)*) {
-                Ok((i,o))     => Ok((i, Some(o))),
-                Err(nom::Err::Error(_))      => Ok(($i, None)),
-                Err(nom::Err::Failure(_))    => Ok(($i, None)),
-                Err(nom::Err::Incomplete(i)) => Err(nom::Err::Incomplete(i))
+fn take_n_digits(i: &[u8], n: usize) -> IResult<&[u8], u32> {
+    let (i, digits) = take_while_m_n(n, n, is_digit)(i)?;
 
-            }
-        }
-    });
-);
+    let s = str::from_utf8(digits).expect("Invalid data, expected UTF-8 string");
+    let res = s
+        .parse()
+        .expect("Invalid string, expected ASCII reprensation of a number");
+    Ok((i, res))
+}
 
-macro_rules! check(
-  ($input:expr, $submac:ident!( $($args:tt)* )) => (
+fn sign(i: &[u8]) -> IResult<&[u8], i32> {
+    map(alt((tag(b"-"), tag(b"+"))), |s: &[u8]| match s {
+        b"-" => -1,
+        _ => 1,
+    })(i)
+}
 
-    {
-      let mut failed = false;
-      for &idx in $input.0 {
-        if !$submac!(idx, $($args)*) {
-            failed = true;
-            break;
-        }
-      }
-      if failed {
-        Err(nom::Err::Error(error_position!($input, nom::ErrorKind::Custom(20u32))))
-      } else {
-        Ok((CompleteByteSlice(&b""[..]), $input))
-      }
+// [+/-] year
+fn year(i: &[u8]) -> IResult<&[u8], i32> {
+    // The sign is optional, but defaults to `+`
+    let (i, s) = sign(i).unwrap_or((i, 1));
+    let (i, year) = take_n_digits(i, 4)?;
+    let year = s * year as i32;
+
+    Ok((i, year))
+}
+
+fn n_digit_in_range(
+    i: &[u8],
+    n: usize,
+    range: impl std::ops::RangeBounds<u32>,
+) -> IResult<&[u8], u32> {
+    let (new_i, number) = take_n_digits(i, n)?;
+
+    if range.contains(&number) {
+        Ok((new_i, number))
+    } else {
+        Err(nom::Err::Error((i, nom::error::ErrorKind::Eof)))
     }
-  );
-  ($input:expr, $f:expr) => (
-    check!($input, call!($f));
-  );
-);
-
-macro_rules! char_between(
-    ($input:expr, $min:expr, $max:expr) => (
-        {
-        fn f(c: u8) -> bool { c >= ($min as u8) && c <= ($max as u8)}
-        flat_map!($input, take!(1), check!(f))
-        }
-    );
-);
-
-named!(take_4_digits<CompleteByteSlice,CompleteByteSlice>, flat_map!(take!(4), check!(is_digit)));
-
-// year
-named!(year_prefix<CompleteByteSlice, CompleteByteSlice>, alt!(tag!("+") | tag!("-")));
-named!(year <CompleteByteSlice, i32>, do_parse!(
-        pref: opt!(year_prefix) >>
-        year: call!(take_4_digits) >>
-        (
-            match pref {
-                Some(CompleteByteSlice(b"-")) => -buf_to_i32(year.0),
-                _ => buf_to_i32(year.0)
-            }
-        )));
+}
 
 // MM
-named!(lower_month <CompleteByteSlice,u32>, do_parse!(tag!("0") >> s:char_between!('1', '9') >> (buf_to_u32(s.0))));
-named!(upper_month <CompleteByteSlice,u32>, do_parse!(tag!("1") >> s:char_between!('0', '2') >> (10+buf_to_u32(s.0))));
-named!(month <CompleteByteSlice,u32>, alt!(lower_month | upper_month));
+fn month(i: &[u8]) -> IResult<&[u8], u32> {
+    n_digit_in_range(i, 2, 1..=12)
+}
 
 // DD
-named!(day_zero  <CompleteByteSlice,u32>, do_parse!(tag!("0") >> s:char_between!('1', '9') >> (buf_to_u32(s.0))));
-named!(day_one   <CompleteByteSlice,u32>, do_parse!(tag!("1") >> s:char_between!('0', '9') >> (10+buf_to_u32(s.0))));
-named!(day_two   <CompleteByteSlice,u32>, do_parse!(tag!("2") >> s:char_between!('0', '9') >> (20+buf_to_u32(s.0))));
-named!(day_three <CompleteByteSlice,u32>, do_parse!(tag!("3") >> s:char_between!('0', '1') >> (30+buf_to_u32(s.0))));
-named!(day <CompleteByteSlice,u32>, alt!(day_zero | day_one | day_two | day_three));
+fn day(i: &[u8]) -> IResult<&[u8], u32> {
+    n_digit_in_range(i, 2, 1..=31)
+}
 
 // WW
-// reusing day_N parsers, sorry
-named!(week_three <CompleteByteSlice,u32>, do_parse!(tag!("3") >> s:char_between!('0', '9') >> (30+buf_to_u32(s.0))));
-named!(week_four  <CompleteByteSlice,u32>, do_parse!(tag!("4") >> s:char_between!('0', '9') >> (40+buf_to_u32(s.0))));
-named!(week_five  <CompleteByteSlice,u32>, do_parse!(tag!("5") >> s:char_between!('0', '3') >> (50+buf_to_u32(s.0))));
+fn week(i: &[u8]) -> IResult<&[u8], u32> {
+    n_digit_in_range(i, 2, 1..=52)
+}
 
-named!(week <CompleteByteSlice,u32>, alt!(day_zero | day_one | day_two | week_three| week_four | week_five ));
-named!(week_day <CompleteByteSlice,u32>, map!(char_between!('1', '7') , |s| buf_to_u32(s.0)));
+fn week_day(i: &[u8]) -> IResult<&[u8], u32> {
+    n_digit_in_range(i, 1, 1..=7)
+}
 
 // ordinal DDD
-named!(ord_day <CompleteByteSlice,u32>, do_parse!(
-        a:char_between!('0','3') >>
-        b:char_between!('0','9') >>
-        c:char_between!('0','9') >>
-        ( buf_to_u32(a.0)*100 + buf_to_u32(b.0)*10 + buf_to_u32(c.0) )
-        ));
+fn ord_day(i: &[u8]) -> IResult<&[u8], u32> {
+    n_digit_in_range(i, 3, 1..=366)
+}
 
 // YYYY-MM-DD
-named!(pub ymd_date <CompleteByteSlice,Date>, do_parse!(
-        y: year >>
-        opt!(tag!("-")) >>
-        m: month >>
-        opt!(tag!("-")) >>
-        d: day >>
-        ( Date::YMD{ year: y, month: m, day: d } )
-        ));
+fn ymd_date(i: &[u8]) -> IResult<&[u8], Date> {
+    let (i, y) = year(i)?;
+    let (i, _) = opt(tag(b"-"))(i)?;
+    let (i, m) = month(i)?;
+    let (i, _) = opt(tag(b"-"))(i)?;
+    let (i, d) = day(i)?;
+    Ok((
+        i,
+        Date::YMD {
+            year: y,
+            month: m,
+            day: d,
+        },
+    ))
+}
 
-// YYYY-MM-DD
-named!(pub ordinal_date <CompleteByteSlice,Date>, do_parse!(
-        y: year >>
-        opt!(tag!("-")) >>
-        d: ord_day >>
-        ( Date::Ordinal{ year: y, ddd: d } )
-        ));
+// YYYY-DDD
+fn ordinal_date(i: &[u8]) -> IResult<&[u8], Date> {
+    let (i, y) = year(i)?;
+    let (i, _) = opt(tag(b"-"))(i)?;
+    let (i, d) = ord_day(i)?;
+    Ok((i, Date::Ordinal { year: y, ddd: d }))
+}
 
 // YYYY-"W"WW-D
-named!(pub iso_week_date <CompleteByteSlice,Date>, do_parse!(
-        y: year >>
-        opt!(tag!("-")) >>
-        tag!("W") >>
-        w: week >>
-        opt!(tag!("-")) >>
-        d: week_day >>
-        ( Date::Week{ year: y, ww: w, d: d } )
-        ));
+fn iso_week_date(i: &[u8]) -> IResult<&[u8], Date> {
+    let (i, y) = year(i)?;
+    let (i, _) = opt(tag(b"-"))(i)?;
+    let (i, _) = tag(b"W")(i)?;
+    let (i, w) = week(i)?;
+    let (i, _) = opt(tag(b"-"))(i)?;
+    let (i, d) = week_day(i)?;
+    Ok((
+        i,
+        Date::Week {
+            year: y,
+            ww: w,
+            d: d,
+        },
+    ))
+}
 
-named!(pub parse_date <CompleteByteSlice,Date>, alt!( ymd_date | iso_week_date | ordinal_date ) );
+pub fn parse_date(i: &[u8]) -> IResult<&[u8], Date> {
+    alt((ymd_date, iso_week_date, ordinal_date))(i)
+}
 
 // TIME
 
 // HH
-named!(lower_hour <CompleteByteSlice,u32>, do_parse!(f:char_between!('0','1') >>
-                                   s:char_between!('0','9') >>
-                                   ( buf_to_u32(f.0)*10 + buf_to_u32(s.0) )));
-named!(upper_hour <CompleteByteSlice,u32>, do_parse!(tag!("2") >>
-                                   s:char_between!('0','4') >>
-                                   (20+buf_to_u32(s.0))));
-named!(hour <CompleteByteSlice,u32>, alt!(lower_hour | upper_hour));
-
-// MM
-named!(below_sixty <CompleteByteSlice,u32>, do_parse!(f:char_between!('0','5') >>
-                                    s:char_between!('0','9') >>
-                                    ( buf_to_u32(f.0)*10 + buf_to_u32(s.0) ) ));
-named!(upto_sixty <CompleteByteSlice,u32>, alt!(below_sixty | map!(tag!("60"), |_| 60)));
-
-fn into_fraction_string(digits: CompleteByteSlice) -> Result<f32, ::std::num::ParseFloatError> {
-    let mut s = String::from("0.");
-    s += str::from_utf8(digits.0).unwrap();
-    FromStr::from_str(&s)
+fn hour(i: &[u8]) -> IResult<&[u8], u32> {
+    n_digit_in_range(i, 2, 0..=24)
 }
 
-named!(minute <CompleteByteSlice,u32>, call!(below_sixty));
-named!(second <CompleteByteSlice,u32>, call!(upto_sixty));
-named!(fractions <CompleteByteSlice,f32>, map_res!(digit, into_fraction_string));
+// MM
+fn minute(i: &[u8]) -> IResult<&[u8], u32> {
+    n_digit_in_range(i, 2, 0..=59)
+}
+
+fn second(i: &[u8]) -> IResult<&[u8], u32> {
+    n_digit_in_range(i, 2, 0..=60)
+}
+
+fn fractions(i: &[u8]) -> IResult<&[u8], f32> {
+    let (i, digits) = take_while(is_digit)(i)?;
+    let digits = str::from_utf8(digits).unwrap(); // This can't panic, `digits` will only include digits.
+    let f = format!("0.{}", digits).parse().unwrap(); // This can't panic, the string is a valid `f32`.
+
+    Ok((i, f))
+}
 
 fn millisecond(fraction: f32) -> u32 {
     (1000.0 * fraction) as u32
 }
 
 // HH:MM:[SS][.(m*)][(Z|+...|-...)]
-named!(pub parse_time <CompleteByteSlice, Time>, do_parse!(
-        h: hour >>
-        opt!(tag!(":")) >>
-        m: minute >>
-        s:  opt!(preceded!(opt!(tag!(":")), second)) >>
-        ms: opt!( map!(preceded!(one_of!(",."), fractions), millisecond)) >>
-        z:  opt!( alt!( timezone_hour | timezone_utc) ) >>
-        (
-            Time {
-                hour: h,
-                minute: m,
-                second: s.unwrap_or(0),
-                millisecond: ms.unwrap_or(0),
-                tz_offset_hours: z.unwrap_or((0,0)).0,
-                tz_offset_minutes: z.unwrap_or((0,0)).1
-            }
-        )
-        ));
+pub fn parse_time(i: &[u8]) -> IResult<&[u8], Time> {
+    let (i, h) = hour(i)?;
+    let (i, _) = opt(tag(b":"))(i)?;
+    let (i, m) = minute(i)?;
+    let (i, s) = opt(preceded(opt(tag(b":")), second))(i)?;
+    let (i, ms) = opt(map(preceded(one_of(",."), fractions), millisecond))(i)?;
+    let (i, z) = match opt(alt((timezone_hour, timezone_utc)))(i) {
+        Ok(ok) => ok,
+        Err(nom::Err::Incomplete(_)) => (i, None),
+        Err(e) => return Err(e),
+    };
 
-named!(sign <CompleteByteSlice,i32>, alt!(
-        tag!("-") => { |_| -1 } |
-        tag!("+") => { |_| 1 }
-        )
-    );
+    let (tz_offset_hours, tz_offset_minutes) = z.unwrap_or((0, 0));
 
-named!(timezone_hour <CompleteByteSlice,(i32,i32)>, do_parse!(
-        s: sign >>
-        h: hour >>
-        m: empty_or!(
-            preceded!(opt!(tag!(":")), minute)
-           ) >>
-        ( (s * (h as i32) , s * (m.unwrap_or(0) as i32)) )
-        ));
+    Ok((
+        i,
+        Time {
+            hour: h,
+            minute: m,
+            second: s.unwrap_or(0),
+            millisecond: ms.unwrap_or(0),
+            tz_offset_hours,
+            tz_offset_minutes,
+        },
+    ))
+}
 
-named!(timezone_utc <CompleteByteSlice,(i32,i32)>, map!(tag!("Z"), |_| (0,0)));
+fn timezone_hour(i: &[u8]) -> IResult<&[u8], (i32, i32)> {
+    let (i, s) = sign(i)?;
+    let (i, h) = hour(i)?;
+    let (i, m) = if i.is_empty() {
+        (i, 0)
+    } else {
+        let (i, _) = opt(tag(b":"))(i)?;
+        minute(i)?
+    };
+
+    Ok((i, ((s * (h as i32), s * (m as i32)))))
+}
+
+fn timezone_utc(i: &[u8]) -> IResult<&[u8], (i32, i32)> {
+    map(tag(b"Z"), |_| (0, 0))(i)
+}
 
 // Full ISO8601
-named!(pub parse_datetime <CompleteByteSlice,DateTime>, do_parse!(
-        d: parse_date >>
-        tag!("T") >>
-        t: parse_time >>
-        (
-            DateTime{
-                date: d,
-                time: t,
-            }
-        )
-        ));
+pub fn parse_datetime(i: &[u8]) -> IResult<&[u8], DateTime> {
+    let (i, d) = parse_date(i)?;
+    let (i, _) = tag(b"T")(i)?;
+    let (i, t) = parse_time(i)?;
+
+    Ok((i, DateTime { date: d, time: t }))
+}
