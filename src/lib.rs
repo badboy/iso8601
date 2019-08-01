@@ -52,6 +52,25 @@ pub struct DateTime {
     pub time: Time,
 }
 
+/// A duration, can hold three different formats.
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
+pub enum Duration {
+    /// consists of year, month, day, hour, minute and second units
+    YMDHMS {
+        year: u32,
+        month: u32,
+        day: u32,
+        hour: u32,
+        minute: u32,
+        second: u32,
+        millisecond: u32,
+    },
+    /// consists of week units
+    Weeks(u32),
+    /// consists of an ISO 8601 format [DateTime](struct.DateTime.html)
+    DateTime(DateTime),
+}
+
 impl Time {
     pub fn set_tz(&self, tzo: (i32, i32)) -> Time {
         let mut t = *self;
@@ -92,6 +111,28 @@ impl FromStr for DateTime {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         datetime(s)
+    }
+}
+
+impl Default for Duration {
+    fn default() -> Duration {
+        Duration::YMDHMS {
+            year: 0,
+            month: 0,
+            day: 0,
+            hour: 0,
+            minute: 0,
+            second: 0,
+            millisecond: 0,
+        }
+    }
+}
+
+impl FromStr for Duration {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        duration(s)
     }
 }
 
@@ -151,6 +192,42 @@ pub fn time(string: &str) -> Result<Time, String> {
 /// ```
 pub fn datetime(string: &str) -> Result<DateTime, String> {
     if let Ok((_left_overs, parsed)) = parsers::parse_datetime(string.as_bytes()) {
+        Ok(parsed)
+    } else {
+        Err(format!("Parser Error: {}", string))
+    }
+}
+
+/// Parses a duration string.
+///
+/// A string starts with `P` and can have one of the following formats:
+///
+/// * `P1Y2M3DT4H5M6S`
+/// * `P1W`
+/// * `P<datetime>`
+///
+/// The ranges for each of the individual units are not expected to exceed
+/// the next largest unit, with the year not expected to exceed four digits.
+///
+/// These ranges (inclusive) are as follows:
+///
+/// * Year 0 - 9999
+/// * Month 0 - 12
+/// * Week 0 - 52
+/// * Day 0 - 31
+/// * Hour 0 - 24
+/// * Minute 0 - 60
+/// * Second 0 - 60
+///
+/// ## Examples
+///
+/// ```rust
+/// let duration = iso8601::duration("P1Y2M3DT4H5M6S").unwrap();
+/// let duration = iso8601::duration("P1W").unwrap();
+/// let duration = iso8601::duration("P2015-11-03T21:56").unwrap();
+/// ```
+pub fn duration(string: &str) -> Result<Duration, String> {
+    if let Ok((_left_overs, parsed)) = parsers::parse_duration(string.as_bytes()) {
         Ok(parsed)
     } else {
         Err(format!("Parser Error: {}", string))
