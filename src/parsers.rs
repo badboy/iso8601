@@ -357,26 +357,32 @@ fn duration_weeks(i: &[u8]) -> IResult<&[u8], Duration> {
     Ok((i, Duration::Weeks(w)))
 }
 
+// YYYY, no sign
+fn duration_datetime_year(i: &[u8]) -> IResult<&[u8], u32> {
+    take_n_digits(i, 4)
+}
+
 fn duration_datetime(i: &[u8]) -> IResult<&[u8], Duration> {
     let (i, _) = tag(b"P")(i)?;
     let (i, _) = not(sign)(i)?;
-    let (i, dt) = parse_datetime(i)?;
-
-    let (year, month, day) = match dt.date {
-        Date::YMD { year, month, day } => Ok((year, month, day)),
-        _ => Err(nom::Err::Error((i, nom::error::ErrorKind::Eof))),
-    }?;
+    let (i, y) = duration_datetime_year(i)?;
+    let (i, _) = opt(tag(b"-"))(i)?;
+    let (i, m) = date_month(i)?;
+    let (i, _) = opt(tag(b"-"))(i)?;
+    let (i, d) = date_day(i)?;
+    let (i, _) = tag(b"T")(i)?;
+    let (i, t) = parse_time(i)?;
 
     Ok((
         i,
         Duration::YMDHMS {
-            year: year as u32,
-            month,
-            day,
-            hour: dt.time.hour,
-            minute: dt.time.minute,
-            second: dt.time.second,
-            millisecond: dt.time.millisecond,
+            year: y,
+            month: m,
+            day: d,
+            hour: t.hour,
+            minute: t.minute,
+            second: t.second,
+            millisecond: t.millisecond,
         },
     ))
 }
