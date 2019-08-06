@@ -1111,6 +1111,32 @@ fn test_duration_ymdhms() {
         }),
         duration("PT42M30S")
     );
+
+    assert_eq!(
+        Ok(Duration::YMDHMS {
+            year: 1,
+            month: 2,
+            day: 3,
+            hour: 4,
+            minute: 5,
+            second: 6,
+            millisecond: 0,
+        }),
+        duration("P0001-02-03T04:05:06")
+    );
+
+    assert_eq!(
+        Ok(Duration::YMDHMS {
+            year: 2018,
+            month: 4,
+            day: 27,
+            hour: 0,
+            minute: 0,
+            second: 0,
+            millisecond: 0,
+        }),
+        duration("P2018-04-27T00:00:00")
+    );
 }
 
 #[test]
@@ -1118,45 +1144,4 @@ fn test_duration_weeks() {
     assert_eq!(Ok(Duration::Weeks(0)), duration("P0W"));
     assert_eq!(Ok(Duration::Weeks(26)), duration("P26W"));
     assert_eq!(Ok(Duration::Weeks(52)), duration("P52W"));
-}
-
-#[test]
-fn test_duration_datetime() {
-    assert_eq!(
-        Ok(Duration::DateTime(DateTime {
-            date: Date::YMD {
-                year: 1,
-                month: 2,
-                day: 3,
-            },
-            time: Time {
-                hour: 4,
-                minute: 5,
-                second: 6,
-                millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0,
-            }
-        })),
-        duration("P0001-02-03T04:05:06")
-    );
-
-    assert_eq!(
-        Ok(Duration::DateTime(DateTime {
-            date: Date::YMD {
-                year: 2018,
-                month: 4,
-                day: 27,
-            },
-            time: Time {
-                hour: 0,
-                minute: 0,
-                second: 0,
-                millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0,
-            }
-        })),
-        duration("P2018-04-27T00:00:00")
-    );
 }

@@ -27,13 +27,28 @@ mod tests;
 
 // UTILITY
 
+fn take_digits(i: &[u8]) -> IResult<&[u8], u32> {
+    let (i, digits) = take_while(is_digit)(i)?;
+
+    if digits.is_empty() {
+        return Err(nom::Err::Error((i, nom::error::ErrorKind::Eof)));
+    }
+
+    let s = str::from_utf8(digits).expect("Invalid data, expected UTF-8 string");
+    let res = s
+        .parse()
+        .expect("Invalid string, expected ASCII representation of a number");
+
+    Ok((i, res))
+}
+
 fn take_n_digits(i: &[u8], n: usize) -> IResult<&[u8], u32> {
     let (i, digits) = take_while_m_n(n, n, is_digit)(i)?;
 
     let s = str::from_utf8(digits).expect("Invalid data, expected UTF-8 string");
     let res = s
         .parse()
-        .expect("Invalid string, expected ASCII reprensentation of a number");
+        .expect("Invalid string, expected ASCII representation of a number");
 
     Ok((i, res))
 }
@@ -256,9 +271,9 @@ pub fn parse_datetime(i: &[u8]) -> IResult<&[u8], DateTime> {
 
 // DURATION
 
-// Y[YYY]
+// Y[YYY...]
 fn duration_year(i: &[u8]) -> IResult<&[u8], u32> {
-    m_to_n_digit_in_range(i, 1, 4, 0..=9999)
+    take_digits(i)
 }
 
 // M[M]
@@ -347,7 +362,23 @@ fn duration_datetime(i: &[u8]) -> IResult<&[u8], Duration> {
     let (i, _) = not(sign)(i)?;
     let (i, dt) = parse_datetime(i)?;
 
-    Ok((i, Duration::DateTime(dt)))
+    let (year, month, day) = match dt.date {
+        Date::YMD { year, month, day } => Ok((year, month, day)),
+        _ => Err(nom::Err::Error((i, nom::error::ErrorKind::Eof))),
+    }?;
+
+    Ok((
+        i,
+        Duration::YMDHMS {
+            year: year as u32,
+            month,
+            day,
+            hour: dt.time.hour,
+            minute: dt.time.minute,
+            second: dt.time.second,
+            millisecond: dt.time.millisecond,
+        },
+    ))
 }
 
 pub fn parse_duration(i: &[u8]) -> IResult<&[u8], Duration> {
