@@ -52,7 +52,7 @@ pub struct DateTime {
     pub time: Time,
 }
 
-/// A duration, can hold three different formats.
+/// A time duration.
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum Duration {
     /// consists of year, month, day, hour, minute and second units
@@ -67,8 +67,6 @@ pub enum Duration {
     },
     /// consists of week units
     Weeks(u32),
-    /// consists of an ISO 8601 format [DateTime](struct.DateTime.html)
-    DateTime(DateTime),
 }
 
 impl Time {
@@ -202,9 +200,12 @@ pub fn datetime(string: &str) -> Result<DateTime, String> {
 ///
 /// A string starts with `P` and can have one of the following formats:
 ///
-/// * `P1Y2M3DT4H5M6S`
-/// * `P1W`
-/// * `P<datetime>`
+/// * Fully-specified duration: `P1Y2M3DT4H5M6S`
+/// * Duration in weekly intervals: `P1W`
+/// * Fully-specified duration in [DateTime](struct.DateTime.html) format: `P<datetime>`
+///
+/// Both fully-specified formats get parsed into the YMDHMS Duration variant.
+/// The weekly interval format gets parsed into the Weeks Duration variant.
 ///
 /// The ranges for each of the individual units are not expected to exceed
 /// the next largest unit, with the year not expected to exceed four digits.

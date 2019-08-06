@@ -163,7 +163,7 @@ fn disallows_notallowed() {
 fn test_duration_year() {
     assert_eq!(Ok((&[][..], 2019)), duration_year(b"2019"));
     assert_eq!(Ok((&[][..], 0)), duration_year(b"0"));
-    assert_eq!(Ok((&[][..], 9999)), duration_year(b"9999"));
+    assert_eq!(Ok((&[][..], 10000)), duration_year(b"10000"));
     assert!(duration_year(b"abcd").is_err());
     assert!(duration_year(b"-1").is_err());
 }
@@ -257,7 +257,6 @@ fn test_duration_time() {
 fn test_duration_ymdhms_error() {
     assert!(duration_ymdhms(b"").is_err());
     assert!(duration_ymdhms(b"P").is_err()); // empty duration is not 0 seconds
-    assert!(duration_ymdhms(b"P12345Y").is_err()); // years in range 0..=9999
     assert!(duration_ymdhms(b"1Y2M3DT4H5M6S").is_err()); // missing P at start
     assert!(duration_ymdhms(b"T4H5M6S").is_err()); // missing P, required even if no YMD part
 }
