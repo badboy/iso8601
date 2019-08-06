@@ -208,11 +208,11 @@ pub fn datetime(string: &str) -> Result<DateTime, String> {
 /// The weekly interval format gets parsed into the Weeks Duration variant.
 ///
 /// The ranges for each of the individual units are not expected to exceed
-/// the next largest unit, with the year not expected to exceed four digits.
+/// the next largest unit.
 ///
 /// These ranges (inclusive) are as follows:
 ///
-/// * Year 0 - 9999
+/// * Year (any valid u32)
 /// * Month 0 - 12
 /// * Week 0 - 52
 /// * Day 0 - 31
