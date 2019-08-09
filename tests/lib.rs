@@ -956,3 +956,192 @@ fn issue12_regression_2() {
         time(input)
     );
 }
+
+#[test]
+fn test_duration_ymdhms() {
+    // full YMDHMS
+    assert_eq!(
+        Ok(Duration::YMDHMS {
+            year: 1,
+            month: 2,
+            day: 3,
+            hour: 4,
+            minute: 5,
+            second: 6,
+            millisecond: 0,
+        }),
+        duration("P1Y2M3DT4H5M6S")
+    );
+
+    // full YMDHMS with milliseconds dot delimiter
+    assert_eq!(
+        Ok(Duration::YMDHMS {
+            year: 1,
+            month: 2,
+            day: 3,
+            hour: 4,
+            minute: 5,
+            second: 6,
+            millisecond: 700,
+        }),
+        duration("P1Y2M3DT4H5M6.7S")
+    );
+
+    // full YMDHMS with milliseconds comma delimiter
+    assert_eq!(
+        Ok(Duration::YMDHMS {
+            year: 1,
+            month: 2,
+            day: 3,
+            hour: 4,
+            minute: 5,
+            second: 6,
+            millisecond: 700,
+        }),
+        duration("P1Y2M3DT4H5M6,7S")
+    );
+
+    // subset YM-HM-
+    assert_eq!(
+        Ok(Duration::YMDHMS {
+            year: 1,
+            month: 2,
+            day: 0,
+            hour: 4,
+            minute: 5,
+            second: 0,
+            millisecond: 0,
+        }),
+        duration("P1Y2MT4H5M")
+    );
+
+    // subset Y-----
+    assert_eq!(
+        Ok(Duration::YMDHMS {
+            year: 1,
+            month: 0,
+            day: 0,
+            hour: 0,
+            minute: 0,
+            second: 0,
+            millisecond: 0,
+        }),
+        duration("P1Y")
+    );
+
+    // subset ---H--
+    assert_eq!(
+        Ok(Duration::YMDHMS {
+            year: 0,
+            month: 0,
+            day: 0,
+            hour: 4,
+            minute: 0,
+            second: 0,
+            millisecond: 0,
+        }),
+        duration("PT4H")
+    );
+
+    // subset -----S with milliseconds dot delimiter
+    assert_eq!(
+        Ok(Duration::YMDHMS {
+            year: 0,
+            month: 0,
+            day: 0,
+            hour: 0,
+            minute: 0,
+            second: 6,
+            millisecond: 700,
+        }),
+        duration("PT6.7S")
+    );
+
+    // subset -----S with milliseconds comma delimiter
+    assert_eq!(
+        Ok(Duration::YMDHMS {
+            year: 0,
+            month: 0,
+            day: 0,
+            hour: 0,
+            minute: 0,
+            second: 6,
+            millisecond: 700,
+        }),
+        duration("PT6,700S")
+    );
+
+    // empty duration, using Y
+    assert_eq!(
+        Ok(Duration::YMDHMS {
+            year: 0,
+            month: 0,
+            day: 0,
+            hour: 0,
+            minute: 0,
+            second: 0,
+            millisecond: 0,
+        }),
+        duration("P0Y")
+    );
+
+    // empty duration, using S
+    assert_eq!(
+        Ok(Duration::YMDHMS {
+            year: 0,
+            month: 0,
+            day: 0,
+            hour: 0,
+            minute: 0,
+            second: 0,
+            millisecond: 0,
+        }),
+        duration("PT0S")
+    );
+
+    assert_eq!(
+        Ok(Duration::YMDHMS {
+            year: 0,
+            month: 0,
+            day: 0,
+            hour: 0,
+            minute: 42,
+            second: 30,
+            millisecond: 0,
+        }),
+        duration("PT42M30S")
+    );
+
+    assert_eq!(
+        Ok(Duration::YMDHMS {
+            year: 1,
+            month: 2,
+            day: 3,
+            hour: 4,
+            minute: 5,
+            second: 6,
+            millisecond: 0,
+        }),
+        duration("P0001-02-03T04:05:06")
+    );
+
+    assert_eq!(
+        Ok(Duration::YMDHMS {
+            year: 2018,
+            month: 4,
+            day: 27,
+            hour: 0,
+            minute: 0,
+            second: 0,
+            millisecond: 0,
+        }),
+        duration("P2018-04-27T00:00:00")
+    );
+}
+
+#[test]
+fn test_duration_weeks() {
+    assert_eq!(Ok(Duration::Weeks(0)), duration("P0W"));
+    assert_eq!(Ok(Duration::Weeks(26)), duration("P26W"));
+    assert_eq!(Ok(Duration::Weeks(52)), duration("P52W"));
+}
