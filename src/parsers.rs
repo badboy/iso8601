@@ -8,7 +8,7 @@
 //!
 //! **These functions may be made private later.**
 
-use std::str;
+use core::str;
 
 use nom::{
     branch::alt,
@@ -67,7 +67,7 @@ fn take_m_to_n_digits(i: &[u8], m: usize, n: usize) -> IResult<&[u8], u32> {
 fn n_digit_in_range(
     i: &[u8],
     n: usize,
-    range: impl std::ops::RangeBounds<u32>,
+    range: impl core::ops::RangeBounds<u32>,
 ) -> IResult<&[u8], u32> {
     let (new_i, number) = take_n_digits(i, n)?;
 
@@ -82,7 +82,7 @@ fn m_to_n_digit_in_range(
     i: &[u8],
     m: usize,
     n: usize,
-    range: impl std::ops::RangeBounds<u32>,
+    range: impl core::ops::RangeBounds<u32>,
 ) -> IResult<&[u8], u32> {
     let (new_i, number) = take_m_to_n_digits(i, m, n)?;
 
