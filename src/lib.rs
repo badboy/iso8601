@@ -12,8 +12,18 @@
 //! let datetime = iso8601::datetime("2015-06-26T16:43:23+0200").unwrap();
 //! ```
 
-use std::default::Default;
-use std::str::FromStr;
+#![no_std]
+
+#[cfg(any(feature = "std", test))]
+#[macro_use]
+extern crate std;
+
+#[macro_use]
+extern crate alloc;
+
+use alloc::string::String;
+use core::default::Default;
+use core::str::FromStr;
 
 mod display;
 mod parsers;
