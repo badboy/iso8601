@@ -1,10 +1,12 @@
 # Changelog
 
-## [Unreleased](https://github.com/badboy/iso8601/compare/0.3.0...Unreleased) - ReleaseDate
+<!-- next-header -->
+
+## [Unreleased](https://github.com/badboy/iso8601/compare/v0.3.0...master) - ReleaseDate
 
 * Upgrade to [nom 5](http://unhandledexpression.com/general/2019/06/17/nom-5-is-here.html), getting rid of all parser macros ([#22](https://github.com/badboy/iso8601/pull/22))
 
-## [0.3.0](https://github.com/badboy/iso8601/compare/0.2.0...0.3.0) - 2019-01-31
+## [0.3.0](https://github.com/badboy/iso8601/compare/v0.2.0...v0.3.0) - 2019-01-31
 
 * Add `Display` implementations for exported structures
 * Implemented `FromStr` for `Date`, `Time` and `DateTime`
