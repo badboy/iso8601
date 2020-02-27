@@ -4,7 +4,8 @@
 
 ## [Unreleased](https://github.com/badboy/iso8601/compare/v0.3.0...master) - ReleaseDate
 
-* Upgrade to [nom 5](http://unhandledexpression.com/general/2019/06/17/nom-5-is-here.html), getting rid of all parser macros ([#22](https://github.com/badboy/iso8601/pull/22))
+* Upgrade to [nom 5](http://unhandledexpression.com/general/2019/06/17/nom-5-is-here.html), getting rid of all parser macros ([#22](https://github.com/badboy/iso8601/pull/22)).
+* Added support for ISO 8601 Durations ([#24](https://github.com/badboy/iso8601/pull/24), thanks to @zoewithabang).
 
 ## [0.3.0](https://github.com/badboy/iso8601/compare/v0.2.0...v0.3.0) - 2019-01-31
 
