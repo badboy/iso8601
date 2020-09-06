@@ -144,6 +144,35 @@ impl FromStr for Duration {
     }
 }
 
+impl From<Duration> for ::core::time::Duration {
+    fn from(duration: Duration) -> Self {
+        match duration {
+            Duration::YMDHMS {
+                year,
+                month,
+                day,
+                hour,
+                minute,
+                second,
+                millisecond,
+            } => {
+                let secs = u64::from(year) * 365 * 86_400
+                    + u64::from(month) * 30 * 86_400
+                    + u64::from(day) * 86_400
+                    + u64::from(hour) * 3600
+                    + u64::from(minute) * 60
+                    + u64::from(second);
+                let nanos = millisecond * 1_000_000;
+                Self::new(secs, nanos)
+            }
+            Duration::Weeks(week) => {
+                let secs = u64::from(week) * 7 * 86_400;
+                Self::from_secs(secs)
+            }
+        }
+    }
+}
+
 /// Parses a date string.
 ///
 /// A string can have one of the following formats:
