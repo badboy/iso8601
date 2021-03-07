@@ -16,8 +16,9 @@ use nom::{
     character::complete::one_of,
     character::is_digit,
     combinator::{map, map_res, not, opt},
+    error::Error,
     sequence::{preceded, separated_pair, terminated, tuple},
-    IResult,
+    Err, IResult,
 };
 
 use crate::{Date, DateTime, Duration, Time};
@@ -31,7 +32,7 @@ fn take_digits(i: &[u8]) -> IResult<&[u8], u32> {
     let (i, digits) = take_while(is_digit)(i)?;
 
     if digits.is_empty() {
-        return Err(nom::Err::Error((i, nom::error::ErrorKind::Eof)));
+        return Err(Err::Error(Error::new(i, nom::error::ErrorKind::Eof)));
     }
 
     let s = str::from_utf8(digits).expect("Invalid data, expected UTF-8 string");
@@ -74,7 +75,7 @@ fn n_digit_in_range(
     if range.contains(&number) {
         Ok((new_i, number))
     } else {
-        Err(nom::Err::Error((i, nom::error::ErrorKind::Eof)))
+        Err(Err::Error(Error::new(i, nom::error::ErrorKind::Eof)))
     }
 }
 
@@ -89,7 +90,7 @@ fn m_to_n_digit_in_range(
     if range.contains(&number) {
         Ok((new_i, number))
     } else {
-        Err(nom::Err::Error((i, nom::error::ErrorKind::Eof)))
+        Err(Err::Error(Error::new(i, nom::error::ErrorKind::Eof)))
     }
 }
 
@@ -325,7 +326,7 @@ fn duration_ymdhms(i: &[u8]) -> IResult<&[u8], Duration> {
         |(y, mo, d, time)| {
             // at least one element must be present for a valid duration representation
             if y.is_none() && mo.is_none() && d.is_none() && time.is_none() {
-                return Err(nom::Err::Error((i, nom::error::ErrorKind::Eof)));
+                return Err(Err::Error((i, nom::error::ErrorKind::Eof)));
             }
 
             let (h, mi, s, ms) = time.unwrap_or((0, 0, 0, 0));
