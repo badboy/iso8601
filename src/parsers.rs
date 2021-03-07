@@ -15,8 +15,8 @@ use nom::{
     bytes::complete::{tag, take_while, take_while_m_n},
     character::complete::one_of,
     character::is_digit,
-    combinator::{map, not, opt},
-    sequence::{preceded, terminated},
+    combinator::{map, map_res, not, opt},
+    sequence::{preceded, separated_pair, terminated, tuple},
     IResult,
 };
 
@@ -113,11 +113,13 @@ fn fractions(i: &[u8]) -> IResult<&[u8], f32> {
 // [+/-]YYYY
 fn date_year(i: &[u8]) -> IResult<&[u8], i32> {
     // The sign is optional, but defaults to `+`
-    let (i, s) = sign(i).unwrap_or((i, 1));
-    let (i, year) = take_n_digits(i, 4)?;
-    let year = s * year as i32;
-
-    Ok((i, year))
+    map(
+        tuple((
+            opt(sign),               // [+/-]
+            |i| take_n_digits(i, 4), // year
+        )),
+        |(s, year)| s.unwrap_or(1) * year as i32,
+    )(i)
 }
 
 // MM
@@ -146,48 +148,38 @@ fn date_ord_day(i: &[u8]) -> IResult<&[u8], u32> {
 
 // YYYY-MM-DD
 fn date_ymd(i: &[u8]) -> IResult<&[u8], Date> {
-    let (i, y) = date_year(i)?;
-    let (i, _) = opt(tag(b"-"))(i)?;
-    let (i, m) = date_month(i)?;
-    let (i, _) = opt(tag(b"-"))(i)?;
-    let (i, d) = date_day(i)?;
-
-    Ok((
-        i,
-        Date::YMD {
-            year: y,
-            month: m,
-            day: d,
-        },
-    ))
+    map(
+        tuple((
+            date_year,      // YYYY
+            opt(tag(b"-")), // -
+            date_month,     // MM
+            opt(tag(b"-")), // -
+            date_day,       //DD
+        )),
+        |(year, _, month, _, day)| Date::YMD { year, month, day },
+    )(i)
 }
 
 // YYYY-DDD
 fn date_ordinal(i: &[u8]) -> IResult<&[u8], Date> {
-    let (i, y) = date_year(i)?;
-    let (i, _) = opt(tag(b"-"))(i)?;
-    let (i, d) = date_ord_day(i)?;
-
-    Ok((i, Date::Ordinal { year: y, ddd: d }))
+    map(
+        separated_pair(date_year, opt(tag(b"-")), date_ord_day),
+        |(year, ddd)| Date::Ordinal { year, ddd },
+    )(i)
 }
 
 // YYYY-"W"WW-D
 fn date_iso_week(i: &[u8]) -> IResult<&[u8], Date> {
-    let (i, y) = date_year(i)?;
-    let (i, _) = opt(tag(b"-"))(i)?;
-    let (i, _) = tag(b"W")(i)?;
-    let (i, w) = date_week(i)?;
-    let (i, _) = opt(tag(b"-"))(i)?;
-    let (i, d) = date_week_day(i)?;
-
-    Ok((
-        i,
-        Date::Week {
-            year: y,
-            ww: w,
-            d: d,
-        },
-    ))
+    map(
+        tuple((
+            date_year,                          // y
+            tuple((opt(tag(b"-")), tag(b"W"))), // [-]W
+            date_week,                          // w
+            opt(tag(b"-")),                     // [-]
+            date_week_day,                      // d
+        )),
+        |(year, _, ww, _, d)| Date::Week { year, ww, d },
+    )(i)
 }
 
 pub fn parse_date(i: &[u8]) -> IResult<&[u8], Date> {
@@ -217,43 +209,35 @@ fn time_millisecond(fraction: f32) -> u32 {
 
 // HH:MM:[SS][.(m*)][(Z|+...|-...)]
 pub fn parse_time(i: &[u8]) -> IResult<&[u8], Time> {
-    let (i, h) = time_hour(i)?;
-    let (i, _) = opt(tag(b":"))(i)?;
-    let (i, m) = time_minute(i)?;
-    let (i, s) = opt(preceded(opt(tag(b":")), time_second))(i)?;
-    let (i, ms) = opt(map(preceded(one_of(",."), fractions), time_millisecond))(i)?;
-    let (i, z) = match opt(alt((timezone_hour, timezone_utc)))(i) {
-        Ok(ok) => ok,
-        Err(nom::Err::Incomplete(_)) => (i, None),
-        Err(e) => return Err(e),
-    };
+    map(
+        tuple((
+            time_hour,                                                     // HH
+            opt(tag(b":")),                                                // :
+            time_minute,                                                   // MM
+            opt(preceded(opt(tag(b":")), time_second)),                    // [SS]
+            opt(map(preceded(one_of(",."), fractions), time_millisecond)), // [.(m*)]
+            opt(alt((timezone_hour, timezone_utc))),                       // [(Z|+...|-...)]
+        )),
+        |(h, _, m, s, ms, z)| {
+            let (tz_offset_hours, tz_offset_minutes) = z.unwrap_or((0, 0));
 
-    let (tz_offset_hours, tz_offset_minutes) = z.unwrap_or((0, 0));
-
-    Ok((
-        i,
-        Time {
-            hour: h,
-            minute: m,
-            second: s.unwrap_or(0),
-            millisecond: ms.unwrap_or(0),
-            tz_offset_hours,
-            tz_offset_minutes,
+            Time {
+                hour: h,
+                minute: m,
+                second: s.unwrap_or(0),
+                millisecond: ms.unwrap_or(0),
+                tz_offset_hours,
+                tz_offset_minutes,
+            }
         },
-    ))
+    )(i)
 }
 
 fn timezone_hour(i: &[u8]) -> IResult<&[u8], (i32, i32)> {
-    let (i, s) = sign(i)?;
-    let (i, h) = time_hour(i)?;
-    let (i, m) = if i.is_empty() {
-        (i, 0)
-    } else {
-        let (i, _) = opt(tag(b":"))(i)?;
-        time_minute(i)?
-    };
-
-    Ok((i, ((s * (h as i32), s * (m as i32)))))
+    map(
+        tuple((sign, time_hour, opt(preceded(opt(tag(b":")), time_minute)))),
+        |(s, h, m)| (s * (h as i32), s * (m.unwrap_or(0) as i32)),
+    )(i)
 }
 
 fn timezone_utc(i: &[u8]) -> IResult<&[u8], (i32, i32)> {
@@ -262,11 +246,10 @@ fn timezone_utc(i: &[u8]) -> IResult<&[u8], (i32, i32)> {
 
 // Full ISO8601 datetime
 pub fn parse_datetime(i: &[u8]) -> IResult<&[u8], DateTime> {
-    let (i, d) = parse_date(i)?;
-    let (i, _) = tag(b"T")(i)?;
-    let (i, t) = parse_time(i)?;
-
-    Ok((i, DateTime { date: d, time: t }))
+    map(
+        separated_pair(parse_date, tag(b"T"), parse_time),
+        |(d, t)| DateTime { date: d, time: t },
+    )(i)
 }
 
 // DURATION
@@ -314,47 +297,57 @@ fn duration_millisecond(fraction: f32) -> u32 {
 }
 
 fn duration_time(i: &[u8]) -> IResult<&[u8], (u32, u32, u32, u32)> {
-    let (i, h) = opt(terminated(duration_hour, tag(b"H")))(i)?;
-    let (i, m) = opt(terminated(duration_minute, tag(b"M")))(i)?;
-    let (i, s) = opt(terminated(duration_second_and_millisecond, tag(b"S")))(i)?;
-    let (s, ms) = s.unwrap_or((0, 0));
+    map(
+        tuple((
+            opt(terminated(duration_hour, tag(b"H"))),
+            opt(terminated(duration_minute, tag(b"M"))),
+            opt(terminated(duration_second_and_millisecond, tag(b"S"))),
+        )),
+        |(h, m, s)| {
+            let (s, ms) = s.unwrap_or((0, 0));
 
-    Ok((i, (h.unwrap_or(0), m.unwrap_or(0), s, ms)))
+            (h.unwrap_or(0), m.unwrap_or(0), s, ms)
+        },
+    )(i)
 }
 
 fn duration_ymdhms(i: &[u8]) -> IResult<&[u8], Duration> {
-    let (i, _) = tag(b"P")(i)?;
-    let (i, y) = opt(terminated(duration_year, tag(b"Y")))(i)?;
-    let (i, mo) = opt(terminated(duration_month, tag(b"M")))(i)?;
-    let (i, d) = opt(terminated(duration_day, tag(b"D")))(i)?;
-    let (i, time) = opt(preceded(tag(b"T"), duration_time))(i)?;
+    map_res(
+        preceded(
+            tag(b"P"),
+            tuple((
+                opt(terminated(duration_year, tag(b"Y"))),
+                opt(terminated(duration_month, tag(b"M"))),
+                opt(terminated(duration_day, tag(b"D"))),
+                opt(preceded(tag(b"T"), duration_time)),
+            )),
+        ),
+        |(y, mo, d, time)| {
+            // at least one element must be present for a valid duration representation
+            if y.is_none() && mo.is_none() && d.is_none() && time.is_none() {
+                return Err(nom::Err::Error((i, nom::error::ErrorKind::Eof)));
+            }
 
-    // at least one element must be present for a valid duration representation
-    if y.is_none() && mo.is_none() && d.is_none() && time.is_none() {
-        return Err(nom::Err::Error((i, nom::error::ErrorKind::Eof)));
-    }
+            let (h, mi, s, ms) = time.unwrap_or((0, 0, 0, 0));
 
-    let (h, mi, s, ms) = time.unwrap_or((0, 0, 0, 0));
-
-    Ok((
-        i,
-        Duration::YMDHMS {
-            year: y.unwrap_or(0),
-            month: mo.unwrap_or(0),
-            day: d.unwrap_or(0),
-            hour: h,
-            minute: mi,
-            second: s,
-            millisecond: ms,
+            Ok(Duration::YMDHMS {
+                year: y.unwrap_or(0),
+                month: mo.unwrap_or(0),
+                day: d.unwrap_or(0),
+                hour: h,
+                minute: mi,
+                second: s,
+                millisecond: ms,
+            })
         },
-    ))
+    )(i)
 }
 
 fn duration_weeks(i: &[u8]) -> IResult<&[u8], Duration> {
-    let (i, _) = tag(b"P")(i)?;
-    let (i, w) = terminated(duration_week, tag(b"W"))(i)?;
-
-    Ok((i, Duration::Weeks(w)))
+    map(
+        preceded(tag(b"P"), terminated(duration_week, tag(b"W"))),
+        Duration::Weeks,
+    )(i)
 }
 
 // YYYY, no sign
@@ -363,28 +356,29 @@ fn duration_datetime_year(i: &[u8]) -> IResult<&[u8], u32> {
 }
 
 fn duration_datetime(i: &[u8]) -> IResult<&[u8], Duration> {
-    let (i, _) = tag(b"P")(i)?;
-    let (i, _) = not(sign)(i)?;
-    let (i, y) = duration_datetime_year(i)?;
-    let (i, _) = opt(tag(b"-"))(i)?;
-    let (i, m) = date_month(i)?;
-    let (i, _) = opt(tag(b"-"))(i)?;
-    let (i, d) = date_day(i)?;
-    let (i, _) = tag(b"T")(i)?;
-    let (i, t) = parse_time(i)?;
-
-    Ok((
-        i,
-        Duration::YMDHMS {
-            year: y,
-            month: m,
-            day: d,
+    map(
+        preceded(
+            tuple((tag(b"P"), not(sign))),
+            tuple((
+                duration_datetime_year,
+                opt(tag(b"-")),
+                date_month,
+                opt(tag(b"-")),
+                date_day,
+                tag(b"T"),
+                parse_time,
+            )),
+        ),
+        |(year, _, month, _, day, _, t)| Duration::YMDHMS {
+            year,
+            month,
+            day,
             hour: t.hour,
             minute: t.minute,
             second: t.second,
             millisecond: t.millisecond,
         },
-    ))
+    )(i)
 }
 
 pub fn parse_duration(i: &[u8]) -> IResult<&[u8], Duration> {
