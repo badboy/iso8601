@@ -959,9 +959,12 @@ fn issue12_regression_2() {
 
 #[test]
 fn test_duration_ymdhms() {
+    use core::time::Duration as StdDuration;
+
     // full YMDHMS
+    let dur = duration("P1Y2M3DT4H5M6S").unwrap();
     assert_eq!(
-        Ok(Duration::YMDHMS {
+        Duration::YMDHMS {
             year: 1,
             month: 2,
             day: 3,
@@ -969,13 +972,15 @@ fn test_duration_ymdhms() {
             minute: 5,
             second: 6,
             millisecond: 0,
-        }),
-        duration("P1Y2M3DT4H5M6S")
+        },
+        dur
     );
+    assert_eq!(StdDuration::from(dur), StdDuration::new(36993906, 0));
 
     // full YMDHMS with milliseconds dot delimiter
+    let dur = duration("P1Y2M3DT4H5M6.7S").unwrap();
     assert_eq!(
-        Ok(Duration::YMDHMS {
+        Duration::YMDHMS {
             year: 1,
             month: 2,
             day: 3,
@@ -983,13 +988,18 @@ fn test_duration_ymdhms() {
             minute: 5,
             second: 6,
             millisecond: 700,
-        }),
-        duration("P1Y2M3DT4H5M6.7S")
+        },
+        dur
+    );
+    assert_eq!(
+        StdDuration::from(dur),
+        StdDuration::new(36993906, 700000000)
     );
 
     // full YMDHMS with milliseconds comma delimiter
+    let dur = duration("P1Y2M3DT4H5M6,7S").unwrap();
     assert_eq!(
-        Ok(Duration::YMDHMS {
+        Duration::YMDHMS {
             year: 1,
             month: 2,
             day: 3,
@@ -997,13 +1007,18 @@ fn test_duration_ymdhms() {
             minute: 5,
             second: 6,
             millisecond: 700,
-        }),
-        duration("P1Y2M3DT4H5M6,7S")
+        },
+        dur
+    );
+    assert_eq!(
+        StdDuration::from(dur),
+        StdDuration::new(36993906, 700000000)
     );
 
     // subset YM-HM-
+    let dur = duration("P1Y2MT4H5M").unwrap();
     assert_eq!(
-        Ok(Duration::YMDHMS {
+        Duration::YMDHMS {
             year: 1,
             month: 2,
             day: 0,
@@ -1011,13 +1026,15 @@ fn test_duration_ymdhms() {
             minute: 5,
             second: 0,
             millisecond: 0,
-        }),
-        duration("P1Y2MT4H5M")
+        },
+        dur
     );
+    assert_eq!(StdDuration::from(dur), StdDuration::new(36734700, 0));
 
     // subset Y-----
+    let dur = duration("P1Y").unwrap();
     assert_eq!(
-        Ok(Duration::YMDHMS {
+        Duration::YMDHMS {
             year: 1,
             month: 0,
             day: 0,
@@ -1025,13 +1042,15 @@ fn test_duration_ymdhms() {
             minute: 0,
             second: 0,
             millisecond: 0,
-        }),
-        duration("P1Y")
+        },
+        dur
     );
+    assert_eq!(StdDuration::from(dur), StdDuration::new(31536000, 0));
 
     // subset ---H--
+    let dur = duration("PT4H").unwrap();
     assert_eq!(
-        Ok(Duration::YMDHMS {
+        Duration::YMDHMS {
             year: 0,
             month: 0,
             day: 0,
@@ -1039,13 +1058,15 @@ fn test_duration_ymdhms() {
             minute: 0,
             second: 0,
             millisecond: 0,
-        }),
-        duration("PT4H")
+        },
+        dur
     );
+    assert_eq!(StdDuration::from(dur), StdDuration::new(14400, 0));
 
     // subset -----S with milliseconds dot delimiter
+    let dur = duration("PT6.7S").unwrap();
     assert_eq!(
-        Ok(Duration::YMDHMS {
+        Duration::YMDHMS {
             year: 0,
             month: 0,
             day: 0,
@@ -1053,13 +1074,15 @@ fn test_duration_ymdhms() {
             minute: 0,
             second: 6,
             millisecond: 700,
-        }),
-        duration("PT6.7S")
+        },
+        dur
     );
+    assert_eq!(StdDuration::from(dur), StdDuration::new(6, 700000000));
 
     // subset -----S with milliseconds comma delimiter
+    let dur = duration("PT6,700S").unwrap();
     assert_eq!(
-        Ok(Duration::YMDHMS {
+        Duration::YMDHMS {
             year: 0,
             month: 0,
             day: 0,
@@ -1067,13 +1090,15 @@ fn test_duration_ymdhms() {
             minute: 0,
             second: 6,
             millisecond: 700,
-        }),
-        duration("PT6,700S")
+        },
+        dur
     );
+    assert_eq!(StdDuration::from(dur), StdDuration::new(6, 700000000));
 
     // empty duration, using Y
+    let dur = duration("P0Y").unwrap();
     assert_eq!(
-        Ok(Duration::YMDHMS {
+        Duration::YMDHMS {
             year: 0,
             month: 0,
             day: 0,
@@ -1081,13 +1106,15 @@ fn test_duration_ymdhms() {
             minute: 0,
             second: 0,
             millisecond: 0,
-        }),
-        duration("P0Y")
+        },
+        dur
     );
+    assert_eq!(StdDuration::from(dur), StdDuration::new(0, 0));
 
     // empty duration, using S
+    let dur = duration("PT0S").unwrap();
     assert_eq!(
-        Ok(Duration::YMDHMS {
+        Duration::YMDHMS {
             year: 0,
             month: 0,
             day: 0,
@@ -1095,12 +1122,14 @@ fn test_duration_ymdhms() {
             minute: 0,
             second: 0,
             millisecond: 0,
-        }),
-        duration("PT0S")
+        },
+        dur
     );
+    assert_eq!(StdDuration::from(dur), StdDuration::new(0, 0));
 
+    let dur = duration("PT42M30S").unwrap();
     assert_eq!(
-        Ok(Duration::YMDHMS {
+        Duration::YMDHMS {
             year: 0,
             month: 0,
             day: 0,
@@ -1108,12 +1137,14 @@ fn test_duration_ymdhms() {
             minute: 42,
             second: 30,
             millisecond: 0,
-        }),
-        duration("PT42M30S")
+        },
+        dur
     );
+    assert_eq!(StdDuration::from(dur), StdDuration::new(2550, 0));
 
+    let dur = duration("P0001-02-03T04:05:06").unwrap();
     assert_eq!(
-        Ok(Duration::YMDHMS {
+        Duration::YMDHMS {
             year: 1,
             month: 2,
             day: 3,
@@ -1121,12 +1152,14 @@ fn test_duration_ymdhms() {
             minute: 5,
             second: 6,
             millisecond: 0,
-        }),
-        duration("P0001-02-03T04:05:06")
+        },
+        dur
     );
+    assert_eq!(StdDuration::from(dur), StdDuration::new(36993906, 0));
 
+    let dur = duration("P2018-04-27T00:00:00").unwrap();
     assert_eq!(
-        Ok(Duration::YMDHMS {
+        Duration::YMDHMS {
             year: 2018,
             month: 4,
             day: 27,
@@ -1134,14 +1167,23 @@ fn test_duration_ymdhms() {
             minute: 0,
             second: 0,
             millisecond: 0,
-        }),
-        duration("P2018-04-27T00:00:00")
+        },
+        dur
     );
+    assert_eq!(StdDuration::from(dur), StdDuration::new(63652348800, 0));
 }
 
 #[test]
 fn test_duration_weeks() {
-    assert_eq!(Ok(Duration::Weeks(0)), duration("P0W"));
-    assert_eq!(Ok(Duration::Weeks(26)), duration("P26W"));
-    assert_eq!(Ok(Duration::Weeks(52)), duration("P52W"));
+    use core::time::Duration as StdDuration;
+
+    let dur = duration("P0W").unwrap();
+    assert_eq!(Duration::Weeks(0), dur);
+    assert_eq!(StdDuration::from(dur), StdDuration::new(0, 0));
+    let dur = duration("P26W").unwrap();
+    assert_eq!(Duration::Weeks(26), dur);
+    assert_eq!(StdDuration::from(dur), StdDuration::new(15724800, 0));
+    let dur = duration("P52W").unwrap();
+    assert_eq!(Duration::Weeks(52), dur);
+    assert_eq!(StdDuration::from(dur), StdDuration::new(31449600, 0));
 }
