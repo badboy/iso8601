@@ -26,7 +26,7 @@ use core::default::Default;
 use core::str::FromStr;
 
 mod display;
-mod parsers;
+pub mod parsers;
 
 /// A date, can hold three different formats.
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
