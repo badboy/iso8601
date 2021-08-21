@@ -22,6 +22,22 @@ fn test_date() {
 
 #[test]
 fn test_millisecond() {
+    let mut i=0;
+    while i < 1000 {
+      //regression test for pull request 36.
+      assert_eq!(
+        Ok(Time {
+            hour: 16,
+            minute: 43,
+            second: 0,
+            millisecond: i,
+            tz_offset_hours: 0,
+            tz_offset_minutes: 0
+        }),
+        time(format!("16:43:00.{:0>3}",i).as_str())
+      );
+      i+=1;
+    }
     assert_eq!(
         Ok(Time {
             hour: 16,
