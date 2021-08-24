@@ -196,7 +196,10 @@ fn time_second(i: &[u8]) -> IResult<&[u8], u32> {
     n_digit_in_range(i, 2, 0..=60)
 }
 
-fn time_millisecond(i: &[u8]) -> IResult<&[u8], u32> {
+// Converts the fractional part if-any of a number of seconds to milliseconds
+// truncating towards zero if there are more than three digits.
+// e.g. "" -> 0, "1" -> 100, "12" -> 120, "123" -> 123, "1234" -> 123
+fn fraction_millisecond(i: &[u8]) -> IResult<&[u8], u32> {
     let (i, mut digits) = take_while(is_digit)(i)?;
     let mut l = digits.len();
     if l > 3 {
@@ -222,7 +225,7 @@ pub fn parse_time(i: &[u8]) -> IResult<&[u8], Time> {
             opt(tag(b":")),                                                // :
             time_minute,                                                   // MM
             opt(preceded(opt(tag(b":")), time_second)),                    // [SS]
-            opt(preceded(one_of(",."), time_millisecond)), // [.(m*)]
+            opt(preceded(one_of(",."), fraction_millisecond)), // [.(m*)]
             opt(alt((timezone_hour, timezone_utc))),                       // [(Z|+...|-...)]
         )),
         |(h, _, m, s, ms, z)| {
@@ -294,27 +297,9 @@ fn duration_minute(i: &[u8]) -> IResult<&[u8], u32> {
 // S[S][[,.][MS]]
 fn duration_second_and_millisecond(i: &[u8]) -> IResult<&[u8], (u32, u32)> {
     let (i, s) = m_to_n_digit_in_range(i, 1, 2, 0..=60)?;
-    let (i, ms) = opt(preceded(one_of(",."), duration_millisecond))(i)?;
+    let (i, ms) = opt(preceded(one_of(",."), fraction_millisecond))(i)?;
 
     Ok((i, (s, ms.unwrap_or(0))))
-}
-
-fn duration_millisecond(i: &[u8]) -> IResult<&[u8], u32> {
-    let (i, mut digits) = take_while(is_digit)(i)?;
-    let mut l = digits.len();
-    if l > 3 {
-        digits = digits.get(0..3).unwrap();
-    }
-    let mut result = 0;
-    if l > 0 {
-        let digits = str::from_utf8(digits).unwrap(); // This can't panic, `digits` will only include digits.
-        result = digits.parse().unwrap();
-    }
-    while l < 3 {
-        result = result * 10;
-        l += 1;
-    }
-    Ok ((i,result))
 }
 
 fn duration_time(i: &[u8]) -> IResult<&[u8], (u32, u32, u32, u32)> {
