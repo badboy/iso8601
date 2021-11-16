@@ -1,6 +1,6 @@
 use core::fmt::{self, Display};
 
-use super::{Date, DateTime, Time};
+use super::{Date, DateTime, Duration, Time};
 
 impl Display for Date {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -35,5 +35,86 @@ impl Display for DateTime {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // like `16:43:16.123+00:00`
         write!(f, "{}T{}", self.date, self.time)
+    }
+}
+
+impl Display for Duration {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // P1Y2M3DT4H5M6S
+        match self {
+            Duration::YMDHMS {
+                year,
+                month,
+                day,
+                hour,
+                minute,
+                second,
+                millisecond,
+            } => {
+                write!(
+                    f,
+                    "P{year}Y{month}M{day}DT{hour}H{minute}M",
+                    year = year,
+                    month = month,
+                    day = day,
+                    hour = hour,
+                    minute = minute,
+                )?;
+                if *millisecond > 0 {
+                    write!(f, "{}.{}S", second, millisecond)?
+                } else {
+                    write!(f, "{}S", second)?
+                }
+                Ok(())
+            }
+            Duration::Weeks(w) => write!(f, "P{}W", w),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::parse_duration;
+
+    use super::*;
+
+    fn test_duration_reparse(duration: Duration) {
+        let serialized = format!("{}", duration);
+        let reparsed = parse_duration(serialized.as_bytes()).unwrap().1;
+        assert_eq!(duration, reparsed);
+    }
+
+    #[test]
+    fn display_duration_0() {
+        let duration = Duration::YMDHMS {
+            year: 2021,
+            month: 11,
+            day: 16,
+            hour: 23,
+            minute: 26,
+            second: 59,
+            millisecond: 0,
+        };
+        test_duration_reparse(duration);
+    }
+
+    #[test]
+    fn display_duration_1() {
+        let duration = Duration::YMDHMS {
+            year: 2021,
+            month: 11,
+            day: 16,
+            hour: 23,
+            minute: 26,
+            second: 59,
+            millisecond: 123,
+        };
+        test_duration_reparse(duration);
+    }
+
+    #[test]
+    fn display_duration_2() {
+        let duration = Duration::Weeks(50);
+        test_duration_reparse(duration);
     }
 }
