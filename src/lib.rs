@@ -40,6 +40,9 @@ use core::str::FromStr;
 mod display;
 mod parsers;
 
+#[cfg(test)]
+mod assert;
+
 /// A date, can hold three different formats.
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum Date {
