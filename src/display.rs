@@ -51,18 +51,33 @@ impl Display for Duration {
                 second,
                 millisecond,
             } => {
-                write!(
-                    f,
-                    "P{year}Y{month}M{day}DT{hour}H{minute}M",
-                    year = year,
-                    month = month,
-                    day = day,
-                    hour = hour,
-                    minute = minute,
-                )?;
+                write!(f, "P")?;
+
+                if *year > 0 {
+                    write!(f, "{}Y", year)?
+                }
+
+                if *month > 0 {
+                    write!(f, "{}M", month)?
+                }
+
+                if *day > 0 {
+                    write!(f, "{}D", day)?
+                }
+
+                if *hour > 0 || *minute > 0 || *second > 0 || *millisecond > 0 {
+                    write!(f, "T")?
+                }
+                if *hour > 0 {
+                    write!(f, "{}H", hour)?
+                }
+                if *minute > 0 {
+                    write!(f, "{}M", minute)?
+                }
+
                 if *millisecond > 0 {
                     write!(f, "{}.{}S", second, millisecond)?
-                } else {
+                } else if *second > 0 {
                     write!(f, "{}S", second)?
                 }
                 Ok(())
