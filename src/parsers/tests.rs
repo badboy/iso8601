@@ -324,6 +324,10 @@ fn duration_roundtrip() {
         parse_duration, "P16D",
         Duration::YMDHMS { year: 0, month: 0, day: 16, hour: 0, minute: 0, second: 0, millisecond: 0 }
     );
+    assert_parser!(
+        parse_duration, "P0D",
+        Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0, millisecond: 0 }
+    );
 }
 
 // #[test]

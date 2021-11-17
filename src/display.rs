@@ -51,6 +51,11 @@ impl Display for Duration {
                 second,
                 millisecond,
             } => {
+                if self.is_zero() {
+                    write!(f, "P0D")?;
+                    return Ok(());
+                }
+
                 write!(f, "P")?;
 
                 if *year > 0 {

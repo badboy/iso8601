@@ -94,6 +94,22 @@ pub enum Duration {
     Weeks(u32),
 }
 
+impl Duration {
+    pub fn is_zero(&self) -> bool {
+        *self
+            == Duration::YMDHMS {
+                year: 0,
+                month: 0,
+                day: 0,
+                hour: 0,
+                minute: 0,
+                second: 0,
+                millisecond: 0,
+            }
+            || *self == Duration::Weeks(0)
+    }
+}
+
 impl Time {
     pub fn set_tz(&self, tzo: (i32, i32)) -> Time {
         let mut t = *self;
