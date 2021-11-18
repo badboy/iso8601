@@ -40,7 +40,6 @@ impl Display for DateTime {
 
 impl Display for Duration {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // P1Y2M3DT4H5M6S
         match self {
             Duration::YMDHMS {
                 year,
