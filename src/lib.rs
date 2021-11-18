@@ -12,6 +12,18 @@
 //! let datetime = iso8601::datetime("2015-06-26T16:43:23+0200").unwrap();
 //! ```
 
+#![deny(
+    missing_copy_implementations,
+    trivial_casts,
+    trivial_numeric_casts,
+    unsafe_code,
+    unused_import_braces,
+    unused_qualifications
+)]
+#![warn(
+    // missing_docs,
+    clippy::doc_markdown
+)]
 #![no_std]
 
 #[cfg(any(feature = "std", test))]
@@ -27,6 +39,9 @@ use core::str::FromStr;
 
 mod display;
 mod parsers;
+
+#[cfg(test)]
+mod assert;
 
 /// A date, can hold three different formats.
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
@@ -77,6 +92,22 @@ pub enum Duration {
     },
     /// consists of week units
     Weeks(u32),
+}
+
+impl Duration {
+    pub fn is_zero(&self) -> bool {
+        *self
+            == Duration::YMDHMS {
+                year: 0,
+                month: 0,
+                day: 0,
+                hour: 0,
+                minute: 0,
+                second: 0,
+                millisecond: 0,
+            }
+            || *self == Duration::Weeks(0)
+    }
 }
 
 impl Time {
@@ -241,7 +272,7 @@ pub fn datetime(string: &str) -> Result<DateTime, String> {
 ///
 /// * Fully-specified duration: `P1Y2M3DT4H5M6S`
 /// * Duration in weekly intervals: `P1W`
-/// * Fully-specified duration in [DateTime](struct.DateTime.html) format: `P<datetime>`
+/// * Fully-specified duration in [`DateTime`] format: `P<datetime>`
 ///
 /// Both fully-specified formats get parsed into the YMDHMS Duration variant.
 /// The weekly interval format gets parsed into the Weeks Duration variant.

@@ -1,4 +1,5 @@
 use super::*;
+use crate::assert_parser;
 
 #[test]
 fn test_date_year() {
@@ -274,6 +275,59 @@ fn test_duration_datetime_error() {
     assert!(duration_datetime(b"").is_err());
     assert!(duration_datetime(b"P").is_err()); // empty duration is not 0 seconds
     assert!(duration_datetime(b"0001-02-03T04:05:06").is_err()); // missing P at start
+}
+
+#[rustfmt::skip]
+#[test]
+fn duration_roundtrip() {
+    assert_parser!(
+        parse_duration, "P0W", Duration::Weeks(0)
+    );
+
+    assert_parser!(
+        parse_duration, "P2021Y11M16DT23H26M59.123S",
+        Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 23, minute: 26, second: 59, millisecond: 123 }
+    );
+    assert_parser!(
+        parse_duration, "P2021Y11M16DT23H26M59S",
+        Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 23, minute: 26, second: 59, millisecond: 0 }
+    );
+    assert_parser!(
+        parse_duration, "P2021Y11M16DT23H26M",
+        Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 23, minute: 26, second: 0, millisecond: 0 }
+    );
+    assert_parser!(
+        parse_duration, "P2021Y11M16DT23H",
+        Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 23, minute: 0, second: 0, millisecond: 0 }
+    );
+    assert_parser!(
+        parse_duration, "P2021Y11M16D",
+        Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 0, minute: 0, second: 0, millisecond: 0 }
+    );
+    assert_parser!(
+        parse_duration, "P2021Y11M16DT1S",
+        Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 0, minute: 0, second: 1, millisecond: 0 }
+    );
+    assert_parser!(
+        parse_duration, "P2021Y11M16DT0.471S",
+        Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 0, minute: 0, second: 0, millisecond: 471 }
+    );
+    assert_parser!(
+        parse_duration, "P2021Y11M",
+        Duration::YMDHMS { year: 2021, month: 11, day: 0, hour: 0, minute: 0, second: 0, millisecond: 0 }
+    );
+    assert_parser!(
+        parse_duration, "P11M",
+        Duration::YMDHMS { year: 0, month: 11, day: 0, hour: 0, minute: 0, second: 0, millisecond: 0 }
+    );
+    assert_parser!(
+        parse_duration, "P16D",
+        Duration::YMDHMS { year: 0, month: 0, day: 16, hour: 0, minute: 0, second: 0, millisecond: 0 }
+    );
+    assert_parser!(
+        parse_duration, "P0D",
+        Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0, millisecond: 0 }
+    );
 }
 
 // #[test]
