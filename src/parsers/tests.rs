@@ -4,7 +4,7 @@ use crate::assert_parser;
 #[test]
 fn test_date_year() {
     assert_eq!(Ok((&[][..], 2015)), date_year(b"2015"));
-    assert_eq!(Ok((&[][..], -0333)), date_year(b"-0333"));
+    assert_eq!(Ok((&[][..], -333)), date_year(b"-0333"));
     assert_eq!(Ok((&b"-"[..], 2015)), date_year(b"2015-"));
     assert!(date_year(b"abcd").is_err());
     assert!(date_year(b"2a03").is_err());
