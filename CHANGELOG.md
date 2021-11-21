@@ -2,7 +2,9 @@
 
 <!-- next-header -->
 
-## [Unreleased](https://github.com/badboy/iso8601/compare/v0.4.0...master) - ReleaseDate
+## [Unreleased](https://github.com/badboy/iso8601/compare/v0.4.1...master) - ReleaseDate
+
+## [0.4.1](https://github.com/badboy/iso8601/compare/v0.4.0...v0.4.1) - 2021-11-21
 * Add `Display` implementations for more exported structures (Duration)
 
 ## [0.4.0](https://github.com/badboy/iso8601/compare/v0.3.0...v0.4.0) - 2020-02-27
