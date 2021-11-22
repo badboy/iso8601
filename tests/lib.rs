@@ -103,9 +103,9 @@ fn test_millisecond() {
 
     assert_eq!(
         Ok(Time {
-            hour:4,
-            minute:5,
-            second:6,
+            hour: 4,
+            minute: 5,
+            second: 6,
             millisecond: 123,
             tz_offset_hours: 0,
             tz_offset_minutes: 0
@@ -117,13 +117,13 @@ fn test_millisecond() {
         Ok(DateTime {
             date: Date::Week {
                 year: 2001,
-                ww:5,
+                ww: 5,
                 d: 6
             },
             time: Time {
-                hour:4,
-                minute:5,
-                second:6,
+                hour: 4,
+                minute: 5,
+                second: 6,
                 millisecond: 123,
                 tz_offset_hours: 0,
                 tz_offset_minutes: 0
@@ -365,7 +365,7 @@ fn short_dtim1() {
         Ok(DateTime {
             date: Date::YMD {
                 year: 2007,
-                month:8,
+                month: 8,
                 day: 31,
             },
             time: Time {
@@ -386,7 +386,7 @@ fn short_dtim2() {
         Ok(DateTime {
             date: Date::YMD {
                 year: 2007,
-                month:8,
+                month: 8,
                 day: 31,
             },
             time: Time {
@@ -605,7 +605,7 @@ fn test_datetime_correct() {
         Ok(DateTime {
             date: Date::YMD {
                 year: 2006,
-                month:8,
+                month: 8,
                 day: 31
             },
             time: Time {
@@ -623,7 +623,7 @@ fn test_datetime_correct() {
         Ok(DateTime {
             date: Date::YMD {
                 year: 2007,
-                month:8,
+                month: 8,
                 day: 31
             },
             time: Time {
@@ -641,7 +641,7 @@ fn test_datetime_correct() {
         Ok(DateTime {
             date: Date::YMD {
                 year: 2007,
-                month:8,
+                month: 8,
                 day: 31
             },
             time: Time {
@@ -659,7 +659,7 @@ fn test_datetime_correct() {
         Ok(DateTime {
             date: Date::YMD {
                 year: 2007,
-                month:8,
+                month: 8,
                 day: 31
             },
             time: Time {
@@ -713,7 +713,7 @@ fn test_datetime_correct() {
         Ok(DateTime {
             date: Date::YMD {
                 year: 2011,
-                month:6,
+                month: 6,
                 day: 30
             },
             time: Time {
@@ -731,12 +731,12 @@ fn test_datetime_correct() {
         Ok(DateTime {
             date: Date::YMD {
                 year: 2015,
-                month:6,
+                month: 6,
                 day: 29
             },
             time: Time {
                 hour: 23,
-                minute:7,
+                minute: 7,
                 second: 0,
                 millisecond: 0,
                 tz_offset_hours: 2,
@@ -749,7 +749,7 @@ fn test_datetime_correct() {
         Ok(DateTime {
             date: Date::YMD {
                 year: 2015,
-                month:6,
+                month: 6,
                 day: 26
             },
             time: Time {
@@ -767,7 +767,7 @@ fn test_datetime_correct() {
         Ok(DateTime {
             date: Date::YMD {
                 year: 2015,
-                month:6,
+                month: 6,
                 day: 26
             },
             time: Time {
@@ -785,11 +785,11 @@ fn test_datetime_correct() {
         Ok(DateTime {
             date: Date::Week {
                 year: 2015,
-                ww:5,
+                ww: 5,
                 d: 6
             },
             time: Time {
-                hour:4,
+                hour: 4,
                 minute: 5,
                 second: 6,
                 millisecond: 0,
@@ -803,11 +803,11 @@ fn test_datetime_correct() {
         Ok(DateTime {
             date: Date::Week {
                 year: 2015,
-                ww:5,
+                ww: 5,
                 d: 6
             },
             time: Time {
-                hour:4,
+                hour: 4,
                 minute: 5,
                 second: 6,
                 millisecond: 0,
@@ -824,7 +824,7 @@ fn test_datetime_correct() {
                 ddd: 56
             },
             time: Time {
-                hour:4,
+                hour: 4,
                 minute: 5,
                 second: 6,
                 millisecond: 0,
@@ -841,7 +841,7 @@ fn test_datetime_correct() {
                 ddd: 56
             },
             time: Time {
-                hour:4,
+                hour: 4,
                 minute: 5,
                 second: 6,
                 millisecond: 0,
@@ -890,13 +890,13 @@ fn test_datetime_correct() {
         Ok(DateTime {
             date: Date::Week {
                 year: 2001,
-                ww:5,
+                ww: 5,
                 d: 6
             },
             time: Time {
-                hour:4,
-                minute:5,
-                second:6,
+                hour: 4,
+                minute: 5,
+                second: 6,
                 millisecond: 123,
                 tz_offset_hours: 0,
                 tz_offset_minutes: 0
@@ -908,13 +908,13 @@ fn test_datetime_correct() {
         Ok(DateTime {
             date: Date::Week {
                 year: 2001,
-                ww:5,
+                ww: 5,
                 d: 6
             },
             time: Time {
-                hour:4,
-                minute:5,
-                second:6,
+                hour: 4,
+                minute: 5,
+                second: 6,
                 millisecond: 123,
                 tz_offset_hours: 0,
                 tz_offset_minutes: 0
