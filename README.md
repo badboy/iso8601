@@ -1,7 +1,9 @@
 # omnomnom - ~~Eating~~ Parsing [ISO8601][iso] dates using [nom][]
 
-[![Crates.io](https://img.shields.io/crates/v/iso8601)](https://crates.io/crates/iso8601)
-[![Build Status](https://travis-ci.org/badboy/iso8601.svg?branch=master)](https://travis-ci.org/badboy/iso8601)
+[![crates.io](https://img.shields.io/crates/v/iso8601?style=flat-square)](https://crates.io/crates/iso8601)
+[![docs.rs docs](https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square)](https://docs.rs/iso8601)
+[![License: MIT](https://img.shields.io/github/license/badboy/iso8601?style=flat-square)](LICENSE)
+[![Build Status](https://img.shields.io/github/workflow/status/badboy/iso8601/CI/main?style=flat-square)](https://github.com/badboy/iso8601/actions/workflows/ci.yml)
 
 [iso]: https://en.wikipedia.org/wiki/ISO_8601
 [nom]: https://github.com/Geal/nom
