@@ -1,6 +1,6 @@
 # omnomnom - ~~Eating~~ Parsing [ISO8601][iso] dates using [nom][]
 
-[![crates.io](http://meritbadge.herokuapp.com/iso8601)](https://crates.io/crates/iso8601)
+[![Crates.io](https://img.shields.io/crates/v/iso8601)](https://crates.io/crates/iso8601)
 [![Build Status](https://travis-ci.org/badboy/iso8601.svg?branch=master)](https://travis-ci.org/badboy/iso8601)
 
 [iso]: https://en.wikipedia.org/wiki/ISO_8601
