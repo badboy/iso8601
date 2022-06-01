@@ -5,7 +5,7 @@
 ## [Unreleased](https://github.com/badboy/iso8601/compare/v0.4.2...master) - ReleaseDate
 
 ## [0.4.2](https://github.com/badboy/iso8601/compare/v0.4.1...v0.4.2) - 2022-06-01
-| * Fix TZ offset minutes being replaced by hours
+* Fix TZ offset minutes being replaced by hours
 
 ## [0.4.1](https://github.com/badboy/iso8601/compare/v0.4.0...v0.4.1) - 2021-11-21
 * Add `Display` implementations for more exported structures (Duration)
