@@ -19,11 +19,9 @@
     unsafe_code,
     unused_import_braces,
     unused_qualifications,
-    missing_docs,
+    missing_docs
 )]
-#![warn(
-    clippy::doc_markdown
-)]
+#![warn(clippy::doc_markdown)]
 #![no_std]
 
 #[cfg(any(feature = "std", test))]
