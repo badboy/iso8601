@@ -2,7 +2,9 @@
 
 <!-- next-header -->
 
-## [Unreleased](https://github.com/badboy/iso8601/compare/v0.4.2...master) - ReleaseDate
+## [Unreleased](https://github.com/badboy/iso8601/compare/v0.5.0...master) - ReleaseDate
+
+## [0.5.0](https://github.com/badboy/iso8601/compare/v0.4.2...v0.5.0) - 2022-07-29
 
 ## [0.4.2](https://github.com/badboy/iso8601/compare/v0.4.1...v0.4.2) - 2022-06-01
 * Fix TZ offset minutes being replaced by hours
