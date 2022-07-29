@@ -18,10 +18,10 @@
     trivial_numeric_casts,
     unsafe_code,
     unused_import_braces,
-    unused_qualifications
+    unused_qualifications,
+    missing_docs,
 )]
 #![warn(
-    // missing_docs,
     clippy::doc_markdown
 )]
 #![no_std]
@@ -38,12 +38,13 @@ use core::default::Default;
 use core::str::FromStr;
 
 mod display;
-mod parsers;
+pub mod parsers;
 
 #[cfg(test)]
 mod assert;
 
 /// A date, can hold three different formats.
+#[allow(missing_docs)]
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum Date {
     /// consists of year, month and day of month
@@ -54,7 +55,7 @@ pub enum Date {
     Ordinal { year: i32, ddd: u32 },
 }
 
-/// A time object
+/// A time object.
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Default)]
 pub struct Time {
     /// a 24th of a day
@@ -65,29 +66,39 @@ pub struct Time {
     pub second: u32,
     /// everything after a `.`
     pub millisecond: u32,
-    /// depends on where you're at
+    /// the hour part of the timezone offset from UTC
     pub tz_offset_hours: i32,
+    /// the minute part of the timezone offset from UTC
     pub tz_offset_minutes: i32,
 }
 
-/// Compound struct, holds Date and Time
+/// Compound struct, holds Date and Time.
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Default)]
 pub struct DateTime {
+    /// The date part
     pub date: Date,
+    /// The time part
     pub time: Time,
 }
 
 /// A time duration.
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum Duration {
-    /// consists of year, month, day, hour, minute and second units
+    /// A duration specified by year, month, day, hour, minute and second units
     YMDHMS {
+        /// Number of calendar years
         year: u32,
+        /// Number of months
         month: u32,
+        /// Number of days
         day: u32,
+        /// Number of hours
         hour: u32,
+        /// Number of minutes
         minute: u32,
+        /// Number of seconds
         second: u32,
+        /// Number of milliseconds
         millisecond: u32,
     },
     /// consists of week units
@@ -95,6 +106,7 @@ pub enum Duration {
 }
 
 impl Duration {
+    /// Whether this duration represents a zero duration.
     pub fn is_zero(&self) -> bool {
         *self
             == Duration::YMDHMS {
@@ -111,6 +123,11 @@ impl Duration {
 }
 
 impl Time {
+    /// Change this time's timezone offset.
+    ///
+    /// # Arguments
+    ///
+    /// * `tzo` - A tuple of `(hours, minutes)` specifying the timezone offset from UTC.
     pub fn set_tz(&self, tzo: (i32, i32)) -> Time {
         let mut t = *self;
         t.tz_offset_hours = tzo.0;

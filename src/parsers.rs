@@ -1,12 +1,12 @@
-//! This module is strictly internal.
+//! The low-level parsers for date, datetime, duration and time.
 //!
-//! These functions are used by `date()`, `time()` and `datetime()`.
-//! They are currently not private, because the need to be accessible,
-//! but are not useful by themselves.
+//! The top-level functions [`date`][`crate::date`], [`datetime`][`crate::datetime`],
+//! [`duration`][`crate::duration`] and [`time`][`crate::time`]
+//! provide convenient wrappers around the low-level parsers,
+//! but throw away leftover input on success.
 //!
-//! Please refer to the top-level functions instead, as they offer a better abstraction.
-//!
-//! **These functions may be made private later.**
+//! Using the low-level functions provided here allows to recover leftover input
+//! or to combine these parsers with other parser combinators.
 
 use core::str;
 
@@ -175,6 +175,9 @@ fn date_iso_week(i: &[u8]) -> IResult<&[u8], Date> {
     )(i)
 }
 
+/// Parses a date string.
+///
+/// See [`date`][`crate::date`] for the supported formats.
 pub fn parse_date(i: &[u8]) -> IResult<&[u8], Date> {
     alt((date_ymd, date_iso_week, date_ordinal))(i)
 }
@@ -217,6 +220,9 @@ fn fraction_millisecond(i: &[u8]) -> IResult<&[u8], u32> {
     Ok((i, result))
 }
 
+/// Parses a time string.
+///
+/// See [`time`][`crate::time`] for the supported formats.
 // HH:MM:[SS][.(m*)][(Z|+...|-...)]
 pub fn parse_time(i: &[u8]) -> IResult<&[u8], Time> {
     map(
@@ -254,6 +260,9 @@ fn timezone_utc(i: &[u8]) -> IResult<&[u8], (i32, i32)> {
     map(tag(b"Z"), |_| (0, 0))(i)
 }
 
+/// Parses a datetime string.
+///
+/// See [`datetime`][`crate::datetime`] for supported formats.
 // Full ISO8601 datetime
 pub fn parse_datetime(i: &[u8]) -> IResult<&[u8], DateTime> {
     map(
@@ -387,6 +396,9 @@ fn duration_datetime(i: &[u8]) -> IResult<&[u8], Duration> {
     )(i)
 }
 
+/// Parses a duration string.
+///
+/// See [`duration`][`crate::duration`] for supported formats.
 pub fn parse_duration(i: &[u8]) -> IResult<&[u8], Duration> {
     alt((duration_ymdhms, duration_weeks, duration_datetime))(i)
 }
