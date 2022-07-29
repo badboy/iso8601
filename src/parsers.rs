@@ -211,22 +211,22 @@ fn fraction_millisecond(i: &[u8]) -> IResult<&[u8], u32> {
         result = digits.parse().unwrap();
     }
     while l < 3 {
-        result = result * 10;
+        result *= 10;
         l += 1;
     }
-    Ok ((i,result))
+    Ok((i, result))
 }
 
 // HH:MM:[SS][.(m*)][(Z|+...|-...)]
 pub fn parse_time(i: &[u8]) -> IResult<&[u8], Time> {
     map(
         tuple((
-            time_hour,                                                     // HH
-            opt(tag(b":")),                                                // :
-            time_minute,                                                   // MM
-            opt(preceded(opt(tag(b":")), time_second)),                    // [SS]
+            time_hour,                                         // HH
+            opt(tag(b":")),                                    // :
+            time_minute,                                       // MM
+            opt(preceded(opt(tag(b":")), time_second)),        // [SS]
             opt(preceded(one_of(",."), fraction_millisecond)), // [.(m*)]
-            opt(alt((timezone_hour, timezone_utc))),                       // [(Z|+...|-...)]
+            opt(alt((timezone_hour, timezone_utc))),           // [(Z|+...|-...)]
         )),
         |(h, _, m, s, ms, z)| {
             let (tz_offset_hours, tz_offset_minutes) = z.unwrap_or((0, 0));
