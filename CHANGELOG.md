@@ -4,6 +4,8 @@
 
 ## [Unreleased](https://github.com/badboy/iso8601/compare/v0.5.0...main) - ReleaseDate
 
+* Fix accepted duration representations
+
 ## [0.5.0](https://github.com/badboy/iso8601/compare/v0.4.2...v0.5.0) - 2022-07-29
 
 * Replace rounding-error prone floating point code with robust integer code ([#36](https://github.com/badboy/iso8601/pull/36) by @plugwash)

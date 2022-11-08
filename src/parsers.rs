@@ -54,38 +54,12 @@ fn take_n_digits(i: &[u8], n: usize) -> IResult<&[u8], u32> {
     Ok((i, res))
 }
 
-fn take_m_to_n_digits(i: &[u8], m: usize, n: usize) -> IResult<&[u8], u32> {
-    let (i, digits) = take_while_m_n(m, n, is_digit)(i)?;
-
-    let s = str::from_utf8(digits).expect("Invalid data, expected UTF-8 string");
-    let res = s
-        .parse()
-        .expect("Invalid string, expected ASCII representation of a number");
-
-    Ok((i, res))
-}
-
 fn n_digit_in_range(
     i: &[u8],
     n: usize,
     range: impl core::ops::RangeBounds<u32>,
 ) -> IResult<&[u8], u32> {
     let (new_i, number) = take_n_digits(i, n)?;
-
-    if range.contains(&number) {
-        Ok((new_i, number))
-    } else {
-        Err(Err::Error(Error::new(i, nom::error::ErrorKind::Eof)))
-    }
-}
-
-fn m_to_n_digit_in_range(
-    i: &[u8],
-    m: usize,
-    n: usize,
-    range: impl core::ops::RangeBounds<u32>,
-) -> IResult<&[u8], u32> {
-    let (new_i, number) = take_m_to_n_digits(i, m, n)?;
 
     if range.contains(&number) {
         Ok((new_i, number))
@@ -273,50 +247,61 @@ pub fn parse_datetime(i: &[u8]) -> IResult<&[u8], DateTime> {
 
 // DURATION
 
-// Y[YYY...]
+///    dur-year          = 1*DIGIT "Y" [dur-month]
 fn duration_year(i: &[u8]) -> IResult<&[u8], u32> {
-    take_digits(i)
+    terminated(take_digits, tag(b"Y"))(i)
 }
 
-// M[M]
+///    dur-month         = 1*DIGIT "M" [dur-day]
 fn duration_month(i: &[u8]) -> IResult<&[u8], u32> {
-    m_to_n_digit_in_range(i, 1, 2, 0..=12)
+    terminated(take_digits, tag(b"M"))(i)
 }
 
-// W[W]
+///    dur-week          = 1*DIGIT "W"
 fn duration_week(i: &[u8]) -> IResult<&[u8], u32> {
-    m_to_n_digit_in_range(i, 1, 2, 0..=52)
+    terminated(take_digits, tag(b"W"))(i)
 }
 
-// D[D]
+//    dur-day           = 1*DIGIT "D"
 fn duration_day(i: &[u8]) -> IResult<&[u8], u32> {
-    m_to_n_digit_in_range(i, 1, 2, 0..=31)
+    terminated(take_digits, tag(b"D"))(i)
 }
 
-// H[H]
+///    dur-hour          = 1*DIGIT "H" [dur-minute]
+///    dur-time          = "T" (dur-hour / dur-minute / dur-second)
 fn duration_hour(i: &[u8]) -> IResult<&[u8], u32> {
-    m_to_n_digit_in_range(i, 1, 2, 0..=24)
+    terminated(take_digits, tag(b"H"))(i)
 }
 
-// M[M]
+///    dur-minute        = 1*DIGIT "M" [dur-second]
 fn duration_minute(i: &[u8]) -> IResult<&[u8], u32> {
-    m_to_n_digit_in_range(i, 1, 2, 0..=60)
+    terminated(take_digits, tag(b"M"))(i)
 }
 
-// S[S][[,.][MS]]
-fn duration_second_and_millisecond(i: &[u8]) -> IResult<&[u8], (u32, u32)> {
-    let (i, s) = m_to_n_digit_in_range(i, 1, 2, 0..=60)?;
-    let (i, ms) = opt(preceded(one_of(",."), fraction_millisecond))(i)?;
+////    dur-second        = 1*DIGIT "S"
+fn duration_second(i: &[u8]) -> IResult<&[u8], u32> {
+    terminated(take_digits, tag(b"S"))(i)
+}
 
-    Ok((i, (s, ms.unwrap_or(0))))
+///    dur-second-ext    = 1*DIGIT (,|.) 1*DIGIT "S"
+fn duration_second_and_millisecond(i: &[u8]) -> IResult<&[u8], (u32, u32)> {
+    alt((
+        // no milliseconds
+        map(duration_second, |m| (m, 0)),
+        terminated(
+            // with milliseconds
+            separated_pair(take_digits, one_of(",."), fraction_millisecond),
+            tag(b"S"),
+        ),
+    ))(i)
 }
 
 fn duration_time(i: &[u8]) -> IResult<&[u8], (u32, u32, u32, u32)> {
     map(
         tuple((
-            opt(terminated(duration_hour, tag(b"H"))),
-            opt(terminated(duration_minute, tag(b"M"))),
-            opt(terminated(duration_second_and_millisecond, tag(b"S"))),
+            opt(duration_hour),
+            opt(duration_minute),
+            opt(duration_second_and_millisecond),
         )),
         |(h, m, s)| {
             let (s, ms) = s.unwrap_or((0, 0));
@@ -331,9 +316,9 @@ fn duration_ymdhms(i: &[u8]) -> IResult<&[u8], Duration> {
         preceded(
             tag(b"P"),
             tuple((
-                opt(terminated(duration_year, tag(b"Y"))),
-                opt(terminated(duration_month, tag(b"M"))),
-                opt(terminated(duration_day, tag(b"D"))),
+                opt(duration_year),
+                opt(duration_month),
+                opt(duration_day),
                 opt(preceded(tag(b"T"), duration_time)),
             )),
         ),
@@ -359,10 +344,7 @@ fn duration_ymdhms(i: &[u8]) -> IResult<&[u8], Duration> {
 }
 
 fn duration_weeks(i: &[u8]) -> IResult<&[u8], Duration> {
-    map(
-        preceded(tag(b"P"), terminated(duration_week, tag(b"W"))),
-        Duration::Weeks,
-    )(i)
+    map(preceded(tag(b"P"), duration_week), Duration::Weeks)(i)
 }
 
 // YYYY, no sign
