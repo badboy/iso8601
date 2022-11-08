@@ -246,6 +246,7 @@ fn test_duration_second_and_millisecond() {
 #[test]
 fn test_duration_time() {
     assert_eq!(Ok((&[][..], (1, 2, 3, 0))), duration_time(b"1H2M3S"));
+    assert_eq!(Ok((&[][..], (10, 12, 30, 0))), duration_time(b"10H12M30S"));
     assert_eq!(Ok((&[][..], (1, 0, 3, 0))), duration_time(b"1H3S"));
     assert_eq!(Ok((&[][..], (0, 2, 0, 0))), duration_time(b"2M"));
     assert_eq!(Ok((&[][..], (1, 2, 3, 400))), duration_time(b"1H2M3,4S"));
@@ -327,6 +328,56 @@ fn duration_roundtrip() {
     assert_parser!(
         parse_duration, "P0D",
         Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0, millisecond: 0 }
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn duration_multi_digit_hour() {
+    assert_parser!(
+        parse_duration, "PT12H",
+        Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 12, minute: 0, second: 0, millisecond: 0 }
+    );
+    assert_parser!(
+        parse_duration, "PT8760H",
+        Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 365*24, minute: 0, second: 0, millisecond: 0 }
+    );
+}
+
+
+#[rustfmt::skip]
+#[test]
+fn duration_multi_digit_minute() {
+    assert_parser!(
+        parse_duration, "PT15M",
+        Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 15, second: 0, millisecond: 0 }
+    );
+    assert_parser!(
+        parse_duration, "PT600M",
+        Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 600, second: 0, millisecond: 0 }
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn duration_multi_digit_second() {
+    assert_parser!(
+        parse_duration, "PT16S",
+        Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 16, millisecond: 0 }
+    );
+
+    assert_parser!(
+        parse_duration, "PT900S",
+        Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 900, millisecond: 0 }
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn duration_multi_digit_day() {
+    assert_parser!(
+        parse_duration, "PT36500D",
+        Duration::YMDHMS { year: 0, month: 0, day: 36500, hour: 0, minute: 0, second: 0, millisecond: 0 }
     );
 }
 
