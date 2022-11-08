@@ -13,8 +13,9 @@ macro_rules! assert_parser {
         use std::string::ToString;
 
         let (rest, parsed) = $parser($line.as_bytes()).unwrap();
-        crate::assert::print_result($line, &rest, &parsed);
-
+        if std::env::var("VERBOSE_TEST_OUTPUT").is_ok() {
+            $crate::assert::print_result($line, &rest, &parsed);
+        }
         assert_eq!(
             parsed, $expectation,
             "{:?} not parsed as expected (leftover: {:?})",
