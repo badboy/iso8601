@@ -80,6 +80,19 @@ pub struct DateTime {
 }
 
 /// A time duration.
+
+/// Durations:
+/// https://www.rfc-editor.org/rfc/rfc3339#page-13
+///    dur-second        = 1*DIGIT "S"
+///    dur-minute        = 1*DIGIT "M" [dur-second]
+///    dur-hour          = 1*DIGIT "H" [dur-minute]
+///    dur-time          = "T" (dur-hour / dur-minute / dur-second)
+///    dur-day           = 1*DIGIT "D"
+///    dur-week          = 1*DIGIT "W"
+///    dur-month         = 1*DIGIT "M" [dur-day]
+///    dur-year          = 1*DIGIT "Y" [dur-month]
+///    dur-date          = (dur-day / dur-month / dur-year) [dur-time]
+///    duration          = "P" (dur-date / dur-time / dur-week)
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum Duration {
     /// A duration specified by year, month, day, hour, minute and second units

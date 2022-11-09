@@ -162,18 +162,18 @@ fn disallows_notallowed() {
 
 #[test]
 fn test_duration_year() {
-    assert_eq!(Ok((&[][..], 2019)), duration_year(b"2019"));
-    assert_eq!(Ok((&[][..], 0)), duration_year(b"0"));
-    assert_eq!(Ok((&[][..], 10000)), duration_year(b"10000"));
+    assert_eq!(Ok((&[][..], 2019)), duration_year(b"2019Y"));
+    assert_eq!(Ok((&[][..], 0)), duration_year(b"0Y"));
+    assert_eq!(Ok((&[][..], 10000)), duration_year(b"10000Y"));
     assert!(duration_year(b"abcd").is_err());
     assert!(duration_year(b"-1").is_err());
 }
 
 #[test]
 fn test_duration_month() {
-    assert_eq!(Ok((&[][..], 6)), duration_month(b"6"));
-    assert_eq!(Ok((&[][..], 0)), duration_month(b"0"));
-    assert_eq!(Ok((&[][..], 12)), duration_month(b"12"));
+    assert_eq!(Ok((&[][..], 6)), duration_month(b"6M"));
+    assert_eq!(Ok((&[][..], 0)), duration_month(b"0M"));
+    assert_eq!(Ok((&[][..], 12)), duration_month(b"12M"));
     assert!(duration_month(b"ab").is_err());
     assert!(duration_month(b"-1").is_err());
     assert!(duration_month(b"13").is_err());
@@ -181,9 +181,9 @@ fn test_duration_month() {
 
 #[test]
 fn test_duration_week() {
-    assert_eq!(Ok((&[][..], 26)), duration_week(b"26"));
-    assert_eq!(Ok((&[][..], 0)), duration_week(b"0"));
-    assert_eq!(Ok((&[][..], 52)), duration_week(b"52"));
+    assert_eq!(Ok((&[][..], 26)), duration_week(b"26W"));
+    assert_eq!(Ok((&[][..], 0)), duration_week(b"0W"));
+    assert_eq!(Ok((&[][..], 52)), duration_week(b"52W"));
     assert!(duration_week(b"ab").is_err());
     assert!(duration_week(b"-1").is_err());
     assert!(duration_week(b"53").is_err());
@@ -191,9 +191,9 @@ fn test_duration_week() {
 
 #[test]
 fn test_duration_day() {
-    assert_eq!(Ok((&[][..], 16)), duration_day(b"16"));
-    assert_eq!(Ok((&[][..], 0)), duration_day(b"0"));
-    assert_eq!(Ok((&[][..], 31)), duration_day(b"31"));
+    assert_eq!(Ok((&[][..], 16)), duration_day(b"16D"));
+    assert_eq!(Ok((&[][..], 0)), duration_day(b"0D"));
+    assert_eq!(Ok((&[][..], 31)), duration_day(b"31D"));
     assert!(duration_day(b"ab").is_err());
     assert!(duration_day(b"-1").is_err());
     assert!(duration_day(b"32").is_err());
@@ -201,9 +201,9 @@ fn test_duration_day() {
 
 #[test]
 fn test_duration_hour() {
-    assert_eq!(Ok((&[][..], 12)), duration_hour(b"12"));
-    assert_eq!(Ok((&[][..], 0)), duration_hour(b"0"));
-    assert_eq!(Ok((&[][..], 24)), duration_hour(b"24"));
+    assert_eq!(Ok((&[][..], 12)), duration_hour(b"12H"));
+    assert_eq!(Ok((&[][..], 0)), duration_hour(b"0H"));
+    assert_eq!(Ok((&[][..], 24)), duration_hour(b"24H"));
     assert!(duration_hour(b"ab").is_err());
     assert!(duration_hour(b"-1").is_err());
     assert!(duration_hour(b"25").is_err());
@@ -211,41 +211,44 @@ fn test_duration_hour() {
 
 #[test]
 fn test_duration_minute() {
-    assert_eq!(Ok((&[][..], 30)), duration_minute(b"30"));
-    assert_eq!(Ok((&[][..], 0)), duration_minute(b"0"));
-    assert_eq!(Ok((&[][..], 60)), duration_minute(b"60"));
+    assert_eq!(Ok((&[][..], 30)), duration_minute(b"30M"));
+    assert_eq!(Ok((&[][..], 0)), duration_minute(b"0M"));
+    assert_eq!(Ok((&[][..], 60)), duration_minute(b"60M"));
     assert!(duration_minute(b"ab").is_err());
     assert!(duration_minute(b"-1").is_err());
     assert!(duration_minute(b"61").is_err());
 }
 
 #[test]
-fn test_duration_second_and_millisecond() {
+fn test_duration_second_and_millisecond1() {
     assert_eq!(
         Ok((&[][..], (30, 0))),
-        duration_second_and_millisecond(b"30")
+        duration_second_and_millisecond(b"30S")
     );
-    assert_eq!(Ok((&[][..], (0, 0))), duration_second_and_millisecond(b"0"));
+    assert_eq!(
+        Ok((&[][..], (0, 0))),
+        duration_second_and_millisecond(b"0S")
+    );
     assert_eq!(
         Ok((&[][..], (60, 0))),
-        duration_second_and_millisecond(b"60")
+        duration_second_and_millisecond(b"60S")
     );
     assert_eq!(
         Ok((&[][..], (1, 230))),
-        duration_second_and_millisecond(b"1,23")
+        duration_second_and_millisecond(b"1,23S")
     );
     assert_eq!(
-        Ok((&[][..], (1, 230))),
-        duration_second_and_millisecond(b"1.23")
+        Ok((&[][..], (2, 340))),
+        duration_second_and_millisecond(b"2.34S")
     );
-    assert!(duration_second_and_millisecond(b"ab").is_err());
-    assert!(duration_second_and_millisecond(b"-1").is_err());
-    assert!(duration_second_and_millisecond(b"61").is_err());
+    assert!(duration_second_and_millisecond(b"abS").is_err());
+    assert!(duration_second_and_millisecond(b"-1S").is_err());
 }
 
 #[test]
 fn test_duration_time() {
     assert_eq!(Ok((&[][..], (1, 2, 3, 0))), duration_time(b"1H2M3S"));
+    assert_eq!(Ok((&[][..], (10, 12, 30, 0))), duration_time(b"10H12M30S"));
     assert_eq!(Ok((&[][..], (1, 0, 3, 0))), duration_time(b"1H3S"));
     assert_eq!(Ok((&[][..], (0, 2, 0, 0))), duration_time(b"2M"));
     assert_eq!(Ok((&[][..], (1, 2, 3, 400))), duration_time(b"1H2M3,4S"));
@@ -275,6 +278,27 @@ fn test_duration_datetime_error() {
     assert!(duration_datetime(b"").is_err());
     assert!(duration_datetime(b"P").is_err()); // empty duration is not 0 seconds
     assert!(duration_datetime(b"0001-02-03T04:05:06").is_err()); // missing P at start
+}
+
+#[rustfmt::skip]
+#[test]
+fn test_duration_second_and_millisecond2() {
+    assert_parser!(
+        parse_duration, "PT30S", 
+        Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 30, millisecond: 0 }
+
+    );
+
+    assert_parser!(
+        parse_duration, "PT30.123S", 
+        Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 30, millisecond: 123 }
+
+    );
+
+    assert_parser!(
+        parse_duration, "P2021Y11M16DT23H26M59.123S",
+        Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 23, minute: 26, second: 59, millisecond: 123 }
+    );
 }
 
 #[rustfmt::skip]
@@ -327,6 +351,59 @@ fn duration_roundtrip() {
     assert_parser!(
         parse_duration, "P0D",
         Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0, millisecond: 0 }
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn duration_multi_digit_hour() {
+    assert_parser!(
+        parse_duration, "PT12H",
+        Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 12, minute: 0, second: 0, millisecond: 0 }
+    );
+    assert_parser!(
+        parse_duration, "PT8760H",
+        Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 365*24, minute: 0, second: 0, millisecond: 0 }
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn duration_multi_digit_minute() {
+    assert_parser!(
+        parse_duration, "PT15M",
+        Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 15, second: 0, millisecond: 0 }
+    );
+    assert_parser!(
+        parse_duration, "PT600M",
+        Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 600, second: 0, millisecond: 0 }
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn duration_multi_digit_second() {
+    assert_parser!(
+        parse_duration, "PT16S",
+        Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 16, millisecond: 0 }
+    );
+
+    assert_parser!(
+        parse_duration, "PT900S",
+        Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 900, millisecond: 0 }
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn duration_multi_digit_day() {
+    assert_parser!(
+        parse_duration, "P365D",
+        Duration::YMDHMS { year: 0, month: 0, day: 365, hour: 0, minute: 0, second: 0, millisecond: 0 }
+    );
+    assert_parser!(
+        parse_duration, "P36500D",
+        Duration::YMDHMS { year: 0, month: 0, day: 36500, hour: 0, minute: 0, second: 0, millisecond: 0 }
     );
 }
 
