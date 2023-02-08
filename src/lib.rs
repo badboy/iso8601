@@ -12,6 +12,7 @@
 //! let datetime = iso8601::datetime("2015-06-26T16:43:23+0200").unwrap();
 //! ```
 
+#![allow(clippy::uninlined_format_args)]
 #![deny(
     missing_copy_implementations,
     trivial_casts,
@@ -85,7 +86,7 @@ pub struct DateTime {
 /// A time duration.
 
 /// Durations:
-/// https://www.rfc-editor.org/rfc/rfc3339#page-13
+/// <https://www.rfc-editor.org/rfc/rfc3339#page-13>
 ///    dur-second        = 1*DIGIT "S"
 ///    dur-minute        = 1*DIGIT "M" [dur-second]
 ///    dur-hour          = 1*DIGIT "H" [dur-minute]
