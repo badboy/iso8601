@@ -38,6 +38,9 @@ use core::str::FromStr;
 mod display;
 pub mod parsers;
 
+#[cfg(feature = "chrono")]
+mod chrono;
+
 #[cfg(test)]
 mod assert;
 

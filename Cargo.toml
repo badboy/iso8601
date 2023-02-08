@@ -14,7 +14,10 @@ edition = "2018"
 
 [dependencies]
 nom = { version = "7", default-features = false }
+chrono = { version = "0.4", default-features = false, optional = true }
+num-traits = { version = "0.2", optional = true }
 
 [features]
 default = ["std"]
 std = ["nom/std"]
+chrono = ["dep:chrono", "num-traits"]
