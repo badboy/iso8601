@@ -42,6 +42,9 @@ pub mod parsers;
 #[cfg(feature = "chrono")]
 mod chrono;
 
+#[cfg(feature = "serde")]
+mod serde;
+
 #[cfg(test)]
 mod assert;
 
