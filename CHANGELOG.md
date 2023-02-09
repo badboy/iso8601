@@ -4,6 +4,8 @@
 
 ## [Unreleased](https://github.com/badboy/iso8601/compare/v0.5.1...main) - ReleaseDate
 
+* add conversion to chrono as a feature
+
 ## [0.5.1](https://github.com/badboy/iso8601/compare/v0.5.0...v0.5.1) - 2022-11-09
 
 * Fix accepted duration representations

@@ -37,3 +37,6 @@ jobs:
           override: true
       - name: Run tests
         run: cargo test --all --verbose
+
+      - name: Run tests (chrono feature)
+        run: cargo test --lib chrono --features chrono
