@@ -22,6 +22,13 @@ impl TryFrom<crate::Date> for chrono::NaiveDate {
     }
 }
 
+impl crate::Date {
+    /// create a [`chrono::NativeDate`] if possible
+    pub fn into_naive(&self) -> Option<chrono::NaiveDate> {
+        chrono::NaiveDate::try_from(*self).ok()
+    }
+}
+
 #[cfg(test)]
 mod test_date {
     use chrono::Datelike;
@@ -62,6 +69,13 @@ impl TryFrom<crate::Time> for chrono::NaiveTime {
     }
 }
 
+impl crate::Time {
+    /// create a [`chrono::NaiveTime`] if possible
+    pub fn into_naive(self) -> Option<chrono::NaiveTime> {
+        chrono::NaiveTime::try_from(self).ok()
+    }
+}
+
 impl TryFrom<crate::DateTime> for chrono::DateTime<chrono::FixedOffset> {
     type Error = ();
 
@@ -82,6 +96,18 @@ impl TryFrom<crate::DateTime> for chrono::DateTime<chrono::FixedOffset> {
             .from_local_datetime(&naive_date_time)
             .single()
             .ok_or(())
+    }
+}
+
+impl crate::DateTime {
+    /// create a [`chrono::DateTime<chrono::FixedOffset>`] if possible
+    pub fn into_fixed_offset(self) -> Option<chrono::DateTime<chrono::FixedOffset>> {
+        chrono::DateTime::<chrono::FixedOffset>::try_from(self).ok()
+    }
+
+    /// create a [`chrono::NativeDateTime`] if possible
+    pub fn into_naive(self) -> Option<chrono::NaiveDateTime> {
+        self.into_fixed_offset().map(|fxed| fxed.naive_local())
     }
 }
 
