@@ -40,3 +40,6 @@ jobs:
 
       - name: Run tests (chrono feature)
         run: cargo test --lib chrono --features chrono
+
+      - name: Run tests (serde feature)
+        run: cargo test --lib serde --features serde
