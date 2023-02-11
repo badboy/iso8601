@@ -185,6 +185,16 @@ mod datetime {
 
         assert_eq!(deserialized_datetime, datetime);
     }
+
+    #[test]
+    fn deserialize_short() {
+        let datetime_json = r#""2023-02-10T18:12""#;
+        let datetime = crate::datetime("2023-02-10T18:12").unwrap();
+
+        let deserialized_datetime = serde_json::from_str::<crate::DateTime>(datetime_json).unwrap();
+
+        assert_eq!(deserialized_datetime, datetime);
+    }
 }
 
 mod duration {
