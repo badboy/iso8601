@@ -256,7 +256,7 @@ pub fn date(string: &str) -> Result<Date, String> {
     if let Ok((_, parsed)) = parsers::parse_date(string.as_bytes()) {
         Ok(parsed)
     } else {
-        Err(format!("Parser Error: {}", string))
+        Err(format!("Failed to parse date: {}", string))
     }
 }
 
@@ -278,7 +278,7 @@ pub fn time(string: &str) -> Result<Time, String> {
     if let Ok((_, parsed)) = parsers::parse_time(string.as_bytes()) {
         Ok(parsed)
     } else {
-        Err(format!("Parser Error: {}", string))
+        Err(format!("Failed to parse time: {}", string))
     }
 }
 
@@ -297,7 +297,7 @@ pub fn datetime(string: &str) -> Result<DateTime, String> {
     if let Ok((_left_overs, parsed)) = parsers::parse_datetime(string.as_bytes()) {
         Ok(parsed)
     } else {
-        Err(format!("Parser Error: {}", string))
+        Err(format!("Failed to parse datetime: {}", string))
     }
 }
 
@@ -336,6 +336,6 @@ pub fn duration(string: &str) -> Result<Duration, String> {
     if let Ok((_left_overs, parsed)) = parsers::parse_duration(string.as_bytes()) {
         Ok(parsed)
     } else {
-        Err(format!("Parser Error: {}", string))
+        Err(format!("Failed to parse duration: {}", string))
     }
 }
