@@ -3,7 +3,7 @@
 [![crates.io](https://img.shields.io/crates/v/iso8601?style=flat-square)](https://crates.io/crates/iso8601)
 [![docs.rs docs](https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square)](https://docs.rs/iso8601)
 [![License: MIT](https://img.shields.io/github/license/badboy/iso8601?style=flat-square)](LICENSE)
-[![Build Status](https://img.shields.io/github/workflow/status/badboy/iso8601/CI/main?style=flat-square)](https://github.com/badboy/iso8601/actions/workflows/ci.yaml)
+[![Build status](https://img.shields.io/github/actions/workflow/status/badboy/iso8601/ci.yaml?branch=main)](https://github.com/badboy/iso8601/actions/workflows/ci.yaml)
 
 [iso]: https://en.wikipedia.org/wiki/ISO_8601
 [nom]: https://github.com/Geal/nom
