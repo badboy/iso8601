@@ -2,7 +2,9 @@
 
 <!-- next-header -->
 
-## [Unreleased](https://github.com/badboy/iso8601/compare/v0.5.1...main) - ReleaseDate
+## [Unreleased](https://github.com/badboy/iso8601/compare/v0.6.0...main) - ReleaseDate
+
+## [0.6.0](https://github.com/badboy/iso8601/compare/v0.5.1...v0.6.0) - 2023-02-12
 
 * add serde (de)serializer implementations
 * add conversion to chrono as a feature
