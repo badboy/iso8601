@@ -10,6 +10,10 @@
 //!
 //! ```rust
 //! let datetime = iso8601::datetime("2015-06-26T16:43:23+0200").unwrap();
+//! let time = "16:43:23+0200".parse::<iso8601::Time>().unwrap();
+//! let date = "2015-02-29".parse::<iso8601::Date>().unwrap();
+//! let datetime = "2015-06-26T16:43:23+0200".parse::<iso8601::DateTime>().unwrap();
+//! let duration = "P2021Y11M16DT23H26M59.123S".parse::<iso8601::Duration>().unwrap();
 //! ```
 
 #![allow(clippy::uninlined_format_args)]
@@ -49,6 +53,13 @@ mod serde;
 mod assert;
 
 /// A date, can hold three different formats.
+/// ```
+/// # use std::str::FromStr;
+/// assert_eq!(
+///     iso8601::Date::from_str("2023-02-18T17:08:08.793Z"),
+///     Ok(iso8601::Date::YMD{ year: 2023, month: 2, day: 18})
+/// )
+/// ```
 #[allow(missing_docs)]
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum Date {
@@ -61,6 +72,13 @@ pub enum Date {
 }
 
 /// A time object.
+/// ```
+/// # use std::str::FromStr;
+/// assert_eq!(
+///     iso8601::Time::from_str("17:08:08.793Z"),
+///     Ok(iso8601::Time{ hour: 17, minute: 8, second: 8, millisecond: 793, tz_offset_hours: 0, tz_offset_minutes: 00 })
+/// )
+/// ```
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Default)]
 pub struct Time {
     /// a 24th of a day
@@ -78,6 +96,16 @@ pub struct Time {
 }
 
 /// Compound struct, holds Date and Time.
+/// ```
+/// # use std::str::FromStr;
+/// assert_eq!(
+///     iso8601::DateTime::from_str("2023-02-18T17:08:08.793Z"),
+///     Ok(iso8601::DateTime {
+///         date: iso8601::Date::YMD{ year: 2023, month: 2, day: 18},
+///         time: iso8601::Time{ hour: 17, minute: 8, second: 8, millisecond: 793, tz_offset_hours: 0, tz_offset_minutes: 00 }
+///     })
+/// )
+/// ```
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Default)]
 pub struct DateTime {
     /// The date part
