@@ -15,10 +15,10 @@ use nom::{
     bytes::complete::{tag, take_while, take_while_m_n},
     character::complete::one_of,
     character::is_digit,
-    combinator::{map, map_res, not, opt},
+    combinator::{map_res, not, opt},
     error::Error,
     sequence::{preceded, separated_pair, terminated, tuple},
-    Err, IResult,
+    Err, IResult, Parser,
 };
 
 use crate::{Date, DateTime, Duration, Time};
@@ -69,10 +69,12 @@ fn n_digit_in_range(
 }
 
 fn sign(i: &[u8]) -> IResult<&[u8], i32> {
-    map(alt((tag(b"-"), tag(b"+"))), |s: &[u8]| match s {
-        b"-" => -1,
-        _ => 1,
-    })(i)
+    alt((tag(b"-"), tag(b"+")))
+        .map(|s: &[u8]| match s {
+            b"-" => -1,
+            _ => 1,
+        })
+        .parse(i)
 }
 
 // DATE
@@ -80,13 +82,12 @@ fn sign(i: &[u8]) -> IResult<&[u8], i32> {
 // [+/-]YYYY
 fn date_year(i: &[u8]) -> IResult<&[u8], i32> {
     // The sign is optional, but defaults to `+`
-    map(
-        tuple((
-            opt(sign),               // [+/-]
-            |i| take_n_digits(i, 4), // year
-        )),
-        |(s, year)| s.unwrap_or(1) * year as i32,
-    )(i)
+    tuple((
+        opt(sign),               // [+/-]
+        |i| take_n_digits(i, 4), // year
+    ))
+    .map(|(s, year)| s.unwrap_or(1) * year as i32)
+    .parse(i)
 }
 
 // MM
@@ -115,38 +116,35 @@ fn date_ord_day(i: &[u8]) -> IResult<&[u8], u32> {
 
 // YYYY-MM-DD
 fn date_ymd(i: &[u8]) -> IResult<&[u8], Date> {
-    map(
-        tuple((
-            date_year,      // YYYY
-            opt(tag(b"-")), // -
-            date_month,     // MM
-            opt(tag(b"-")), // -
-            date_day,       //DD
-        )),
-        |(year, _, month, _, day)| Date::YMD { year, month, day },
-    )(i)
+    tuple((
+        date_year,      // YYYY
+        opt(tag(b"-")), // -
+        date_month,     // MM
+        opt(tag(b"-")), // -
+        date_day,       //DD
+    ))
+    .map(|(year, _, month, _, day)| Date::YMD { year, month, day })
+    .parse(i)
 }
 
 // YYYY-DDD
 fn date_ordinal(i: &[u8]) -> IResult<&[u8], Date> {
-    map(
-        separated_pair(date_year, opt(tag(b"-")), date_ord_day),
-        |(year, ddd)| Date::Ordinal { year, ddd },
-    )(i)
+    separated_pair(date_year, opt(tag(b"-")), date_ord_day)
+        .map(|(year, ddd)| Date::Ordinal { year, ddd })
+        .parse(i)
 }
 
 // YYYY-"W"WW-D
 fn date_iso_week(i: &[u8]) -> IResult<&[u8], Date> {
-    map(
-        tuple((
-            date_year,                          // y
-            tuple((opt(tag(b"-")), tag(b"W"))), // [-]W
-            date_week,                          // w
-            opt(tag(b"-")),                     // [-]
-            date_week_day,                      // d
-        )),
-        |(year, _, ww, _, d)| Date::Week { year, ww, d },
-    )(i)
+    tuple((
+        date_year,                          // y
+        tuple((opt(tag(b"-")), tag(b"W"))), // [-]W
+        date_week,                          // w
+        opt(tag(b"-")),                     // [-]
+        date_week_day,                      // d
+    ))
+    .map(|(year, _, ww, _, d)| Date::Week { year, ww, d })
+    .parse(i)
 }
 
 /// Parses a date string.
@@ -199,39 +197,37 @@ fn fraction_millisecond(i: &[u8]) -> IResult<&[u8], u32> {
 /// See [`time`][`crate::time`] for the supported formats.
 // HH:MM:[SS][.(m*)][(Z|+...|-...)]
 pub fn parse_time(i: &[u8]) -> IResult<&[u8], Time> {
-    map(
-        tuple((
-            time_hour,                                         // HH
-            opt(tag(b":")),                                    // :
-            time_minute,                                       // MM
-            opt(preceded(opt(tag(b":")), time_second)),        // [SS]
-            opt(preceded(one_of(",."), fraction_millisecond)), // [.(m*)]
-            opt(alt((timezone_hour, timezone_utc))),           // [(Z|+...|-...)]
-        )),
-        |(h, _, m, s, ms, z)| {
-            let (tz_offset_hours, tz_offset_minutes) = z.unwrap_or((0, 0));
+    tuple((
+        time_hour,                                         // HH
+        opt(tag(b":")),                                    // :
+        time_minute,                                       // MM
+        opt(preceded(opt(tag(b":")), time_second)),        // [SS]
+        opt(preceded(one_of(",."), fraction_millisecond)), // [.(m*)]
+        opt(alt((timezone_hour, timezone_utc))),           // [(Z|+...|-...)]
+    ))
+    .map(|(h, _, m, s, ms, z)| {
+        let (tz_offset_hours, tz_offset_minutes) = z.unwrap_or((0, 0));
 
-            Time {
-                hour: h,
-                minute: m,
-                second: s.unwrap_or(0),
-                millisecond: ms.unwrap_or(0),
-                tz_offset_hours,
-                tz_offset_minutes,
-            }
-        },
-    )(i)
+        Time {
+            hour: h,
+            minute: m,
+            second: s.unwrap_or(0),
+            millisecond: ms.unwrap_or(0),
+            tz_offset_hours,
+            tz_offset_minutes,
+        }
+    })
+    .parse(i)
 }
 
 fn timezone_hour(i: &[u8]) -> IResult<&[u8], (i32, i32)> {
-    map(
-        tuple((sign, time_hour, opt(preceded(opt(tag(b":")), time_minute)))),
-        |(s, h, m)| (s * (h as i32), s * (m.unwrap_or(0) as i32)),
-    )(i)
+    tuple((sign, time_hour, opt(preceded(opt(tag(b":")), time_minute))))
+        .map(|(s, h, m)| (s * (h as i32), s * (m.unwrap_or(0) as i32)))
+        .parse(i)
 }
 
-fn timezone_utc(i: &[u8]) -> IResult<&[u8], (i32, i32)> {
-    map(tag(b"Z"), |_| (0, 0))(i)
+fn timezone_utc(input: &[u8]) -> IResult<&[u8], (i32, i32)> {
+    tag(b"Z").map(|_| (0, 0)).parse(input)
 }
 
 /// Parses a datetime string.
@@ -239,10 +235,9 @@ fn timezone_utc(i: &[u8]) -> IResult<&[u8], (i32, i32)> {
 /// See [`datetime`][`crate::datetime`] for supported formats.
 // Full ISO8601 datetime
 pub fn parse_datetime(i: &[u8]) -> IResult<&[u8], DateTime> {
-    map(
-        separated_pair(parse_date, tag(b"T"), parse_time),
-        |(d, t)| DateTime { date: d, time: t },
-    )(i)
+    separated_pair(parse_date, tag(b"T"), parse_time)
+        .map(|(d, t)| DateTime { date: d, time: t })
+        .parse(i)
 }
 
 // DURATION
@@ -287,7 +282,7 @@ fn duration_second(i: &[u8]) -> IResult<&[u8], u32> {
 fn duration_second_and_millisecond(i: &[u8]) -> IResult<&[u8], (u32, u32)> {
     alt((
         // no milliseconds
-        map(duration_second, |m| (m, 0)),
+        duration_second.map(|m| (m, 0)),
         terminated(
             // with milliseconds
             separated_pair(take_digits, one_of(",."), fraction_millisecond),
@@ -297,18 +292,17 @@ fn duration_second_and_millisecond(i: &[u8]) -> IResult<&[u8], (u32, u32)> {
 }
 
 fn duration_time(i: &[u8]) -> IResult<&[u8], (u32, u32, u32, u32)> {
-    map(
-        tuple((
-            opt(duration_hour),
-            opt(duration_minute),
-            opt(duration_second_and_millisecond),
-        )),
-        |(h, m, s)| {
-            let (s, ms) = s.unwrap_or((0, 0));
+    tuple((
+        opt(duration_hour),
+        opt(duration_minute),
+        opt(duration_second_and_millisecond),
+    ))
+    .map(|(h, m, s)| {
+        let (s, ms) = s.unwrap_or((0, 0));
 
-            (h.unwrap_or(0), m.unwrap_or(0), s, ms)
-        },
-    )(i)
+        (h.unwrap_or(0), m.unwrap_or(0), s, ms)
+    })
+    .parse(i)
 }
 
 fn duration_ymdhms(i: &[u8]) -> IResult<&[u8], Duration> {
@@ -344,7 +338,9 @@ fn duration_ymdhms(i: &[u8]) -> IResult<&[u8], Duration> {
 }
 
 fn duration_weeks(i: &[u8]) -> IResult<&[u8], Duration> {
-    map(preceded(tag(b"P"), duration_week), Duration::Weeks)(i)
+    preceded(tag(b"P"), duration_week)
+        .map(Duration::Weeks)
+        .parse(i)
 }
 
 // YYYY, no sign
@@ -353,29 +349,28 @@ fn duration_datetime_year(i: &[u8]) -> IResult<&[u8], u32> {
 }
 
 fn duration_datetime(i: &[u8]) -> IResult<&[u8], Duration> {
-    map(
-        preceded(
-            tuple((tag(b"P"), not(sign))),
-            tuple((
-                duration_datetime_year,
-                opt(tag(b"-")),
-                date_month,
-                opt(tag(b"-")),
-                date_day,
-                tag(b"T"),
-                parse_time,
-            )),
-        ),
-        |(year, _, month, _, day, _, t)| Duration::YMDHMS {
-            year,
-            month,
-            day,
-            hour: t.hour,
-            minute: t.minute,
-            second: t.second,
-            millisecond: t.millisecond,
-        },
-    )(i)
+    preceded(
+        tuple((tag(b"P"), not(sign))),
+        tuple((
+            duration_datetime_year,
+            opt(tag(b"-")),
+            date_month,
+            opt(tag(b"-")),
+            date_day,
+            tag(b"T"),
+            parse_time,
+        )),
+    )
+    .map(|(year, _, month, _, day, _, t)| Duration::YMDHMS {
+        year,
+        month,
+        day,
+        hour: t.hour,
+        minute: t.minute,
+        second: t.second,
+        millisecond: t.millisecond,
+    })
+    .parse(i)
 }
 
 /// Parses a duration string.
