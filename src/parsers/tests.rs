@@ -6,6 +6,9 @@ fn test_date_year() {
     assert_eq!(Ok((&[][..], 2015)), date_year(b"2015"));
     assert_eq!(Ok((&[][..], -333)), date_year(b"-0333"));
     assert_eq!(Ok((&b"-"[..], 2015)), date_year(b"2015-"));
+    date_year(b"2023").unwrap();
+    date_year(b"+2023").unwrap();
+    date_year(b"-2023").unwrap();
     assert!(date_year(b"abcd").is_err());
     assert!(date_year(b"2a03").is_err());
 }
@@ -418,3 +421,17 @@ fn duration_multi_digit_day() {
 //    assert!(parse_datetime((b"2001-W05-6T04:05:06.123455Z").is_err());
 //    assert!(parse_datetime((b"2015-06-26TZ").is_err());
 // }
+
+#[test]
+#[ignore]
+/// a few things we probably don't parse correctly yet
+/// see <https://ijmacd.github.io/rfc3339-iso8601/>
+fn iso8601_vs_rfc3339() {
+    // "+002023-02-18".parse::<Date>().unwrap();  // six digit years
+    // "+002023-02".parse::<Date>().unwrap(); // six digit years
+    // "+002023".parse::<Date>().unwrap(); // six digit years
+    // "+2023".parse::<Date>().unwrap(); // missing months etc
+    // "2023-02-18 18:29:24+01:00".parse::<DateTime>().unwrap();
+    // "2023-02-18_17:29:49.278Z".parse::<DateTime>().unwrap();
+    // "2021-208T22:20:32.332320+08".parse::<DateTime>().unwrap();
+}
