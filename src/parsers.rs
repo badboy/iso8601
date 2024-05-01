@@ -1,7 +1,7 @@
 //! The low-level parsers for date, datetime, duration and time.
 //!
-//! The top-level functions [`date`][`crate::date`], [`datetime`][`crate::datetime`],
-//! [`duration`][`crate::duration`] and [`time`][`crate::time`]
+//! The top-level functions [`date()`][`crate::date()`], [`datetime()`][`crate::datetime()`],
+//! [`duration()`][`crate::duration()`] and [`time()`][`crate::time()`]
 //! provide convenient wrappers around the low-level parsers,
 //! but throw away leftover input on success.
 //!
@@ -149,7 +149,7 @@ fn date_iso_week(i: &[u8]) -> IResult<&[u8], Date> {
 
 /// Parses a date string.
 ///
-/// See [`date`][`crate::date`] for the supported formats.
+/// See [`date()`][`crate::date()`] for the supported formats.
 pub fn parse_date(i: &[u8]) -> IResult<&[u8], Date> {
     alt((date_ymd, date_iso_week, date_ordinal))(i)
 }
@@ -194,7 +194,7 @@ fn fraction_millisecond(i: &[u8]) -> IResult<&[u8], u32> {
 
 /// Parses a time string.
 ///
-/// See [`time`][`crate::time`] for the supported formats.
+/// See [`time()`][`crate::time()`] for the supported formats.
 // HH:MM:[SS][.(m*)][(Z|+...|-...)]
 pub fn parse_time(i: &[u8]) -> IResult<&[u8], Time> {
     tuple((
@@ -232,7 +232,7 @@ fn timezone_utc(input: &[u8]) -> IResult<&[u8], (i32, i32)> {
 
 /// Parses a datetime string.
 ///
-/// See [`datetime`][`crate::datetime`] for supported formats.
+/// See [`datetime()`][`crate::datetime()`] for supported formats.
 // Full ISO8601 datetime
 pub fn parse_datetime(i: &[u8]) -> IResult<&[u8], DateTime> {
     separated_pair(parse_date, tag(b"T"), parse_time)
@@ -273,7 +273,7 @@ fn duration_minute(i: &[u8]) -> IResult<&[u8], u32> {
     terminated(take_digits, tag(b"M"))(i)
 }
 
-////    dur-second        = 1*DIGIT "S"
+///    dur-second        = 1*DIGIT "S"
 fn duration_second(i: &[u8]) -> IResult<&[u8], u32> {
     terminated(take_digits, tag(b"S"))(i)
 }
@@ -375,7 +375,7 @@ fn duration_datetime(i: &[u8]) -> IResult<&[u8], Duration> {
 
 /// Parses a duration string.
 ///
-/// See [`duration`][`crate::duration`] for supported formats.
+/// See [`duration()`][`crate::duration()`] for supported formats.
 pub fn parse_duration(i: &[u8]) -> IResult<&[u8], Duration> {
     alt((duration_ymdhms, duration_weeks, duration_datetime))(i)
 }
