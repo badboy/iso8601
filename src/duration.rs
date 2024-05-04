@@ -59,6 +59,270 @@ impl Duration {
             }
             || *self == Duration::Weeks(0)
     }
+
+    /// creates an instance of duration variant YMDHMS with a set amount of years
+    pub fn years(years: u32) -> Self {
+        Self::YMDHMS {
+            year: years,
+            month: 0,
+            day: 0,
+            hour: 0,
+            minute: 0,
+            second: 0,
+            millisecond: 0,
+        }
+    }
+
+    /// creates an instance of duration variant YMDHMS with a set amount of months
+    pub fn months(months: u32) -> Self {
+        Self::YMDHMS {
+            year: 0,
+            month: months,
+            day: 0,
+            hour: 0,
+            minute: 0,
+            second: 0,
+            millisecond: 0,
+        }
+    }
+
+    /// creates an instance of duration variant YMDHMS with a set amount of days
+    pub fn days(days: u32) -> Self {
+        Self::YMDHMS {
+            year: 0,
+            month: 0,
+            day: days,
+            hour: 0,
+            minute: 0,
+            second: 0,
+            millisecond: 0,
+        }
+    }
+
+    /// creates an instance of duration variant YMDHMS with a set amount of hours
+    pub fn hours(hours: u32) -> Self {
+        Self::YMDHMS {
+            year: 0,
+            month: 0,
+            day: 0,
+            hour: hours,
+            minute: 0,
+            second: 0,
+            millisecond: 0,
+        }
+    }
+
+    /// creates an instance of duration variant YMDHMS with a set amount of minutes
+    pub fn minutes(minutes: u32) -> Self {
+        Self::YMDHMS {
+            year: 0,
+            month: 0,
+            day: 0,
+            hour: 0,
+            minute: minutes,
+            second: 0,
+            millisecond: 0,
+        }
+    }
+
+    /// creates an instance of duration variant YMDHMS with a set amount of seconds
+    pub fn seconds(seconds: u32) -> Self {
+        Self::YMDHMS {
+            year: 0,
+            month: 0,
+            day: 0,
+            hour: 0,
+            minute: 0,
+            second: seconds,
+            millisecond: 0,
+        }
+    }
+
+    /// creates an instance of duration variant YMDHMS with a set amount of milliseconds
+    pub fn milliseconds(milliseconds: u32) -> Self {
+        Self::YMDHMS {
+            year: 0,
+            month: 0,
+            day: 0,
+            hour: 0,
+            minute: 0,
+            second: 0,
+            millisecond: milliseconds,
+        }
+    }
+
+    /// creates an instance of the weeks instance
+    pub fn weeks(weeks: u32) -> Self {
+        Self::Weeks(weeks)
+    }
+
+    /// appends years to the YMDHMS variant
+    pub fn and_years(self, years: u32) -> Result<Self, String> {
+        match self {
+            Duration::YMDHMS {
+                year: _,
+                month,
+                day,
+                hour,
+                minute,
+                second,
+                millisecond,
+            } => Ok(Self::YMDHMS {
+                year: years,
+                month,
+                day,
+                hour,
+                minute,
+                second,
+                millisecond,
+            }),
+            Duration::Weeks(_) => Err("Not possible for this type".into()),
+        }
+    }
+
+    /// appends months to the YMDHMS variant
+    pub fn and_months(self, months: u32) -> Result<Self, String> {
+        match self {
+            Duration::YMDHMS {
+                year,
+                month: _,
+                day,
+                hour,
+                minute,
+                second,
+                millisecond,
+            } => Ok(Self::YMDHMS {
+                year,
+                month: months,
+                day,
+                hour,
+                minute,
+                second,
+                millisecond,
+            }),
+            Duration::Weeks(_) => Err("Not possible for this type".into()),
+        }
+    }
+
+    /// appends days to the YMDHMS variant
+    pub fn and_days(self, days: u32) -> Result<Self, String> {
+        match self {
+            Duration::YMDHMS {
+                year,
+                month,
+                day: _,
+                hour,
+                minute,
+                second,
+                millisecond,
+            } => Ok(Self::YMDHMS {
+                year,
+                month,
+                day: days,
+                hour,
+                minute,
+                second,
+                millisecond,
+            }),
+            Duration::Weeks(_) => Err("Not possible for this type".into()),
+        }
+    }
+
+    /// appends hours to the YMDHMS variant
+    pub fn and_hours(self, hours: u32) -> Result<Self, String> {
+        match self {
+            Duration::YMDHMS {
+                year,
+                month,
+                day,
+                hour: _,
+                minute,
+                second,
+                millisecond,
+            } => Ok(Self::YMDHMS {
+                year,
+                month,
+                day,
+                hour: hours,
+                minute,
+                second,
+                millisecond,
+            }),
+            Duration::Weeks(_) => Err("Not possible for this type".into()),
+        }
+    }
+
+    /// appends minutes to the YMDHMS variant
+    pub fn and_minutes(self, minutes: u32) -> Result<Self, String> {
+        match self {
+            Duration::YMDHMS {
+                year,
+                month,
+                day,
+                hour,
+                minute: _,
+                second,
+                millisecond,
+            } => Ok(Self::YMDHMS {
+                year,
+                month,
+                day,
+                hour,
+                minute: minutes,
+                second,
+                millisecond,
+            }),
+            Duration::Weeks(_) => Err("Not possible for this type".into()),
+        }
+    }
+
+    /// appends seconds to the YMDHMS variant
+    pub fn and_seconds(self, seconds: u32) -> Result<Self, String> {
+        match self {
+            Duration::YMDHMS {
+                year,
+                month,
+                day,
+                hour,
+                minute,
+                second: _,
+                millisecond,
+            } => Ok(Self::YMDHMS {
+                year,
+                month,
+                day,
+                hour,
+                minute,
+                second: seconds,
+                millisecond,
+            }),
+            Duration::Weeks(_) => Err("Not possible for this type".into()),
+        }
+    }
+
+    /// appends milliseconds to the YMDHMS variant
+    pub fn and_milliseconds(self, milliseconds: u32) -> Result<Self, String> {
+        match self {
+            Duration::YMDHMS {
+                year,
+                month,
+                day,
+                hour,
+                minute,
+                second,
+                millisecond: _,
+            } => Ok(Self::YMDHMS {
+                year,
+                month,
+                day,
+                hour,
+                minute,
+                second,
+                millisecond: milliseconds,
+            }),
+            Duration::Weeks(_) => Err("Not possible for this type".into()),
+        }
+    }
 }
 
 impl Default for Duration {

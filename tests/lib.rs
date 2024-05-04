@@ -1187,6 +1187,49 @@ fn test_duration_ymdhms() {
         dur
     );
     assert_eq!(StdDuration::from(dur), StdDuration::new(63652348800, 0));
+
+    let dur = Duration::weeks(2);
+    assert_eq!(dur.to_string(), "P2W");
+
+    let dur = Duration::weeks(1);
+    assert!(dur.and_days(1).is_err());
+
+    let dur = Duration::years(1);
+    assert_eq!(
+        dur.and_days(1)
+            .unwrap()
+            .and_hours(1)
+            .unwrap()
+            .and_minutes(1)
+            .unwrap()
+            .and_seconds(1)
+            .unwrap()
+            .and_milliseconds(1)
+            .unwrap()
+            .to_string(),
+        "P1Y1DT1H1M1.1S"
+    );
+
+    let dur = Duration::years(1);
+    assert_eq!(dur.to_string(), "P1Y");
+
+    let dur = Duration::months(1);
+    assert_eq!(dur.to_string(), "P1M");
+
+    let dur = Duration::days(1);
+    assert_eq!(dur.to_string(), "P1D");
+
+    let dur = Duration::hours(1);
+    assert_eq!(dur.to_string(), "PT1H");
+
+    let dur = Duration::minutes(1);
+    assert_eq!(dur.to_string(), "PT1M");
+
+    let dur = Duration::seconds(1);
+    assert_eq!(dur.to_string(), "PT1S");
+
+    let dur = Duration::milliseconds(1);
+    assert_eq!(dur.to_string(), "PT0.1S");
 }
 
 #[test]
