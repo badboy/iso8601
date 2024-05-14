@@ -18,7 +18,7 @@ readme = "README.md"
 edition = "2021"
 
 [dependencies]
-nom = { version = "7", default-features = false }
+nom = { version = "8.0.0-alpha2", default-features = false }
 chrono = { version = "0.4", default-features = false, optional = true }
 num-traits = { version = "0.2", optional = true }
 serde = { version = "1.0", optional = true }
