@@ -1,13 +1,12 @@
-# Parsing [ISO8601][iso] dates using [winnow][]
-
-[![crates.io](https://img.shields.io/crates/v/iso8601?style=flat-square)](https://crates.io/crates/iso8601)
-[![docs.rs docs](https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square)](https://docs.rs/iso8601)
-[![License: MIT](https://img.shields.io/github/license/badboy/iso8601?style=flat-square)](LICENSE)
-[![Build status](https://img.shields.io/github/actions/workflow/status/badboy/iso8601/ci.yaml?branch=main)](https://github.com/badboy/iso8601/actions/workflows/ci.yaml)
-
+# winnow-iso8601, making parsing [ISO8601][iso] dates a breeze
 
 [iso]: https://en.wikipedia.org/wiki/ISO_8601
-[nom]: https://github.com/Geal/nom
+[winnow]: https://github.com/winnow-rs/winnow
+[iso-crate]: https://crates.io/crates/iso8601
+
+## About
+
+Provides a set of complete parsers to deal with simple cases where you are parsing a stand-alone date string.
 
 ```rust,ignore
 let datetime = iso8601::datetime("2015-06-26T16:43:23+0200").unwrap();
@@ -29,7 +28,18 @@ DateTime {
 };
 ```
 
-This parses most cases of iso8601 dates.
+Each of these complete methods simply build a `Partial<&[u8]>` which is flagged as complete. run the partial parsers
+available. So, for most cases you would probably want to use: 
+
+```rust,ignore
+
+```
+
+# Contributors
+
+winnow-iso8601 is the fruit of the work of many contributors over the years, many
+thanks for your help! In particular, thanks to [badboy](https://github.com/badboy)
+and [hoodie](https://github.com/hoodie) for the original [`iso8601` crate][iso-crate] and actually reading the standard.
 
 # [Documentation][docs]
 

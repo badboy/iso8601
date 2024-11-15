@@ -1,14 +1,8 @@
 [package]
-name = "winnow-iso8601"
+name = "winnow_iso8601"
 version = "0.1.0"
-authors = [
-    "Jan-Erik Rediger <janerik@fnordig.de>",
-    "Kenny Flegal <soulstompp@gmal.com>",
-    "Hendrik Sollich <hendrik@hoodie.de>",
-]
-
 description = "Parsing ISO8601 dates using nom"
-keywords = [ "iso8601", "date-time", "parser", "nom" ]
+keywords = [ "iso8601", "date-time", "parser", "winnow" ]
 categories = [ "parser-implementations", "date-and-time" ]
 
 repository = "https://github.com/soulstompp/winnow-iso8601"
