@@ -1,8 +1,9 @@
 use core::str::FromStr;
 
 use alloc::string::String;
-
+use winnow::stream::StreamIsPartial;
 use crate::parsers;
+use crate::parsers::Stream;
 
 /// A time duration.
 /// Durations:
@@ -19,7 +20,7 @@ use crate::parsers;
 ///    duration          = "P" (dur-date / dur-time / dur-week)
 /// ```
 ///# use std::str::FromStr;
-/// assert_eq!(iso8601::Duration::from_str("P2021Y11M16DT23H26M59.123S"), Ok(iso8601::Duration::YMDHMS{ year: 2021, month: 11, day: 16, hour: 23, minute: 26, second: 59, millisecond: 123 }))
+/// assert_eq!(winnow_iso8601::Duration::from_str("P2021Y11M16DT23H26M59.123S"), Ok(winnow_iso8601::Duration::YMDHMS{ year: 2021, month: 11, day: 16, hour: 23, minute: 26, second: 59, millisecond: 123 }))
 /// ```
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum Duration {
@@ -139,14 +140,16 @@ impl From<Duration> for ::core::time::Duration {
 /// ## Examples
 ///
 /// ```rust
-/// let duration = iso8601::duration("P1Y2M3DT4H5M6S").unwrap();
-/// let duration = iso8601::duration("P1W").unwrap();
-/// let duration = iso8601::duration("P2015-11-03T21:56").unwrap();
+/// let duration = winnow_iso8601::duration("P1Y2M3DT4H5M6S").unwrap();
+/// let duration = winnow_iso8601::duration("P1W").unwrap();
+/// let duration = winnow_iso8601::duration("P2015-11-03T21:56").unwrap();
 /// ```
 pub fn duration(string: &str) -> Result<Duration, String> {
-    if let Ok((_left_overs, parsed)) = parsers::parse_duration(string.as_bytes()) {
-        Ok(parsed)
-    } else {
-        Err(format!("Failed to parse duration: {}", string))
+    let i = &mut Stream::new(string.as_bytes());
+    let _ = i.complete();
+
+    match parsers::parse_duration(i) {
+        Ok(p) => Ok(p),
+        Err(e) => Err(format!("Failed to parse duration {}: {}", string, e)),
     }
 }
