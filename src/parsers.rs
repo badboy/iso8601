@@ -8,374 +8,439 @@
 //! Using the low-level functions provided here allows to recover leftover input
 //! or to combine these parsers with other parser combinators.
 
+use winnow::token::one_of;
 use core::str;
+use std::ops::RangeBounds;
+use winnow::combinator::{alt, trace};
+use winnow::combinator::{not, opt};
+use winnow::combinator::{preceded, separated_pair, terminated};
+use winnow::error::{ContextError, ErrMode};
+use winnow::token::{literal, take_while};
+use winnow::{seq, PResult, Parser, Partial};
+use winnow::ascii::digit1;
 
-use nom::{
-    branch::alt,
-    bytes::complete::{tag, take_while, take_while_m_n},
-    character::complete::one_of,
-    character::is_digit,
-    combinator::{map_res, not, opt},
-    error::Error,
-    sequence::{preceded, separated_pair, terminated, tuple},
-    Err, IResult, Parser,
-};
 
 use crate::{Date, DateTime, Duration, Time};
 
 #[cfg(test)]
 mod tests;
 
+/// Type for holding partial data for parsers
+pub type Stream<'i> = Partial<&'i [u8]>;
+
 // UTILITY
 
-fn take_digits(i: &[u8]) -> IResult<&[u8], u32> {
-    let (i, digits) = take_while(is_digit)(i)?;
+fn take_digits(i: &mut Stream) -> PResult<u32> {
+    trace("take_digits", move |input: &mut Stream<'_>| {
+        let digits = take_while(1.., |c: u8| char::from(c).is_digit(10)).parse_next(input)?;
 
-    if digits.is_empty() {
-        return Err(Err::Error(Error::new(i, nom::error::ErrorKind::Eof)));
-    }
+        if digits.is_empty() {
+            return Err(ErrMode::Backtrack(ContextError::new()));
+        }
 
-    let s = str::from_utf8(digits).expect("Invalid data, expected UTF-8 string");
-    let res = s
-        .parse()
-        .expect("Invalid string, expected ASCII representation of a number");
+        let s = str::from_utf8(digits).expect("Invalid data, expected UTF-8 string");
+        let res = s
+            .parse()
+            .expect("Invalid string, expected ASCII representation of a number");
 
-    Ok((i, res))
+        Ok(res)
+    }).parse_next(i)
+
 }
 
-fn take_n_digits(i: &[u8], n: usize) -> IResult<&[u8], u32> {
-    let (i, digits) = take_while_m_n(n, n, is_digit)(i)?;
+fn take_digits_in_range(
+    i: &mut Stream,
+    places: usize,
+    range: impl RangeBounds<u32>,
+) -> PResult<u32> {
+    let n = take_while(places, |c: u8| char::from(c).is_digit(10)).parse_next(i)?;
 
-    let s = str::from_utf8(digits).expect("Invalid data, expected UTF-8 string");
-    let res = s
-        .parse()
-        .expect("Invalid string, expected ASCII representation of a number");
+    let s = str::from_utf8(n).expect("Invalid data, expected UTF-8 string");
 
-    Ok((i, res))
-}
-
-fn n_digit_in_range(
-    i: &[u8],
-    n: usize,
-    range: impl core::ops::RangeBounds<u32>,
-) -> IResult<&[u8], u32> {
-    let (new_i, number) = take_n_digits(i, n)?;
+    let number: u32 = s.parse().expect("Invalid string, expected ASCII representation of a number");
 
     if range.contains(&number) {
-        Ok((new_i, number))
+        Ok(number)
     } else {
-        Err(Err::Error(Error::new(i, nom::error::ErrorKind::Eof)))
+        return Err(ErrMode::Backtrack(ContextError::new()));
     }
 }
 
-fn sign(i: &[u8]) -> IResult<&[u8], i32> {
-    alt((tag(b"-"), tag(b"+")))
+fn sign(i: &mut Stream) -> PResult<i32> {
+    alt((literal(b"-"), literal(b"+")))
         .map(|s: &[u8]| match s {
             b"-" => -1,
             _ => 1,
         })
-        .parse(i)
+        .parse_next(i)
 }
 
 // DATE
 
 // [+/-]YYYY
-fn date_year(i: &[u8]) -> IResult<&[u8], i32> {
-    // The sign is optional, but defaults to `+`
-    tuple((
-        opt(sign),               // [+/-]
-        |i| take_n_digits(i, 4), // year
-    ))
-    .map(|(s, year)| s.unwrap_or(1) * year as i32)
-    .parse(i)
+fn date_year(i: &mut Stream) -> PResult<i32> {
+    trace("date_year", move |input: &mut Stream<'_>| {
+        // The sign is optional, but defaults to `+`
+        let sign = opt(sign).parse_next(input)?.unwrap_or(1);
+        let year = take_digits_in_range(input, 4, 100..)?;
+        Ok(sign * year as i32)
+    }).parse_next(i)
 }
 
 // MM
-fn date_month(i: &[u8]) -> IResult<&[u8], u32> {
-    n_digit_in_range(i, 2, 1..=12)
+fn date_month(i: &mut Stream) -> PResult<u32> {
+    trace("date_month", move |input: &mut Stream<'_>| {
+        take_digits_in_range(input, 2, 1..=12)
+    }).parse_next(i)
 }
 
 // DD
-fn date_day(i: &[u8]) -> IResult<&[u8], u32> {
-    n_digit_in_range(i, 2, 1..=31)
+fn date_day(i: &mut Stream) -> PResult<u32> {
+    trace("date_day", move |input: &mut Stream<'_>| {
+        take_digits_in_range(input, 2, 1..=31)
+    }).parse_next(i)
 }
 
 // WW
-fn date_week(i: &[u8]) -> IResult<&[u8], u32> {
-    n_digit_in_range(i, 2, 1..=52)
+fn date_week(i: &mut Stream) -> PResult<u32> {
+    trace("date_week", move |input: &mut Stream<'_>| {
+        take_digits_in_range(input, 2, 1..=52)
+    }).parse_next(i)
+
 }
 
-fn date_week_day(i: &[u8]) -> IResult<&[u8], u32> {
-    n_digit_in_range(i, 1, 1..=7)
+fn date_week_day(i: &mut Stream) -> PResult<u32> {
+    trace("date_week_day", move |input: &mut Stream<'_>| {
+        take_digits_in_range(input, 1, 1..=7)
+    }).parse_next(i)
 }
 
 // ordinal DDD
-fn date_ord_day(i: &[u8]) -> IResult<&[u8], u32> {
-    n_digit_in_range(i, 3, 1..=366)
+fn date_ord_day(i: &mut Stream) -> PResult<u32> {
+    trace("date_ord_day", move |input: &mut Stream<'_>| {
+        take_digits_in_range(input, 3, 1..=366)
+    }).parse_next(i)
+
 }
 
 // YYYY-MM-DD
-fn date_ymd(i: &[u8]) -> IResult<&[u8], Date> {
-    tuple((
+fn date_ymd(i: &mut Stream) -> PResult<Date> {
+    trace("date_ymd", move |input: &mut Stream<'_>| {
+        seq!((
         date_year,      // YYYY
-        opt(tag(b"-")), // -
+        _: opt(literal(b"-")), // -
         date_month,     // MM
-        opt(tag(b"-")), // -
+        _: opt(literal(b"-")), // -
         date_day,       //DD
-    ))
-    .map(|(year, _, month, _, day)| Date::YMD { year, month, day })
-    .parse(i)
+        ))
+            .map(|(year,month, day)| Date::YMD { year, month, day })
+            .parse_next(input)
+    }).parse_next(i)
 }
 
 // YYYY-DDD
-fn date_ordinal(i: &[u8]) -> IResult<&[u8], Date> {
-    separated_pair(date_year, opt(tag(b"-")), date_ord_day)
-        .map(|(year, ddd)| Date::Ordinal { year, ddd })
-        .parse(i)
+fn date_ordinal(i: &mut Stream) -> PResult<Date> {
+    trace("date_ordinal", move |input: &mut Stream<'_>| {
+        separated_pair(date_year, opt(literal(b"-")), date_ord_day)
+            .map(|(year, ddd)| Date::Ordinal { year, ddd })
+            .parse_next(input)
+    }).parse_next(i)
 }
 
 // YYYY-"W"WW-D
-fn date_iso_week(i: &[u8]) -> IResult<&[u8], Date> {
-    tuple((
+fn date_iso_week(i: &mut Stream) -> PResult<Date> {
+    trace("", move |input: &mut Stream<'_>| {
+        seq!((
         date_year,                          // y
-        tuple((opt(tag(b"-")), tag(b"W"))), // [-]W
+        seq!((opt(literal(b"-")), literal(b"W"))), // [-]W
         date_week,                          // w
-        opt(tag(b"-")),                     // [-]
+        opt(literal(b"-")),                     // [-]
         date_week_day,                      // d
     ))
-    .map(|(year, _, ww, _, d)| Date::Week { year, ww, d })
-    .parse(i)
+            .map(|(year, _, ww, _, d)| Date::Week { year, ww, d })
+            .parse_next(input)
+    }).parse_next(i)
 }
 
 /// Parses a date string.
 ///
 /// See [`date()`][`crate::date()`] for the supported formats.
-pub fn parse_date(i: &[u8]) -> IResult<&[u8], Date> {
-    alt((date_ymd, date_iso_week, date_ordinal))(i)
+pub fn parse_date(i: &mut Stream) -> PResult<Date> {
+    trace("parse_date", move |input: &mut Stream<'_>| {
+        alt((date_ymd, date_iso_week, date_ordinal)).parse_next(input)
+    }).parse_next(i)
 }
 
 // TIME
 
 // HH
-fn time_hour(i: &[u8]) -> IResult<&[u8], u32> {
-    n_digit_in_range(i, 2, 0..=24)
+fn time_hour(i: &mut Stream) -> PResult<u32> {
+    trace("time_hour", move |input: &mut Stream<'_>| {
+        take_digits_in_range(input, 2, 0..=24)
+    }).parse_next(i)
 }
 
 // MM
-fn time_minute(i: &[u8]) -> IResult<&[u8], u32> {
-    n_digit_in_range(i, 2, 0..=59)
+fn time_minute(i: &mut Stream, ) -> PResult<u32> {
+    trace("time_minute", move |input: &mut Stream<'_>| {
+        take_digits_in_range(input, 2, 0..=59)
+    }).parse_next(i)
 }
 
 // SS
-fn time_second(i: &[u8]) -> IResult<&[u8], u32> {
-    n_digit_in_range(i, 2, 0..=60)
+fn time_second(i: &mut Stream) -> PResult<u32> {
+    trace("time_second", move |input: &mut Stream<'_>| {
+        take_digits_in_range(input, 2, 0..=60)
+    }).parse_next(i)
 }
 
 // Converts the fractional part if-any of a number of seconds to milliseconds
 // truncating towards zero if there are more than three digits.
 // e.g. "" -> 0, "1" -> 100, "12" -> 120, "123" -> 123, "1234" -> 123
-fn fraction_millisecond(i: &[u8]) -> IResult<&[u8], u32> {
-    let (i, mut digits) = take_while(is_digit)(i)?;
-    let mut l = digits.len();
-    if l > 3 {
-        digits = digits.get(0..3).unwrap();
-    }
-    let mut result = 0;
-    if l > 0 {
-        let digits = str::from_utf8(digits).unwrap(); // This can't panic, `digits` will only include digits.
-        result = digits.parse().unwrap();
-    }
-    while l < 3 {
-        result *= 10;
-        l += 1;
-    }
-    Ok((i, result))
+fn fraction_millisecond(i: &mut Stream) -> PResult<u32> {
+    trace("fraction_millisecond", move |input: &mut Stream<'_>| {
+        let mut digits = digit1(input)?;
+        let mut l = digits.len();
+        if l > 3 {
+            digits = digits.get(0..3).unwrap();
+        }
+        let mut result = 0;
+        if l > 0 {
+            let digits = str::from_utf8(digits).unwrap(); // This can't panic, `digits` will only include digits.
+            result = digits.parse().unwrap();
+        }
+        while l < 3 {
+            result *= 10;
+            l += 1;
+        }
+        Ok(result)
+    }).parse_next(i)
 }
 
 /// Parses a time string.
 ///
 /// See [`time()`][`crate::time()`] for the supported formats.
 // HH:MM:[SS][.(m*)][(Z|+...|-...)]
-pub fn parse_time(i: &[u8]) -> IResult<&[u8], Time> {
-    tuple((
+pub fn parse_time(i: &mut Stream) -> PResult<Time> {
+    trace("parse_time", move |input: &mut Stream<'_>| {
+        seq!((
         time_hour,                                         // HH
-        opt(tag(b":")),                                    // :
+        opt(literal(b":")),                                    // :
         time_minute,                                       // MM
-        opt(preceded(opt(tag(b":")), time_second)),        // [SS]
-        opt(preceded(one_of(",."), fraction_millisecond)), // [.(m*)]
+        opt(preceded(opt(literal(b":")), time_second)),        // [SS]
+        opt(preceded(one_of(b",."), fraction_millisecond)), // [.(m*)]
         opt(alt((timezone_hour, timezone_utc))),           // [(Z|+...|-...)]
-    ))
-    .map(|(h, _, m, s, ms, z)| {
-        let (tz_offset_hours, tz_offset_minutes) = z.unwrap_or((0, 0));
+        ))
+            .map(|(h, _, m, s, ms, z)| {
+                let (tz_offset_hours, tz_offset_minutes) = z.unwrap_or((0, 0));
 
-        Time {
-            hour: h,
-            minute: m,
-            second: s.unwrap_or(0),
-            millisecond: ms.unwrap_or(0),
-            tz_offset_hours,
-            tz_offset_minutes,
-        }
-    })
-    .parse(i)
+                Time {
+                    hour: h,
+                    minute: m,
+                    second: s.unwrap_or(0),
+                    millisecond: ms.unwrap_or(0),
+                    tz_offset_hours,
+                    tz_offset_minutes,
+                }
+            })
+            .parse_next(input)
+    }).parse_next(i)
 }
 
-fn timezone_hour(i: &[u8]) -> IResult<&[u8], (i32, i32)> {
-    tuple((sign, time_hour, opt(preceded(opt(tag(b":")), time_minute))))
+fn timezone_hour(i: &mut Stream) -> PResult<(i32, i32)> {
+    trace("timezone_hour", move |input: &mut Stream<'_>| {
+    seq!((sign, time_hour, opt(preceded(opt(literal(b":")), time_minute))))
         .map(|(s, h, m)| (s * (h as i32), s * (m.unwrap_or(0) as i32)))
-        .parse(i)
+        .parse_next(input)
+    }).parse_next(i)
 }
 
-fn timezone_utc(input: &[u8]) -> IResult<&[u8], (i32, i32)> {
-    tag(b"Z").map(|_| (0, 0)).parse(input)
+fn timezone_utc(i: &mut Stream) -> PResult<(i32, i32)> {
+    trace("timezone_utc", move |input: &mut Stream<'_>| {
+        literal(b"Z").map(|_| (0, 0)).parse_next(input)
+    }).parse_next(i)
 }
 
 /// Parses a datetime string.
 ///
 /// See [`datetime()`][`crate::datetime()`] for supported formats.
 // Full ISO8601 datetime
-pub fn parse_datetime(i: &[u8]) -> IResult<&[u8], DateTime> {
-    separated_pair(parse_date, tag(b"T"), parse_time)
-        .map(|(d, t)| DateTime { date: d, time: t })
-        .parse(i)
+pub fn parse_datetime(i: &mut Stream) -> PResult<DateTime> {
+    trace("parse_datetime", move |input: &mut Stream<'_>| {
+        separated_pair(parse_date, literal(b"T"), parse_time)
+            .map(|(d, t)| DateTime { date: d, time: t })
+            .parse_next(input)
+    }).parse_next(i)
 }
 
 // DURATION
 
 ///    dur-year          = 1*DIGIT "Y" [dur-month]
-fn duration_year(i: &[u8]) -> IResult<&[u8], u32> {
-    terminated(take_digits, tag(b"Y"))(i)
+fn duration_year(i: &mut Stream) -> PResult<u32> {
+    trace("duration_year", move |input: &mut Stream<'_>| {
+        (terminated(take_digits, literal(b"Y"))).parse_next(input)
+    }).parse_next(i)
 }
 
 ///    dur-month         = 1*DIGIT "M" [dur-day]
-fn duration_month(i: &[u8]) -> IResult<&[u8], u32> {
-    terminated(take_digits, tag(b"M"))(i)
+fn duration_month(i: &mut Stream) -> PResult<u32> {
+    trace("duration_month", move |input: &mut Stream<'_>| {
+        terminated(take_digits, literal(b"M")).parse_next(input)
+
+    }).parse_next(i)
 }
 
 ///    dur-week          = 1*DIGIT "W"
-fn duration_week(i: &[u8]) -> IResult<&[u8], u32> {
-    terminated(take_digits, tag(b"W"))(i)
+fn duration_week(i: &mut Stream) -> PResult<u32> {
+    trace("duration_week", move |input: &mut Stream<'_>| {
+        terminated(take_digits, literal(b"W")).parse_next(input)
+    }).parse_next(i)
 }
 
 //    dur-day           = 1*DIGIT "D"
-fn duration_day(i: &[u8]) -> IResult<&[u8], u32> {
-    terminated(take_digits, tag(b"D"))(i)
+fn duration_day(i: &mut Stream) -> PResult<u32> {
+    trace("duration_day", move |input: &mut Stream<'_>| {
+        terminated(take_digits, literal(b"D")).parse_next(input)
+    }).parse_next(i)
 }
 
 ///    dur-hour          = 1*DIGIT "H" [dur-minute]
 ///    dur-time          = "T" (dur-hour / dur-minute / dur-second)
-fn duration_hour(i: &[u8]) -> IResult<&[u8], u32> {
-    terminated(take_digits, tag(b"H"))(i)
+fn duration_hour(i: &mut Stream) -> PResult<u32> {
+    trace("duration_hour", move |input: &mut Stream<'_>| {
+        terminated(take_digits, literal(b"H")).parse_next(input)
+    }).parse_next(i)
 }
 
 ///    dur-minute        = 1*DIGIT "M" [dur-second]
-fn duration_minute(i: &[u8]) -> IResult<&[u8], u32> {
-    terminated(take_digits, tag(b"M"))(i)
+fn duration_minute(i: &mut Stream) -> PResult<u32> {
+    trace("", move |input: &mut Stream<'_>| {
+        terminated(take_digits, literal(b"M")).parse_next(input)
+    }).parse_next(i)
 }
 
 ///    dur-second        = 1*DIGIT "S"
-fn duration_second(i: &[u8]) -> IResult<&[u8], u32> {
-    terminated(take_digits, tag(b"S"))(i)
+fn duration_second(i: &mut Stream) -> PResult<u32> {
+    trace("duration_second", move |input: &mut Stream<'_>| {
+        terminated(take_digits, literal(b"S")).parse_next(input)
+    }).parse_next(i)
 }
 
 ///    dur-second-ext    = 1*DIGIT (,|.) 1*DIGIT "S"
-fn duration_second_and_millisecond(i: &[u8]) -> IResult<&[u8], (u32, u32)> {
-    alt((
-        // no milliseconds
-        duration_second.map(|m| (m, 0)),
-        terminated(
-            // with milliseconds
-            separated_pair(take_digits, one_of(",."), fraction_millisecond),
-            tag(b"S"),
-        ),
-    ))(i)
+fn duration_second_and_millisecond(i: &mut Stream) -> PResult<(u32, u32)> {
+    trace("duration_second_and_millisecond", move |input: &mut Stream<'_>| {
+        alt((
+            // no milliseconds
+            duration_second.map(|m| (m, 0)),
+            terminated(
+                // with milliseconds
+                separated_pair(take_digits, one_of(b",."), fraction_millisecond),
+                literal(b"S"),
+            ),
+        )).parse_next(input)
+    }).parse_next(i)
 }
 
-fn duration_time(i: &[u8]) -> IResult<&[u8], (u32, u32, u32, u32)> {
-    tuple((
+fn duration_time(i: &mut Stream) -> PResult<(u32, u32, u32, u32)> {
+    trace("duration_time", move |input: &mut Stream<'_>| {
+        seq!((
         opt(duration_hour),
         opt(duration_minute),
         opt(duration_second_and_millisecond),
     ))
-    .map(|(h, m, s)| {
-        let (s, ms) = s.unwrap_or((0, 0));
+            .map(|(h, m, s)| {
+                let (s, ms) = s.unwrap_or((0, 0));
 
-        (h.unwrap_or(0), m.unwrap_or(0), s, ms)
-    })
-    .parse(i)
-}
-
-fn duration_ymdhms(i: &[u8]) -> IResult<&[u8], Duration> {
-    map_res(
-        preceded(
-            tag(b"P"),
-            tuple((
-                opt(duration_year),
-                opt(duration_month),
-                opt(duration_day),
-                opt(preceded(tag(b"T"), duration_time)),
-            )),
-        ),
-        |(y, mo, d, time)| {
-            // at least one element must be present for a valid duration representation
-            if y.is_none() && mo.is_none() && d.is_none() && time.is_none() {
-                return Err(Err::Error((i, nom::error::ErrorKind::Eof)));
-            }
-
-            let (h, mi, s, ms) = time.unwrap_or((0, 0, 0, 0));
-
-            Ok(Duration::YMDHMS {
-                year: y.unwrap_or(0),
-                month: mo.unwrap_or(0),
-                day: d.unwrap_or(0),
-                hour: h,
-                minute: mi,
-                second: s,
-                millisecond: ms,
+                (h.unwrap_or(0), m.unwrap_or(0), s, ms)
             })
-        },
-    )(i)
+            .parse_next(input)
+    }).parse_next(i)
 }
 
-fn duration_weeks(i: &[u8]) -> IResult<&[u8], Duration> {
-    preceded(tag(b"P"), duration_week)
-        .map(Duration::Weeks)
-        .parse(i)
+fn duration_ymdhms(i: &mut Stream) -> PResult<Duration> {
+    trace("", move |input: &mut Stream<'_>| {
+        seq!((
+            _: literal(b"P"),
+            opt(duration_year),
+            opt(duration_month),
+            opt(duration_day),
+            opt(preceded(literal(b"T"), duration_time)),
+        ))
+            .verify(
+                |(y, mo, d, time)| {
+                    if y.is_none() && mo.is_none() && d.is_none() && time.is_none() {
+                        false
+                    } else {
+                        true
+                    }
+                })
+            .map(
+                |(y, mo, d, time)| {
+                    // at least one element must be present for a valid duration representation
+
+                    let (h, mi, s, ms) = time.unwrap_or((0, 0, 0, 0));
+
+                    Duration::YMDHMS {
+                        year: y.unwrap_or(0),
+                        month: mo.unwrap_or(0),
+                        day: d.unwrap_or(0),
+                        hour: h,
+                        minute: mi,
+                        second: s,
+                        millisecond: ms,
+                    }
+                },
+            ).parse_next(input)
+    }).parse_next(i)
+}
+
+fn duration_weeks(i: &mut Stream) -> PResult<Duration> {
+    trace("", move |input: &mut Stream<'_>| {
+        preceded(literal(b"P"), duration_week)
+            .map(Duration::Weeks)
+            .parse_next(input)
+    }).parse_next(i)
 }
 
 // YYYY, no sign
-fn duration_datetime_year(i: &[u8]) -> IResult<&[u8], u32> {
-    take_n_digits(i, 4)
+fn duration_datetime_year(i: &mut Stream) -> PResult<u32> {
+    trace("duration_datetime_year", move |input: &mut Stream<'_>| {
+        take_digits_in_range(input, 4, 1..)
+    }).parse_next(i)
 }
 
-fn duration_datetime(i: &[u8]) -> IResult<&[u8], Duration> {
-    preceded(
-        tuple((tag(b"P"), not(sign))),
-        tuple((
+fn duration_datetime(i: &mut Stream) -> PResult<Duration> {
+    trace("duration_datetime", move |input: &mut Stream<'_>| {
+        preceded(
+            seq!((literal(b"P"), not(sign))),
+            seq!((
             duration_datetime_year,
-            opt(tag(b"-")),
+            opt(literal(b"-")),
             date_month,
-            opt(tag(b"-")),
+            opt(literal(b"-")),
             date_day,
-            tag(b"T"),
+            literal(b"T"),
             parse_time,
         )),
-    )
-    .map(|(year, _, month, _, day, _, t)| Duration::YMDHMS {
-        year,
-        month,
-        day,
-        hour: t.hour,
-        minute: t.minute,
-        second: t.second,
-        millisecond: t.millisecond,
-    })
-    .parse(i)
+        )
+            .map(|(year, _, month, _, day, _, t)| Duration::YMDHMS {
+                year,
+                month,
+                day,
+                hour: t.hour,
+                minute: t.minute,
+                second: t.second,
+                millisecond: t.millisecond,
+            })
+            .parse_next(input)
+    }).parse_next(i)
 }
 
 /// Parses a duration string.
 ///
 /// See [`duration()`][`crate::duration()`] for supported formats.
-pub fn parse_duration(i: &[u8]) -> IResult<&[u8], Duration> {
-    alt((duration_ymdhms, duration_weeks, duration_datetime))(i)
+pub fn parse_duration(i: &mut Stream) -> PResult<Duration> {
+    trace("parse_duration", move |input: &mut Stream<'_>| {
+        alt((duration_ymdhms, duration_weeks, duration_datetime)).parse_next(input)
+    }).parse_next(i)
 }

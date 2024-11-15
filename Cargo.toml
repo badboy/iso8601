@@ -1,8 +1,9 @@
 [package]
-name = "iso8601"
-version = "0.6.1"
+name = "winnow-iso8601"
+version = "0.1.0"
 authors = [
     "Jan-Erik Rediger <janerik@fnordig.de>",
+    "Kenny Flegal <soulstompp@gmal.com>",
     "Hendrik Sollich <hendrik@hoodie.de>",
 ]
 
@@ -10,15 +11,15 @@ description = "Parsing ISO8601 dates using nom"
 keywords = [ "iso8601", "date-time", "parser", "nom" ]
 categories = [ "parser-implementations", "date-and-time" ]
 
-repository = "https://github.com/badboy/iso8601"
-documentation = "https://docs.rs/iso8601/"
+repository = "https://github.com/soulstompp/winnow-iso8601"
+documentation = "https://docs.rs/winnow-iso8601/"
 license = "MIT"
 readme = "README.md"
 
 edition = "2021"
 
 [dependencies]
-nom = { version = "7", default-features = false }
+winnow = {  version = "0.6.20"}
 chrono = { version = "0.4", default-features = false, optional = true }
 num-traits = { version = "0.2", optional = true }
 serde = { version = "1.0", optional = true }
@@ -28,5 +29,5 @@ serde_json = "1.0"
 
 [features]
 default = ["std"]
-std = ["nom/std"]
+std = ["winnow/std"]
 chrono = ["dep:chrono", "dep:num-traits"]

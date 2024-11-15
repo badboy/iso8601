@@ -93,13 +93,13 @@ impl Display for Duration {
 
 #[cfg(test)]
 mod tests {
-    use crate::parsers::parse_duration;
+    use crate::parsers::{parse_duration, Stream};
 
     use super::*;
 
     fn test_duration_reparse(duration: Duration) {
         let serialized = format!("{}", duration);
-        let reparsed = parse_duration(serialized.as_bytes()).unwrap().1;
+        let reparsed = parse_duration(&mut Stream::new(serialized.as_bytes())).unwrap();
         assert_eq!(duration, reparsed);
     }
 

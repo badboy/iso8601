@@ -1,14 +1,15 @@
 use alloc::string::String;
 use core::str::FromStr;
-
+use winnow::stream::StreamIsPartial;
 use crate::parsers;
+use crate::parsers::Stream;
 
 /// A date, can hold three different formats.
 /// ```
 /// # use std::str::FromStr;
 /// assert_eq!(
-///     iso8601::Date::from_str("2023-02-18T17:08:08.793Z"),
-///     Ok(iso8601::Date::YMD{ year: 2023, month: 2, day: 18})
+///     winnow_iso8601::Date::from_str("2023-02-18T17:08:08.793Z"),
+///     Ok(winnow_iso8601::Date::YMD{ year: 2023, month: 2, day: 18})
 /// )
 /// ```
 #[allow(missing_docs)]
@@ -51,10 +52,13 @@ impl FromStr for Date {
 /// ## Example
 ///
 /// ```rust
-/// let date = iso8601::date("2015-11-02").unwrap();
+/// let date = winnow_iso8601::date("2015-11-02").unwrap();
 /// ```
 pub fn date(string: &str) -> Result<Date, String> {
-    if let Ok((_, parsed)) = parsers::parse_date(string.as_bytes()) {
+    let i = &mut Stream::new(string.as_bytes());
+    let _ = i.complete();
+
+    if let Ok(parsed) = parsers::parse_date(i) {
         Ok(parsed)
     } else {
         Err(format!("Failed to parse date: {}", string))

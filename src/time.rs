@@ -1,14 +1,15 @@
 use alloc::string::String;
 use core::str::FromStr;
-
+use winnow::stream::StreamIsPartial;
 use crate::parsers;
+use crate::parsers::Stream;
 
 /// A time object.
 /// ```
 /// # use std::str::FromStr;
 /// assert_eq!(
-///     iso8601::Time::from_str("17:08:08.793Z"),
-///     Ok(iso8601::Time{ hour: 17, minute: 8, second: 8, millisecond: 793, tz_offset_hours: 0, tz_offset_minutes: 00 })
+///     winnow_iso8601::Time::from_str("17:08:08.793Z"),
+///     Ok(winnow_iso8601::Time{ hour: 17, minute: 8, second: 8, millisecond: 793, tz_offset_hours: 0, tz_offset_minutes: 00 })
 /// )
 /// ```
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Default)]
@@ -61,10 +62,13 @@ impl FromStr for Time {
 /// ## Example
 ///
 /// ```rust
-/// let time = iso8601::time("21:56:42").unwrap();
+/// let time = winnow_iso8601::time("21:56:42").unwrap();
 /// ```
 pub fn time(string: &str) -> Result<Time, String> {
-    if let Ok((_, parsed)) = parsers::parse_time(string.as_bytes()) {
+    let i = &mut Stream::new(string.as_bytes());
+    let _ = i.complete();
+
+    if let Ok(parsed) = parsers::parse_time(i) {
         Ok(parsed)
     } else {
         Err(format!("Failed to parse time: {}", string))

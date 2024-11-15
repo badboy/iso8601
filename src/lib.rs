@@ -9,11 +9,11 @@
 //! # Example
 //!
 //! ```rust
-//! let datetime = iso8601::datetime("2015-06-26T16:43:23+0200").unwrap();
-//! let time = "16:43:23+0200".parse::<iso8601::Time>().unwrap();
-//! let date = "2015-02-29".parse::<iso8601::Date>().unwrap();
-//! let datetime = "2015-06-26T16:43:23+0200".parse::<iso8601::DateTime>().unwrap();
-//! let duration = "P2021Y11M16DT23H26M59.123S".parse::<iso8601::Duration>().unwrap();
+//! let datetime = winnow_iso8601::datetime("2015-06-26T16:43:23+0200").unwrap();
+//! let time = "16:43:23+0200".parse::<winnow_iso8601::Time>().unwrap();
+//! let date = "2015-02-29".parse::<winnow_iso8601::Date>().unwrap();
+//! let datetime = "2015-06-26T16:43:23+0200".parse::<winnow_iso8601::DateTime>().unwrap();
+//! let duration = "P2021Y11M16DT23H26M59.123S".parse::<winnow_iso8601::Duration>().unwrap();
 //! ```
 
 #![allow(clippy::uninlined_format_args)]
@@ -56,6 +56,3 @@ mod chrono;
 
 #[cfg(feature = "serde")]
 mod serde;
-
-#[cfg(test)]
-mod assert;
