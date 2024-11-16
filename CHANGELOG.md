@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.0 - 2024-11-16
+* Added Timezone struct so offsets are
+
 ## 0.1.0 - 2024-11-15
 
 Initial release/Fork from nom-iso8601 @ 6c59a4a7365bbe0

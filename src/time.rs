@@ -1,15 +1,16 @@
+use crate::parsers::Stream;
+use crate::{parsers, Timezone};
 use alloc::string::String;
 use core::str::FromStr;
 use winnow::stream::StreamIsPartial;
-use crate::parsers;
-use crate::parsers::Stream;
 
 /// A time object.
 /// ```
 /// # use std::str::FromStr;
+/// use winnow_iso8601::Timezone;
 /// assert_eq!(
 ///     winnow_iso8601::Time::from_str("17:08:08.793Z"),
-///     Ok(winnow_iso8601::Time{ hour: 17, minute: 8, second: 8, millisecond: 793, tz_offset_hours: 0, tz_offset_minutes: 00 })
+///     Ok(winnow_iso8601::Time{ hour: 17, minute: 8, second: 8, millisecond: 793, timezone: Timezone { offset_hours: 0, offset_minutes: 00 }})
 /// )
 /// ```
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Default)]
@@ -23,9 +24,7 @@ pub struct Time {
     /// everything after a `.`
     pub millisecond: u32,
     /// the hour part of the timezone offset from UTC
-    pub tz_offset_hours: i32,
-    /// the minute part of the timezone offset from UTC
-    pub tz_offset_minutes: i32,
+    pub timezone: Timezone,
 }
 
 impl Time {
@@ -36,8 +35,10 @@ impl Time {
     /// * `tzo` - A tuple of `(hours, minutes)` specifying the timezone offset from UTC.
     pub fn set_tz(&self, tzo: (i32, i32)) -> Time {
         let mut t = *self;
-        t.tz_offset_hours = tzo.0;
-        t.tz_offset_minutes = tzo.1;
+        t.timezone = Timezone {
+            offset_hours: tzo.0,
+            offset_minutes: tzo.1,
+        };
         t
     }
 }

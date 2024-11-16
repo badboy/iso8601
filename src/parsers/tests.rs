@@ -1,12 +1,17 @@
 use core::fmt::Debug;
 
-use winnow::stream::{AsBytes, StreamIsPartial};
 use super::*;
+use winnow::stream::{AsBytes, StreamIsPartial};
 
-fn test_date_part<O: Debug + PartialEq + Eq>(parser: &dyn Fn(&mut Stream) -> PResult<O>, i: &str, rem: &str, exepected: O) -> PResult<O> {
-   let mut input = Stream::new(i.as_bytes());
+fn test_date_part<O: Debug + PartialEq + Eq>(
+    parser: &dyn Fn(&mut Stream) -> PResult<O>,
+    i: &str,
+    rem: &str,
+    exepected: O,
+) -> PResult<O> {
+    let mut input = Stream::new(i.as_bytes());
     let _ = input.complete();
-   let part = parser(&mut input)?;
+    let part = parser(&mut input)?;
 
     assert_eq!(rem.as_bytes(), input.as_bytes());
     assert_eq!(exepected, part);
@@ -277,7 +282,8 @@ fn test_duration_weeks_error() {
 fn test_duration_datetime_error() {
     assert!(duration_datetime(&mut Stream::new(b"")).is_err());
     assert!(duration_datetime(&mut Stream::new(b"P")).is_err()); // empty duration is not 0 seconds
-    assert!(duration_datetime(&mut Stream::new(b"0001-02-03T04:05:06")).is_err()); // missing P at start
+    assert!(duration_datetime(&mut Stream::new(b"0001-02-03T04:05:06")).is_err());
+    // missing P at start
 }
 
 #[rustfmt::skip]
@@ -347,7 +353,7 @@ fn duration_multi_digit_day() {
 
 #[test]
 #[ignore]
-/// a few things we probably don't parse correctly yet
+/// a few things we don't parse correctly yet
 /// see <https://ijmacd.github.io/rfc3339-iso8601/>
 fn iso8601_vs_rfc3339() {
     // "+002023-02-18".parse::<Date>().unwrap();  // six digit years

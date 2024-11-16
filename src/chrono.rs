@@ -80,13 +80,9 @@ impl TryFrom<crate::DateTime> for chrono::DateTime<chrono::FixedOffset> {
     type Error = ();
 
     fn try_from(iso: crate::DateTime) -> Result<Self, Self::Error> {
-        let crate::Time {
-            tz_offset_hours,
-            tz_offset_minutes,
-            ..
-        } = iso.time;
+        let crate::Time { timezone, .. } = iso.time;
 
-        let offset_minutes = tz_offset_hours * 3600 + tz_offset_minutes;
+        let offset_minutes = timezone.offset_hours * 3600 + timezone.offset_minutes;
         let offset = chrono::FixedOffset::east_opt(offset_minutes).ok_or(())?;
 
         let naive_time = chrono::NaiveTime::try_from(iso.time)?;

@@ -51,6 +51,9 @@ pub use datetime::{datetime, DateTime};
 mod duration;
 pub use duration::{duration, Duration};
 
+mod timezone;
+pub use timezone::{timezone, Timezone};
+
 #[cfg(feature = "chrono")]
 mod chrono;
 

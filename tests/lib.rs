@@ -1,6 +1,5 @@
 use winnow_iso8601::*;
 
-
 #[test]
 fn test_date() {
     assert_eq!(
@@ -32,8 +31,7 @@ fn test_millisecond() {
                 minute: 43,
                 second: 0,
                 millisecond: i,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
+                timezone: Default::default(),
             }),
             time(format!("16:43:00.{:0>3}", i).as_str())
         );
@@ -45,8 +43,7 @@ fn test_millisecond() {
             minute: 43,
             second: 0,
             millisecond: 100,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
+            timezone: Default::default(),
         }),
         time("16:43:00.1")
     );
@@ -56,8 +53,7 @@ fn test_millisecond() {
             minute: 43,
             second: 0,
             millisecond: 120,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
+            timezone: Default::default(),
         }),
         time("16:43:00.12")
     );
@@ -67,8 +63,7 @@ fn test_millisecond() {
             minute: 43,
             second: 0,
             millisecond: 123,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
+            timezone: Default::default(),
         }),
         time("16:43:00.123")
     );
@@ -78,8 +73,7 @@ fn test_millisecond() {
             minute: 43,
             second: 0,
             millisecond: 432,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
+            timezone: Default::default(),
         }),
         time("16:43:00.4321")
     );
@@ -89,8 +83,7 @@ fn test_millisecond() {
             minute: 43,
             second: 0,
             millisecond: 432,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
+            timezone: Default::default(),
         }),
         time("16:43.4321")
     );
@@ -100,8 +93,7 @@ fn test_millisecond() {
             minute: 43,
             second: 11,
             millisecond: 432,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
+            timezone: Default::default(),
         }),
         time("16:43:11.4321")
     );
@@ -112,8 +104,7 @@ fn test_millisecond() {
             minute: 43,
             second: 0,
             millisecond: 100,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
+            timezone: Default::default(),
         }),
         time("16:43:00,1")
     );
@@ -124,8 +115,7 @@ fn test_millisecond() {
             minute: 5,
             second: 6,
             millisecond: 123,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
+            timezone: Default::default(),
         }),
         time("04:05:06.12345")
     );
@@ -142,8 +132,7 @@ fn test_millisecond() {
                 minute: 5,
                 second: 6,
                 millisecond: 123,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
+                timezone: Default::default(),
             }
         }),
         datetime("2001-W05-6T04:05:06.12345Z")
@@ -155,8 +144,7 @@ fn test_millisecond() {
             minute: 43,
             second: 16,
             millisecond: 123,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
+            timezone: Default::default(),
         }),
         time("16:43:16.123")
     );
@@ -166,8 +154,7 @@ fn test_millisecond() {
             minute: 43,
             second: 16,
             millisecond: 123,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
+            timezone: Default::default(),
         }),
         time("16:43:16.123+00:00")
     );
@@ -177,8 +164,7 @@ fn test_millisecond() {
             minute: 43,
             second: 16,
             millisecond: 123,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
+            timezone: Default::default(),
         }),
         time("16:43:16.123-00:00")
     );
@@ -188,8 +174,10 @@ fn test_millisecond() {
             minute: 43,
             second: 16,
             millisecond: 123,
-            tz_offset_hours: 5,
-            tz_offset_minutes: 0
+            timezone: Timezone {
+                offset_hours: 5,
+                offset_minutes: 0,
+            },
         }),
         time("16:43:16.123+05:00")
     );
@@ -204,8 +192,7 @@ fn test_time() {
             minute: 43,
             second: 16,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+            timezone: Default::default(),
         })
     );
     assert_eq!(
@@ -215,8 +202,7 @@ fn test_time() {
             minute: 43,
             second: 0,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+            timezone: Default::default(),
         })
     );
 
@@ -232,16 +218,17 @@ fn test_time_set_tz() {
         minute: 0,
         second: 0,
         millisecond: 0,
-        tz_offset_hours: 0,
-        tz_offset_minutes: 0,
+        timezone: Default::default(),
     };
     let expected = Time {
         hour: 0,
         minute: 0,
         second: 0,
         millisecond: 0,
-        tz_offset_hours: 2,
-        tz_offset_minutes: 30,
+        timezone: Timezone {
+            offset_hours: 2,
+            offset_minutes: 30,
+        },
     };
 
     assert_eq!(expected, original.set_tz((2, 30)));
@@ -256,8 +243,7 @@ fn short_time1() {
             minute: 48,
             second: 0,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+            timezone: Default::default(),
         })
     );
 }
@@ -270,8 +256,7 @@ fn short_time2() {
             minute: 48,
             second: 0,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+            timezone: Default::default(),
         })
     );
 }
@@ -284,8 +269,7 @@ fn short_time3() {
             minute: 48,
             second: 0,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+            timezone: Default::default(),
         })
     );
 }
@@ -298,8 +282,7 @@ fn short_time4() {
             minute: 48,
             second: 0,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+            timezone: Default::default(),
         })
     );
 }
@@ -312,8 +295,7 @@ fn short_time5() {
             minute: 48,
             second: 0,
             millisecond: 100,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+            timezone: Default::default(),
         })
     );
 }
@@ -326,8 +308,7 @@ fn short_time6() {
             minute: 48,
             second: 0,
             millisecond: 100,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+            timezone: Default::default(),
         })
     );
 }
@@ -340,8 +321,7 @@ fn short_time7() {
             minute: 48,
             second: 0,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+            timezone: Default::default(),
         })
     );
 }
@@ -355,8 +335,7 @@ fn short_twtz1() {
             minute: 48,
             second: 0,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+            timezone: Default::default(),
         })
     );
 }
@@ -369,8 +348,7 @@ fn short_twtz2() {
             minute: 48,
             second: 0,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+            timezone: Default::default(),
         })
     );
 }
@@ -390,8 +368,7 @@ fn short_dtim1() {
                 minute: 48,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0,
+                timezone: Default::default(),
             }
         })
     );
@@ -411,8 +388,7 @@ fn short_dtim2() {
                 minute: 48,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0,
+                timezone: Default::default(),
             },
         })
     );
@@ -432,8 +408,7 @@ fn short_dtim3() {
                 minute: 21,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0,
+                timezone: Default::default(),
             },
         })
     );
@@ -447,8 +422,7 @@ fn test_time_with_timezone() {
             minute: 43,
             second: 16,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+            timezone: Default::default(),
         }),
         time("16:43:16")
     );
@@ -458,8 +432,7 @@ fn test_time_with_timezone() {
             minute: 43,
             second: 16,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+            timezone: Default::default(),
         }),
         time("16:43:16Z")
     );
@@ -469,8 +442,7 @@ fn test_time_with_timezone() {
             minute: 43,
             second: 16,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+            timezone: Default::default(),
         }),
         time("16:43:16+00:00")
     );
@@ -480,8 +452,7 @@ fn test_time_with_timezone() {
             minute: 43,
             second: 16,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0,
+            timezone: Default::default(),
         }),
         time("16:43:16-00:00")
     );
@@ -491,8 +462,10 @@ fn test_time_with_timezone() {
             minute: 43,
             second: 16,
             millisecond: 0,
-            tz_offset_hours: 5,
-            tz_offset_minutes: 0,
+            timezone: Timezone {
+                offset_hours: 5,
+                offset_minutes: 0,
+            }
         }),
         time("16:43:16+05:00")
     );
@@ -630,8 +603,7 @@ fn test_datetime_correct() {
                 minute: 44,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
+                timezone: Default::default(),
             }
         })
     );
@@ -648,8 +620,7 @@ fn test_datetime_correct() {
                 minute: 45,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
+                timezone: Default::default(),
             }
         })
     );
@@ -666,8 +637,7 @@ fn test_datetime_correct() {
                 minute: 46,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
+                timezone: Default::default(),
             }
         })
     );
@@ -684,8 +654,7 @@ fn test_datetime_correct() {
                 minute: 47,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
+                timezone: Default::default(),
             }
         })
     );
@@ -702,8 +671,10 @@ fn test_datetime_correct() {
                 minute: 0,
                 second: 22,
                 millisecond: 0,
-                tz_offset_hours: 5,
-                tz_offset_minutes: 0
+                timezone: Timezone {
+                    offset_hours: 5,
+                    offset_minutes: 0
+                },
             }
         })
     );
@@ -720,8 +691,10 @@ fn test_datetime_correct() {
                 minute: 0,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 1,
-                tz_offset_minutes: 0
+                timezone: Timezone {
+                    offset_hours: 1,
+                    offset_minutes: 0
+                }
             }
         })
     );
@@ -738,8 +711,10 @@ fn test_datetime_correct() {
                 minute: 30,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 2,
-                tz_offset_minutes: 0
+                timezone: Timezone {
+                    offset_hours: 2,
+                    offset_minutes: 0
+                }
             }
         })
     );
@@ -756,8 +731,10 @@ fn test_datetime_correct() {
                 minute: 7,
                 second: 0,
                 millisecond: 0,
-                tz_offset_hours: 2,
-                tz_offset_minutes: 0
+                timezone: Timezone {
+                    offset_hours: 2,
+                    offset_minutes: 0
+                },
             }
         })
     );
@@ -774,8 +751,7 @@ fn test_datetime_correct() {
                 minute: 43,
                 second: 16,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
+                timezone: Default::default(),
             }
         })
     );
@@ -792,8 +768,7 @@ fn test_datetime_correct() {
                 minute: 43,
                 second: 16,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
+                timezone: Default::default(),
             }
         })
     );
@@ -810,8 +785,10 @@ fn test_datetime_correct() {
                 minute: 5,
                 second: 6,
                 millisecond: 0,
-                tz_offset_hours: 7,
-                tz_offset_minutes: 0
+                timezone: Timezone {
+                    offset_hours: 7,
+                    offset_minutes: 0
+                }
             }
         })
     );
@@ -828,8 +805,10 @@ fn test_datetime_correct() {
                 minute: 5,
                 second: 6,
                 millisecond: 0,
-                tz_offset_hours: 7,
-                tz_offset_minutes: 0
+                timezone: Timezone {
+                    offset_hours: 7,
+                    offset_minutes: 0
+                }
             }
         })
     );
@@ -845,8 +824,10 @@ fn test_datetime_correct() {
                 minute: 5,
                 second: 6,
                 millisecond: 0,
-                tz_offset_hours: 7,
-                tz_offset_minutes: 0
+                timezone: Timezone {
+                    offset_hours: 7,
+                    offset_minutes: 0
+                }
             }
         })
     );
@@ -862,8 +843,10 @@ fn test_datetime_correct() {
                 minute: 5,
                 second: 6,
                 millisecond: 0,
-                tz_offset_hours: 7,
-                tz_offset_minutes: 0
+                timezone: Timezone {
+                    offset_hours: 7,
+                    offset_minutes: 0
+                }
             }
         })
     );
@@ -879,8 +862,7 @@ fn test_datetime_correct() {
                 minute: 30,
                 second: 48,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
+                timezone: Default::default(),
             }
         })
     );
@@ -897,8 +879,7 @@ fn test_datetime_correct() {
                 minute: 30,
                 second: 48,
                 millisecond: 0,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
+                timezone: Default::default(),
             }
         })
     );
@@ -915,8 +896,7 @@ fn test_datetime_correct() {
                 minute: 5,
                 second: 6,
                 millisecond: 123,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
+                timezone: Default::default(),
             }
         })
     );
@@ -933,8 +913,7 @@ fn test_datetime_correct() {
                 minute: 5,
                 second: 6,
                 millisecond: 123,
-                tz_offset_hours: 0,
-                tz_offset_minutes: 0
+                timezone: Default::default(),
             }
         })
     );
@@ -950,8 +929,7 @@ fn issue12_regression_1() {
             minute: 48,
             second: 1,
             millisecond: 0,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
+            timezone: Default::default(),
         }),
         time(input)
     );
@@ -967,8 +945,7 @@ fn issue12_regression_2() {
             minute: 5,
             second: 6,
             millisecond: 122,
-            tz_offset_hours: 0,
-            tz_offset_minutes: 0
+            timezone: Default::default(),
         }),
         time(input)
     );

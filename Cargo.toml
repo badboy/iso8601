@@ -1,6 +1,6 @@
 [package]
 name = "winnow_iso8601"
-version = "0.1.0"
+version = "0.2.0"
 description = "Parsing ISO8601 dates using winnow"
 keywords = [ "iso8601", "date-time", "parser", "winnow" ]
 categories = [ "parser-implementations", "date-and-time" ]

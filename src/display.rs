@@ -25,8 +25,8 @@ impl Display for Time {
             self.minute,
             self.second,
             self.millisecond,
-            self.tz_offset_hours,
-            self.tz_offset_minutes
+            self.timezone.offset_hours,
+            self.timezone.offset_minutes
         )
     }
 }
