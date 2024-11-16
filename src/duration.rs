@@ -6,21 +6,30 @@ use crate::parsers;
 use crate::parsers::Stream;
 
 /// A time duration.
-/// Durations:
-/// <https://www.rfc-editor.org/rfc/rfc3339#page-13>
-///    dur-second        = 1*DIGIT "S"
-///    dur-minute        = 1*DIGIT "M" [dur-second]
-///    dur-hour          = 1*DIGIT "H" [dur-minute]
-///    dur-time          = "T" (dur-hour / dur-minute / dur-second)
-///    dur-day           = 1*DIGIT "D"
-///    dur-week          = 1*DIGIT "W"
-///    dur-month         = 1*DIGIT "M" [dur-day]
-///    dur-year          = 1*DIGIT "Y" [dur-month]
-///    dur-date          = (dur-day / dur-month / dur-year) [dur-time]
-///    duration          = "P" (dur-date / dur-time / dur-week)
+///
+/// ## Duration grammar[^rfc3339]
+/// [^rfc3339]: Durations from RFC 3339 <https://www.rfc-editor.org/rfc/rfc3339#page-13>
+///
+/// | Duration     | ABNF Description                                     |
+/// | ------------ | ---------------------------------------------------- |
+/// | `dur-second` | 1*DIGIT "S"                                          |
+/// | `dur-minute` | 1*DIGIT "M" [`dur-second`]                           |
+/// | `dur-hour`   | 1*DIGIT "H" [`dur-minute`]                           |
+/// | `dur-time`   | "T" (`dur-hour` / `dur-minute` / `dur-second`)       |
+/// | `dur-day`    | 1*DIGIT "D"                                          |
+/// | `dur-week`   | 1*DIGIT "W"                                          |
+/// | `dur-month`  | 1*DIGIT "M" [`dur-day`]                              |
+/// | `dur-year`   | 1*DIGIT "Y" [`dur-month`]                            |
+/// | `dur-date`   | (`dur-day` / `dur-month` / `dur-year`) [`dur-time`]  |
+/// | `duration`   | "P" (`dur-date` / `dur-time` / `dur-week`)           |
+///
+/// ## Examples
 /// ```
 ///# use std::str::FromStr;
-/// assert_eq!(winnow_iso8601::Duration::from_str("P2021Y11M16DT23H26M59.123S"), Ok(winnow_iso8601::Duration::YMDHMS{ year: 2021, month: 11, day: 16, hour: 23, minute: 26, second: 59, millisecond: 123 }))
+/// assert_eq!(
+///     winnow_iso8601::Duration::from_str("P2021Y11M16DT23H26M59.123S").unwrap(),
+///     winnow_iso8601::Duration::YMDHMS{ year: 2021, month: 11, day: 16, hour: 23, minute: 26, second: 59, millisecond: 123 }
+/// )
 /// ```
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum Duration {
