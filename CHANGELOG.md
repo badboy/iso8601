@@ -2,6 +2,7 @@
 
 ## 0.2.0 - 2024-11-16
 * Added Timezone struct so offsets are
+* Support for complete values in parsers
 
 ## 0.1.0 - 2024-11-15
 

@@ -1,8 +1,6 @@
-use crate::parsers::Stream;
 use crate::{parsers, Timezone};
 use alloc::string::String;
 use core::str::FromStr;
-use winnow::stream::StreamIsPartial;
 
 /// A time object.
 /// ```
@@ -66,10 +64,7 @@ impl FromStr for Time {
 /// let time = winnow_iso8601::time("21:56:42").unwrap();
 /// ```
 pub fn time(string: &str) -> Result<Time, String> {
-    let i = &mut Stream::new(string.as_bytes());
-    let _ = i.complete();
-
-    if let Ok(parsed) = parsers::parse_time(i) {
+    if let Ok(parsed) = parsers::parse_time(&mut string.as_bytes()) {
         Ok(parsed)
     } else {
         Err(format!("Failed to parse time: {}", string))

@@ -1,40 +1,21 @@
-use core::fmt::Debug;
-
 use super::*;
-use winnow::stream::{AsBytes, StreamIsPartial};
-
-fn test_date_part<O: Debug + PartialEq + Eq>(
-    parser: &dyn Fn(&mut Stream) -> PResult<O>,
-    i: &str,
-    rem: &str,
-    exepected: O,
-) -> PResult<O> {
-    let mut input = Stream::new(i.as_bytes());
-    let _ = input.complete();
-    let part = parser(&mut input)?;
-
-    assert_eq!(rem.as_bytes(), input.as_bytes());
-    assert_eq!(exepected, part);
-
-    Ok(part)
-}
 
 #[test]
 fn test_date_year() {
-    test_date_part(&date_year, "2015\n", "\n", 2015).unwrap();
-    test_date_part(&date_year, "2015\n", "\n", 2015).unwrap();
-    test_date_part(&date_year, "-0333\n", "\n", -333).unwrap();
-    test_date_part(&date_year, "2015-\n", "-\n", 2015).unwrap();
+    assert_eq!(date_year(&mut "2015".as_bstr()).unwrap(), 2015);
+    assert_eq!(date_year(&mut "+2015".as_bstr()).unwrap(), 2015);
+    assert_eq!(date_year(&mut "-333".as_bstr()).unwrap(), -333);
+    assert_eq!(date_year(&mut "2015-".as_bstr()).unwrap(), 2015);
     assert!(date_year(&mut Stream::new(b"abcd")).is_err());
     assert!(date_year(&mut Stream::new(b"2a03")).is_err());
 }
 
 #[test]
 fn test_date_month() {
-    test_date_part(&date_month, "01", "", 1).unwrap();
-    test_date_part(&date_month, "06", "", 6).unwrap();
-    test_date_part(&date_month, "12", "", 12).unwrap();
-    test_date_part(&date_month, "12-", "-", 12).unwrap();
+    assert_eq!(date_month(&mut "01".as_bstr()).unwrap(), 1);
+    assert_eq!(date_month(&mut "06".as_bstr()).unwrap(), 6);
+    assert_eq!(date_month(&mut "12".as_bstr()).unwrap(), 12);
+    assert_eq!(date_month(&mut "12-".as_bstr()).unwrap(), 12);
 
     assert!(date_month(&mut Stream::new(b"13\n")).is_err());
     assert!(date_month(&mut Stream::new(b"00\n")).is_err());
@@ -42,13 +23,13 @@ fn test_date_month() {
 
 #[test]
 fn test_date_day() {
-    test_date_part(&date_day, "01", "", 1).unwrap();
-    test_date_part(&date_day, "12", "", 12).unwrap();
-    test_date_part(&date_day, "20", "", 20).unwrap();
-    test_date_part(&date_day, "28", "", 28).unwrap();
-    test_date_part(&date_day, "30", "", 30).unwrap();
-    test_date_part(&date_day, "31", "", 31).unwrap();
-    test_date_part(&date_day, "31-", "-", 31).unwrap();
+    assert_eq!(date_day(&mut "01".as_bstr()).unwrap(), 1);
+    assert_eq!(date_day(&mut "12".as_bstr()).unwrap(), 12);
+    assert_eq!(date_day(&mut "20".as_bstr()).unwrap(), 20);
+    assert_eq!(date_day(&mut "28".as_bstr()).unwrap(), 28);
+    assert_eq!(date_day(&mut "30".as_bstr()).unwrap(), 30);
+    assert_eq!(date_day(&mut "31".as_bstr()).unwrap(), 31);
+    assert_eq!(date_day(&mut "31-".as_bstr()).unwrap(), 31);
 
     assert!(date_day(&mut Stream::new(b"00")).is_err());
     assert!(date_day(&mut Stream::new(b"32")).is_err());
@@ -56,13 +37,13 @@ fn test_date_day() {
 
 #[test]
 fn test_time_hour() {
-    test_date_part(&time_hour, "00", "", 0).unwrap();
-    test_date_part(&time_hour, "01", "", 1).unwrap();
-    test_date_part(&time_hour, "06", "", 6).unwrap();
-    test_date_part(&time_hour, "12", "", 12).unwrap();
-    test_date_part(&time_hour, "13", "", 13).unwrap();
-    test_date_part(&time_hour, "20", "", 20).unwrap();
-    test_date_part(&time_hour, "24", "", 24).unwrap();
+    assert_eq!(time_hour(&mut "00".as_bstr()).unwrap(), 0);
+    assert_eq!(time_hour(&mut "01".as_bstr()).unwrap(), 1);
+    assert_eq!(time_hour(&mut "06".as_bstr()).unwrap(), 6);
+    assert_eq!(time_hour(&mut "12".as_bstr()).unwrap(), 12);
+    assert_eq!(time_hour(&mut "13".as_bstr()).unwrap(), 13);
+    assert_eq!(time_hour(&mut "20".as_bstr()).unwrap(), 20);
+    assert_eq!(time_hour(&mut "24".as_bstr()).unwrap(), 24);
 
     assert!(time_hour(&mut Stream::new(b"25")).is_err());
     assert!(time_hour(&mut Stream::new(b"30")).is_err());
@@ -71,10 +52,10 @@ fn test_time_hour() {
 
 #[test]
 fn test_time_minute() {
-    test_date_part(&time_minute, "00", "", 0).unwrap();
-    test_date_part(&time_minute, "01", "", 1).unwrap();
-    test_date_part(&time_minute, "30", "", 30).unwrap();
-    test_date_part(&time_minute, "59", "", 59).unwrap();
+    assert_eq!(time_minute(&mut "00".as_bstr()).unwrap(), 0);
+    assert_eq!(time_minute(&mut "01".as_bstr()).unwrap(), 1);
+    assert_eq!(time_minute(&mut "30".as_bstr()).unwrap(), 30);
+    assert_eq!(time_minute(&mut "59".as_bstr()).unwrap(), 59);
 
     assert!(time_minute(&mut Stream::new(b"60")).is_err());
     assert!(time_minute(&mut Stream::new(b"61")).is_err());
@@ -83,11 +64,11 @@ fn test_time_minute() {
 
 #[test]
 fn test_time_second() {
-    test_date_part(&time_second, "00", "", 0).unwrap();
-    test_date_part(&time_second, "01", "", 1).unwrap();
-    test_date_part(&time_second, "30", "", 30).unwrap();
-    test_date_part(&time_second, "59", "", 59).unwrap();
-    test_date_part(&time_second, "60", "", 60).unwrap();
+    assert_eq!(time_second(&mut "00".as_bstr()).unwrap(), 0);
+    assert_eq!(time_second(&mut "01".as_bstr()).unwrap(), 1);
+    assert_eq!(time_second(&mut "30".as_bstr()).unwrap(), 30);
+    assert_eq!(time_second(&mut "59".as_bstr()).unwrap(), 59);
+    assert_eq!(time_second(&mut "60".as_bstr()).unwrap(), 60);
 
     assert!(time_second(&mut Stream::new(b"61")).is_err());
     assert!(time_second(&mut Stream::new(b"ab")).is_err());
@@ -181,18 +162,18 @@ fn disallows_notallowed() {
 
 #[test]
 fn test_duration_year() {
-    test_date_part(&duration_year, "2019Y", "", 2019).unwrap();
-    test_date_part(&duration_year, "0Y", "", 0).unwrap();
-    test_date_part(&duration_year, "10000Y", "", 10000).unwrap();
+    assert_eq!(duration_year(&mut "2019Y".as_bstr()).unwrap(), 2019);
+    assert_eq!(duration_year(&mut "0Y".as_bstr()).unwrap(), 0);
+    assert_eq!(duration_year(&mut "10000Y".as_bstr()).unwrap(), 10000);
     assert!(duration_year(&mut Stream::new(b"abcd")).is_err());
     assert!(duration_year(&mut Stream::new(b"-1")).is_err());
 }
 
 #[test]
 fn test_duration_month() {
-    test_date_part(&duration_month, "6M", "", 6).unwrap();
-    test_date_part(&duration_month, "0M", "", 0).unwrap();
-    test_date_part(&duration_month, "12M", "", 12).unwrap();
+    assert_eq!(duration_month(&mut "6M".as_bstr()).unwrap(), 6);
+    assert_eq!(duration_month(&mut "0M".as_bstr()).unwrap(), 0);
+    assert_eq!(duration_month(&mut "12M".as_bstr()).unwrap(), 12);
 
     assert!(duration_month(&mut Stream::new(b"ab")).is_err());
     assert!(duration_month(&mut Stream::new(b"-1")).is_err());
@@ -201,9 +182,9 @@ fn test_duration_month() {
 
 #[test]
 fn test_duration_week() {
-    test_date_part(&duration_week, "26W", "", 26).unwrap();
-    test_date_part(&duration_week, "0W", "", 0).unwrap();
-    test_date_part(&duration_week, "52W", "", 52).unwrap();
+    assert_eq!(duration_week(&mut "26W".as_bstr()).unwrap(), 26);
+    assert_eq!(duration_week(&mut "0W".as_bstr()).unwrap(), 0);
+    assert_eq!(duration_week(&mut "52W".as_bstr()).unwrap(), 52);
     assert!(duration_week(&mut Stream::new(b"ab")).is_err());
     assert!(duration_week(&mut Stream::new(b"-1")).is_err());
     assert!(duration_week(&mut Stream::new(b"53")).is_err());
@@ -211,9 +192,9 @@ fn test_duration_week() {
 
 #[test]
 fn test_duration_day() {
-    test_date_part(&duration_day, "16D", "", 16).unwrap();
-    test_date_part(&duration_day, "0D", "", 0).unwrap();
-    test_date_part(&duration_day, "31D", "", 31).unwrap();
+    assert_eq!(duration_day(&mut "16D".as_bstr()).unwrap(), 16);
+    assert_eq!(duration_day(&mut "0D".as_bstr()).unwrap(), 0);
+    assert_eq!(duration_day(&mut "31D".as_bstr()).unwrap(), 31);
     assert!(duration_day(&mut Stream::new(b"ab")).is_err());
     assert!(duration_day(&mut Stream::new(b"-1")).is_err());
     assert!(duration_day(&mut Stream::new(b"32")).is_err());
@@ -221,9 +202,9 @@ fn test_duration_day() {
 
 #[test]
 fn test_duration_hour() {
-    test_date_part(&duration_hour, "12H", "", 12).unwrap();
-    test_date_part(&duration_hour, "0H", "", 0).unwrap();
-    test_date_part(&duration_hour, "24H", "", 24).unwrap();
+    assert_eq!(duration_hour(&mut "12H".as_bstr()).unwrap(), 12);
+    assert_eq!(duration_hour(&mut "0H".as_bstr()).unwrap(), 0);
+    assert_eq!(duration_hour(&mut "24H".as_bstr()).unwrap(), 24);
     assert!(duration_hour(&mut Stream::new(b"ab")).is_err());
     assert!(duration_hour(&mut Stream::new(b"-1")).is_err());
     assert!(duration_hour(&mut Stream::new(b"25")).is_err());
@@ -231,9 +212,9 @@ fn test_duration_hour() {
 
 #[test]
 fn test_duration_minute() {
-    test_date_part(&duration_minute, "30M", "", 30).unwrap();
-    test_date_part(&duration_minute, "0M", "", 0).unwrap();
-    test_date_part(&duration_minute, "60M", "", 60).unwrap();
+    assert_eq!(duration_minute(&mut "30M".as_bstr()).unwrap(), 30);
+    assert_eq!(duration_minute(&mut "0M".as_bstr()).unwrap(), 0);
+    assert_eq!(duration_minute(&mut "60M".as_bstr()).unwrap(), 60);
     assert!(duration_minute(&mut Stream::new(b"ab")).is_err());
     assert!(duration_minute(&mut Stream::new(b"-1")).is_err());
     assert!(duration_minute(&mut Stream::new(b"61")).is_err());
@@ -241,25 +222,58 @@ fn test_duration_minute() {
 
 #[test]
 fn test_duration_second_and_millisecond1() {
-    test_date_part(&duration_second_and_millisecond, "30S", "", (30, 0)).unwrap();
-    test_date_part(&duration_second_and_millisecond, "0S", "", (0, 0)).unwrap();
-    test_date_part(&duration_second_and_millisecond, "60S", "", (60, 0)).unwrap();
-    test_date_part(&duration_second_and_millisecond, "1,23S", "", (1, 230)).unwrap();
-    test_date_part(&duration_second_and_millisecond, "2.34S", "", (2, 340)).unwrap();
+    assert_eq!(
+        duration_second_and_millisecond(&mut "30S".as_bstr()).unwrap(),
+        (30, 0)
+    );
+    assert_eq!(
+        duration_second_and_millisecond(&mut "0S".as_bstr()).unwrap(),
+        (0, 0)
+    );
+    assert_eq!(
+        duration_second_and_millisecond(&mut "60S".as_bstr()).unwrap(),
+        (60, 0)
+    );
+    assert_eq!(
+        duration_second_and_millisecond(&mut "1,23S".as_bstr()).unwrap(),
+        (1, 230)
+    );
+    assert_eq!(
+        duration_second_and_millisecond(&mut "2.34S".as_bstr()).unwrap(),
+        (2, 340)
+    );
     assert!(duration_second_and_millisecond(&mut Stream::new(b"abS")).is_err());
     assert!(duration_second_and_millisecond(&mut Stream::new(b"-1S")).is_err());
 }
 
 #[test]
 fn test_duration_time() {
-    test_date_part(&duration_time, "1H2M3S", "", (1, 2, 3, 0)).unwrap();
-    test_date_part(&duration_time, "10H12M30S", "", (10, 12, 30, 0)).unwrap();
-    test_date_part(&duration_time, "1H3S", "", (1, 0, 3, 0)).unwrap();
-    test_date_part(&duration_time, "2M", "", (0, 2, 0, 0)).unwrap();
-    test_date_part(&duration_time, "1H2M3,4S", "", (1, 2, 3, 400)).unwrap();
-    test_date_part(&duration_time, "1H2M3.4S", "", (1, 2, 3, 400)).unwrap();
-    test_date_part(&duration_time, "0,123S", "", (0, 0, 0, 123)).unwrap();
-    test_date_part(&duration_time, "0.123S", "", (0, 0, 0, 123)).unwrap();
+    assert_eq!(
+        duration_time(&mut "1H2M3S".as_bstr()).unwrap(),
+        (1, 2, 3, 0)
+    );
+    assert_eq!(
+        duration_time(&mut "10H12M30S".as_bstr()).unwrap(),
+        (10, 12, 30, 0)
+    );
+    assert_eq!(duration_time(&mut "1H3S".as_bstr()).unwrap(), (1, 0, 3, 0));
+    assert_eq!(duration_time(&mut "2M".as_bstr()).unwrap(), (0, 2, 0, 0));
+    assert_eq!(
+        duration_time(&mut "1H2M3,4S".as_bstr()).unwrap(),
+        (1, 2, 3, 400)
+    );
+    assert_eq!(
+        duration_time(&mut "1H2M3.4S".as_bstr()).unwrap(),
+        (1, 2, 3, 400)
+    );
+    assert_eq!(
+        duration_time(&mut "0,123S".as_bstr()).unwrap(),
+        (0, 0, 0, 123)
+    );
+    assert_eq!(
+        duration_time(&mut "0.123S".as_bstr()).unwrap(),
+        (0, 0, 0, 123)
+    );
 }
 
 #[test]
@@ -289,54 +303,54 @@ fn test_duration_datetime_error() {
 #[rustfmt::skip]
 #[test]
 fn test_duration_second_and_millisecond2() {
-    test_date_part(&parse_duration, "PT30S", "", Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 30, millisecond: 0 }).unwrap();
-    test_date_part(&parse_duration, "PT30.123S", "", Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 30, millisecond: 123 }).unwrap();
-    test_date_part(&parse_duration, "P2021Y11M16DT23H26M59.123S", "", Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 23, minute: 26, second: 59, millisecond: 123 }).unwrap();
+    assert_eq!(parse_duration(&mut "PT30S".as_bstr()).unwrap(), Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 30, millisecond: 0 });
+    assert_eq!(parse_duration(&mut "PT30.123S".as_bstr()).unwrap(), Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 30, millisecond: 123 });
+    assert_eq!(parse_duration(&mut "P2021Y11M16DT23H26M59.123S".as_bstr()).unwrap(), Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 23, minute: 26, second: 59, millisecond: 123 });
 }
 
 #[rustfmt::skip]
 #[test]
 fn duration_roundtrip() {
-    test_date_part(&parse_duration, "P0W", "", Duration::Weeks(0)).unwrap();
-    test_date_part(&parse_duration, "P2021Y11M16DT23H26M59.123S", "", Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 23, minute: 26, second: 59, millisecond: 123 }).unwrap();
-    test_date_part(&parse_duration, "P2021Y11M16DT23H26M59S", "", Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 23, minute: 26, second: 59, millisecond: 0 }).unwrap();
-    test_date_part(&parse_duration, "P2021Y11M16DT23H26M", "", Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 23, minute: 26, second: 0, millisecond: 0 }).unwrap();
-    test_date_part(&parse_duration, "P2021Y11M16DT23H", "", Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 23, minute: 0, second: 0, millisecond: 0 }).unwrap();
-    test_date_part(&parse_duration, "P2021Y11M16D", "", Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 0, minute: 0, second: 0, millisecond: 0 }).unwrap();
-    test_date_part(&parse_duration, "P2021Y11M16DT1S", "", Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 0, minute: 0, second: 1, millisecond: 0 }).unwrap();
-    test_date_part(&parse_duration, "P2021Y11M16DT0.471S", "", Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 0, minute: 0, second: 0, millisecond: 471 }).unwrap();
-    test_date_part(&parse_duration, "P2021Y11M", "", Duration::YMDHMS { year: 2021, month: 11, day: 0, hour: 0, minute: 0, second: 0, millisecond: 0 }).unwrap();
-    test_date_part(&parse_duration, "P11M", "", Duration::YMDHMS { year: 0, month: 11, day: 0, hour: 0, minute: 0, second: 0, millisecond: 0 }).unwrap();
-    test_date_part(&parse_duration, "P16D", "", Duration::YMDHMS { year: 0, month: 0, day: 16, hour: 0, minute: 0, second: 0, millisecond: 0 }).unwrap();
-    test_date_part(&parse_duration, "P0D", "", Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0, millisecond: 0 }).unwrap();
+    assert_eq!(parse_duration(&mut "P0W".as_bstr()).unwrap(), Duration::Weeks(0));
+    assert_eq!(parse_duration(&mut "P2021Y11M16DT23H26M59.123S".as_bstr()).unwrap(), Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 23, minute: 26, second: 59, millisecond: 123 });
+    assert_eq!(parse_duration(&mut "P2021Y11M16DT23H26M59S".as_bstr()).unwrap(), Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 23, minute: 26, second: 59, millisecond: 0 });
+    assert_eq!(parse_duration(&mut "P2021Y11M16DT23H26M".as_bstr()).unwrap(), Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 23, minute: 26, second: 0, millisecond: 0 });
+    assert_eq!(parse_duration(&mut "P2021Y11M16DT23H".as_bstr()).unwrap(), Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 23, minute: 0, second: 0, millisecond: 0 });
+    assert_eq!(parse_duration(&mut "P2021Y11M16D".as_bstr()).unwrap(), Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 0, minute: 0, second: 0, millisecond: 0 });
+    assert_eq!(parse_duration(&mut "P2021Y11M16DT1S".as_bstr()).unwrap(), Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 0, minute: 0, second: 1, millisecond: 0 });
+    assert_eq!(parse_duration(&mut "P2021Y11M16DT0.471S".as_bstr()).unwrap(), Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 0, minute: 0, second: 0, millisecond: 471 });
+    assert_eq!(parse_duration(&mut "P2021Y11M".as_bstr()).unwrap(), Duration::YMDHMS { year: 2021, month: 11, day: 0, hour: 0, minute: 0, second: 0, millisecond: 0 });
+    assert_eq!(parse_duration(&mut "P11M".as_bstr()).unwrap(), Duration::YMDHMS { year: 0, month: 11, day: 0, hour: 0, minute: 0, second: 0, millisecond: 0 });
+    assert_eq!(parse_duration(&mut "P16D".as_bstr()).unwrap(), Duration::YMDHMS { year: 0, month: 0, day: 16, hour: 0, minute: 0, second: 0, millisecond: 0 });
+    assert_eq!(parse_duration(&mut "P0D".as_bstr()).unwrap(), Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0, millisecond: 0 });
 }
 
 #[rustfmt::skip]
 #[test]
 fn duration_multi_digit_hour() {
-    test_date_part(&parse_duration, "PT12H", "", Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 12, minute: 0, second: 0, millisecond: 0 }).unwrap();
-    test_date_part(&parse_duration, "PT8760H", "", Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 365*24, minute: 0, second: 0, millisecond: 0 }).unwrap();
+    assert_eq!(parse_duration(&mut "PT12H".as_bstr()).unwrap(), Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 12, minute: 0, second: 0, millisecond: 0 });
+    assert_eq!(parse_duration(&mut "PT8760H".as_bstr()).unwrap(), Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 365*24, minute: 0, second: 0, millisecond: 0 });
 }
 
 #[rustfmt::skip]
 #[test]
 fn duration_multi_digit_minute() {
-    test_date_part(&parse_duration, "PT15M", "", Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 15, second: 0, millisecond: 0 }).unwrap();
-    test_date_part(&parse_duration, "PT600M", "", Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 600, second: 0, millisecond: 0 }).unwrap();
+    assert_eq!(parse_duration(&mut "PT15M".as_bstr()).unwrap(), Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 15, second: 0, millisecond: 0 });
+    assert_eq!(parse_duration(&mut "PT600M".as_bstr()).unwrap(), Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 600, second: 0, millisecond: 0 });
 }
 
 #[rustfmt::skip]
 #[test]
 fn duration_multi_digit_second() {
-    test_date_part(&parse_duration, "PT16S", "", Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 16, millisecond: 0 }).unwrap();
-    test_date_part(&parse_duration, "PT900S", "", Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 900, millisecond: 0 }).unwrap();
+    assert_eq!(parse_duration(&mut "PT16S".as_bstr()).unwrap(), Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 16, millisecond: 0 });
+    assert_eq!(parse_duration(&mut "PT900S".as_bstr()).unwrap(), Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 900, millisecond: 0 });
 }
 
 #[rustfmt::skip]
 #[test]
 fn duration_multi_digit_day() {
-    test_date_part(&parse_duration, "P365D", "", Duration::YMDHMS { year: 0, month: 0, day: 365, hour: 0, minute: 0, second: 0, millisecond: 0 }).unwrap();
-    test_date_part(&parse_duration, "P36500D", "", Duration::YMDHMS { year: 0, month: 0, day: 36500, hour: 0, minute: 0, second: 0, millisecond: 0 }).unwrap();
+    assert_eq!(parse_duration(&mut "P365D".as_bstr()).unwrap(), Duration::YMDHMS { year: 0, month: 0, day: 365, hour: 0, minute: 0, second: 0, millisecond: 0 });
+    assert_eq!(parse_duration(&mut "P36500D".as_bstr()).unwrap(), Duration::YMDHMS { year: 0, month: 0, day: 36500, hour: 0, minute: 0, second: 0, millisecond: 0 }); 
 }
 
 // #[test]

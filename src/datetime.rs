@@ -1,8 +1,6 @@
-use crate::parsers::Stream;
 use crate::{parsers, Date, Time};
 use alloc::string::String;
 use core::str::FromStr;
-use winnow::stream::StreamIsPartial;
 
 /// Compound struct, holds Date and Time.
 /// ```
@@ -44,10 +42,7 @@ impl FromStr for DateTime {
 /// let dt = winnow_iso8601::datetime("2015-11-03T21:56").unwrap();
 /// ```
 pub fn datetime(string: &str) -> Result<DateTime, String> {
-    let i = &mut Stream::new(string.as_bytes());
-    let _ = i.complete();
-
-    if let Ok(parsed) = parsers::parse_datetime(i) {
+    if let Ok(parsed) = parsers::parse_datetime(&mut string.as_bytes()) {
         Ok(parsed)
     } else {
         Err(format!("Failed to parse datetime: {}", string))

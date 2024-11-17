@@ -1,8 +1,6 @@
 use crate::parsers;
-use crate::parsers::Stream;
 use alloc::string::String;
 use core::str::FromStr;
-use winnow::stream::StreamIsPartial;
 
 /// A date, can hold three different formats.
 /// ```
@@ -55,10 +53,7 @@ impl FromStr for Date {
 /// let date = winnow_iso8601::date("2015-11-02").unwrap();
 /// ```
 pub fn date(string: &str) -> Result<Date, String> {
-    let i = &mut Stream::new(string.as_bytes());
-    let _ = i.complete();
-
-    if let Ok(parsed) = parsers::parse_date(i) {
+    if let Ok(parsed) = parsers::parse_date(&mut string.as_bytes()) {
         Ok(parsed)
     } else {
         Err(format!("Failed to parse date: {}", string))

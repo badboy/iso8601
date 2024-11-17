@@ -1,7 +1,5 @@
-use crate::parsers::Stream;
 use core::str::FromStr;
 use std::prelude::rust_2015::String;
-use winnow::stream::StreamIsPartial;
 
 /// Struct holding timezone offsets
 /// ```
@@ -40,10 +38,7 @@ impl FromStr for Timezone {
 /// let dt = winnow_iso8601::timezone("Z").unwrap();
 /// ```
 pub fn timezone(string: &str) -> Result<Timezone, String> {
-    let i = &mut Stream::new(string.as_bytes());
-    let _ = i.complete();
-
-    if let Ok(parsed) = crate::parsers::parse_timezone(i) {
+    if let Ok(parsed) = crate::parsers::parse_timezone(&mut string.as_bytes()) {
         Ok(parsed)
     } else {
         Err(format!("Failed to parse datetime: {}", string))

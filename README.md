@@ -9,7 +9,65 @@
 
 ## About
 
-Provides a set of complete parsers to deal with simple cases where you are parsing a stand-alone date string.
+This library contains parsers for parsing ISO8601 dates and their various components.
+
+### Parsing
+
+#### Complete
+If you have all the data you need, you can just pass along the bytes. Passing in `&mut &str` isn't  yet
+supported but will be supported in the future.
+
+```rust,ignore
+let datetime = opt(parse_datetime)
+    .parse_next(&mut "2015-06-26T16:43:23+0200".as_bytes()));
+
+// the above will give you:
+Some(DateTime {
+    date: Date::YMD {
+        year: 2015,
+        month: 6,
+        day: 26,
+    },
+    time: Time {
+        hour: 16,
+        minute: 43,
+        second: 23,
+        tz_offset_hours: 2,
+        tz_offset_minutes: 0,
+    },
+});
+```
+
+#### Partial
+For partial data the only difference is wrapping the &'i [u8] in Partial and handling incomplete errors correctly,
+which is documented in [winnow partial docs](https://docs.rs/winnow/latest/winnow/_topic/partial/index.html).
+```rust,ignore
+pub type Stream<'i> = Partial<&'i [u8]>;
+
+let datetime = opt(parse_datetime)
+    .parse_next(&mut Stream::new("2015-06-26T16:43:23+0200").as_bytes()));
+
+// the above will give you:
+Some(DateTime {
+    date: Date::YMD {
+        year: 2015,
+        month: 6,
+        day: 26,
+    },
+    time: Time {
+        hour: 16,
+        minute: 43,
+        second: 23,
+        tz_offset_hours: 2,
+        tz_offset_minutes: 0,
+    },
+});
+```
+
+### Serializing
+
+If you have a datetime string handy you can use the helper methods such as datetime to get a DateTime object. This can
+be serialized into a chrono date object if the `serde` feature is enabled.
 
 ```rust,ignore
 let datetime = winnow_iso8601::datetime("2015-06-26T16:43:23+0200").unwrap();
@@ -30,18 +88,6 @@ DateTime {
     },
 };
 ```
-
-Each of these complete methods simply build a `Partial<&[u8]>` which is flagged as complete. run the partial parsers
-available. So, for most cases you would probably want to use:
-
-```rust,ignore
-let datetime = winnow_iso8601::parse_datetime("2015-06-26T16:43:23+0200".as_bytes());
-```
-
-This will give the same `DateTime` as the complete above wrapped in a `winnow::PResult`. All of the public parsers
-behave as expected and so use cases are best covered in the
-[winnow partial docs](https://docs.rs/winnow/latest/winnow/_topic/partial/index.html).
-
 # Contributors
 
 winnow-iso8601 is the fruit of the work of many contributors over the years, many
