@@ -8,6 +8,7 @@ pub fn print_result<T: fmt::Debug>(input: &str, rest: &[u8], result: &T) {
 }
 
 #[macro_export]
+#[allow(missing_docs)]
 macro_rules! assert_parser {
     ($parser:ident, $line:expr, $expectation:expr) => {{
         use std::string::ToString;

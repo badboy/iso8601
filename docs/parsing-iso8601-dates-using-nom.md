@@ -44,7 +44,7 @@ It has several parts we need to parse:
 with the following meaning:
 
 | Characters | Meaning                                                            |
-| ---------- | -------                                                            |
+| ---------- | ------------------------------------------------------------------ |
 | YYYY       | The year, can be negative or null and can be extended if necessary |
 | MM         | Month from 1 to 12 (0-prefixed)                                    |
 | DD         | Day from 1 to 31 (0-prefixed)                                      |
@@ -63,29 +63,28 @@ We will built a small parser for each of these parts and at the end combine them
 
 We will need to make a lib project.
 
-~~~bash
+```bash
 cargo new --lib date_parse
-~~~
+```
 
 Edit `Cargo.toml` and `src/lib.rs` so that our project depends on nom.
 
-~~~toml
+```toml
 [dependencies]
 nom = "^4.0"
-~~~
+```
 
-~~~rust
+```rust
 #[macro_use]
 extern crate nom;
-~~~
-
+```
 
 ### Parsing the date: 2015-07-16
 
 Let's start with the sign. As we need it several times, we create its own parser for that.
 Parsers are created by giving them a name, stating the return value (or defaulting to a byte slice) and the parser combinators to handle the input.
 
-~~~rust
+```rust
 named!(sign <&[u8], i32>, alt!(
         tag!("-") => { |_| -1 } |
         tag!("+") => { |_| 1 }
@@ -109,7 +108,7 @@ mod tests {
         assert_eq!(sign(b" "), Err(Error(Code(&b" "[..], Alt))));
     }
 }
-~~~
+```
 
 First, we parse either a plus or a minus sign.
 This combines two already existing parsers: `tag!`, which will match the given byte array (in our case a single character) and `alt!`, which will try a list of parsers, returning on the first successful one.
@@ -117,7 +116,7 @@ We can directly map the result of the sub-parsers to either `-1` or `1`, so we d
 
 Next we parse the year, which consists of an optional sign and 4 digits (I know, I know, it is possible to extend this to more digits, but let's keep it simple for now).
 
-~~~rust
+```rust
 use std::ops::{AddAssign, MulAssign};
 
 fn buf_to_int<T>(s: &[u8]) -> T
@@ -157,66 +156,65 @@ mod tests {
     }
 }
 
-~~~
+```
 
 A lot of additional stuff here. So let's separate it.
 
-~~~rust
+```rust
 named!(positive_year  <&[u8], i32>, map!(take_while_m_n!(4, 4, nom::is_digit), buf_to_int));
-~~~
+```
 
 This creates a new named parser, that again returns the remaining input and an 32-bit integer.
 To work, it first calls `take_4_digits` and then maps that result to the corresponding integer.
 
 `take_while_m_n` is another small helper parser. We will also use one for 2 digits:
 
-~~~rust
+```rust
 take_while_m_n!(4, 4, nom::is_digit)
 take_while_m_n!(2, 2, nom::is_digit)
-~~~
+```
 
 This takes 4 (or 2) characters from the input and checks that each character is a digit.
 
-~~~rust
+```rust
 named!(pub year <&[u8], i32>, do_parse!(
-~~~
+```
 
 The year is also returned as a 32-bit integer (there's a pattern!).
 Using the `do_parse!` macro, we can chain together multiple parsers and work with the sub-results.
 
-~~~rust
+```rust
     pref: opt!(sign) >>
     y: positive_year >>
-~~~
+```
 
 Our sign is directly followed by 4 digits. It's optional though, that's why we use `opt!`.
 `>>` is the concatenation operator in the `chain!` macro.
 We save the sub-results to variables (`pref` and `y`).
 
-
-~~~rust
+```rust
     (pref.unwrap_or(1) * y)
-~~~
+```
 
 To get the final result, we multiply the prefix (which comes back as either `1` or `-1`) with the year.
 
 We can now successfully parse a year:
 
-~~~rust
+```rust
         assert_eq!(year(b"2018"), Ok((&[][..], 2018)));
         assert_eq!(year(b"-0333"), Ok((&[][..], -0333)));
-~~~
+```
 
 Our nom parser will return an `IResult`.
 
-~~~rust
+```rust
 type IResult<I, O, E = u32> = Result<(I, O), Err<I, E>>;
 pub enum Err<I, E = u32> {
     Incomplete(Needed),
     Error(Context<I, E>),
     Failure(Context<I, E>),
 }
-~~~
+```
 
 If all went well, we get `Ok(I,O)` with `I` and `O` being the appropriate types.
 For our case `I` is the same as the input, a buffer slice (`&[u8]`), and `O` is the output of the parser itself, an integer (`i32`).
@@ -224,7 +222,7 @@ The return value could also be an `Err(Failure)`, if something went completely w
 
 Parsing the month and day is a bit easier now: we simply take the digits and map them to an integer:
 
-~~~rust
+```rust
 named!(month <&[u8], u8>, map!(take_while_m_n!(2, 2, nom::is_digit), buf_to_int));
 named!(day   <&[u8], u8>, map!(take_while_m_n!(2, 2, nom::is_digit), buf_to_int));
 
@@ -243,12 +241,12 @@ mod tests {
         assert_eq!(day(b"18"), Ok((&[][..], 18)));
     }
 }
-~~~
+```
 
 All that's left is combining these 3 parts to parse a full date.
 Again we can chain the different parsers and map it to some useful value:
 
-~~~rust
+```rust
 #[derive(Eq, PartialEq, Debug)]
 pub struct Date {
     year: i32,
@@ -297,7 +295,7 @@ mod tests {
     }
 }
 
-~~~
+```
 
 And running the tests shows it already works!
 
@@ -305,15 +303,15 @@ And running the tests shows it already works!
 
 Next, we parse the time. The individual parts are really simple, just some digits:
 
-~~~rust
+```rust
 named!(pub hour   <&[u8], u8>, map!(take_while_m_n!(2, 2, nom::is_digit), buf_to_int));
 named!(pub minute <&[u8], u8>, map!(take_while_m_n!(2, 2, nom::is_digit), buf_to_int));
 named!(pub second <&[u8], u8>, map!(take_while_m_n!(2, 2, nom::is_digit), buf_to_int));
-~~~
+```
 
 Putting them together becomes a bit more complex, as the `second` part is optional:
 
-~~~rust
+```rust
 #[derive(Eq, PartialEq, Debug)]
 pub struct Time {
     hour: u8,
@@ -367,7 +365,7 @@ mod tests {
         );
     }
 }
-~~~
+```
 
 As you can see, even `do_parse!` parsers can be nested.
 The sub-parts then must be mapped once for the inner parser and once into the final value of the outer parser.
@@ -378,11 +376,11 @@ But it leaves out one important bit: the timezone.
 
 ### Parsing the timezone: +0100
 
-~~~
+```
 2015-07-02T19:45:00-0500
 2015-07-02T19:45:00Z
 2015-07-02T19:45:00+01
-~~~
+```
 
 Above are three variants of valid dates with timezones.
 The timezone in an ISO8601 string is either an appended `Z`, indicating UTC,
@@ -390,16 +388,16 @@ or it's separated using a sign (`+` or `-`) and appends the offset from UTC in h
 
 Let's cover the UTC special case first:
 
-~~~rust
+```rust
 named!(timezone_utc <&[u8], i32>, map!(tag!("Z"), |_| 0));
-~~~
+```
 
 This should look familiar by now.
 It's a simple `Z` character, which we map to `0`.
 
 The other case is the sign-separated hour and minute offset.
 
-~~~rust
+```rust
 named!(timezone_hour <&[u8], i32>, do_parse!(
     sign: sign >>
     hour: hour >>
@@ -408,7 +406,7 @@ named!(timezone_hour <&[u8], i32>, do_parse!(
     ))) >>
     ((sign * (hour as i32 * 3600 + minute.unwrap_or(0) as i32 * 60)))
 ));
-~~~
+```
 
 We can re-use our already existing parsers and once again chain them to get what we want.
 The minutes are optional (and might be separated using a colon).
@@ -419,13 +417,13 @@ We could also just map it to a tuple like <br>`(sign, hour, minute.unwrap_or(0))
 
 Combined we get
 
-~~~rust
+```rust
 named!(timezone <&[u8], i32>, alt!(timezone_utc | timezone_hour));
-~~~
+```
 
 Putting this back into time we get:
 
-~~~rust
+```rust
 named!(pub time <&[u8], Time>, do_parse!(
     hour: hour >>
     tag!(":") >>
@@ -497,7 +495,7 @@ mod tests {
     }
 }
 
-~~~
+```
 
 ### Putting it all together
 
@@ -505,7 +503,7 @@ We now got individual parsers for the date, the time and the timezone offset.
 
 Putting it all together, our final datetime parser looks quite small and easy to understand:
 
-~~~rust
+```rust
 #[derive(Eq, PartialEq, Debug)]
 pub struct DateTime {
     date: Date,
@@ -551,21 +549,21 @@ mod tests {
         );
     }
 }
-~~~
+```
 
 Nothing special anymore. We can now parse all kinds of date strings:
 
-~~~rust
+```rust
 datetime("2007-08-31T16:47+00:00");
 datetime("2007-12-24T18:21Z");
 datetime("2008-02-01T09:00:22+05");
-~~~
+```
 
 But it will also parse invalid dates and times:
 
-~~~rust
+```rust
 datetime("2234-13-42T25:70Z");
-~~~
+```
 
 But this is fine for now. We can handle the actual validation in a later step.
 For example, we could use [chrono][], a time library, [to handle this for us][chrono-convert].
