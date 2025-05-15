@@ -2,7 +2,9 @@
 
 <!-- next-header -->
 
-## [Unreleased](https://github.com/badboy/iso8601/compare/v0.6.2...main) - ReleaseDate
+## [Unreleased](https://github.com/badboy/iso8601/compare/v0.6.3...main) - ReleaseDate
+
+## [0.6.3](https://github.com/badboy/iso8601/compare/v0.6.2...v0.6.3) - 2025-05-15
 
 ## [0.6.2](https://github.com/badboy/iso8601/compare/v0.6.1...v0.6.2) - 2025-02-02
 
