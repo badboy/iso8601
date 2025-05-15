@@ -65,7 +65,8 @@ mod test_date {
 impl TryFrom<crate::Time> for chrono::NaiveTime {
     type Error = ();
     fn try_from(iso: crate::Time) -> Result<Self, Self::Error> {
-        chrono::NaiveTime::from_hms_opt(iso.hour, iso.minute, iso.second).ok_or(())
+        chrono::NaiveTime::from_hms_milli_opt(iso.hour, iso.minute, iso.second, iso.millisecond)
+            .ok_or(())
     }
 }
 
@@ -170,5 +171,16 @@ mod test_datetime {
         assert_eq!(datetime.minute(), 40);
         assert_eq!(datetime.second(), 00);
         assert_eq!(datetime.offset().fix().local_minus_utc(), 3623);
+    }
+
+    #[test]
+    fn naivetime_from_hms_milli() {
+        let iso = crate::time("23:40:15.123").unwrap();
+        let naive = chrono::NaiveTime::try_from(iso).unwrap();
+
+        assert_eq!(naive.hour(), 23);
+        assert_eq!(naive.minute(), 40);
+        assert_eq!(naive.second(), 15);
+        assert_eq!(naive.nanosecond(), 123_000_000);
     }
 }
