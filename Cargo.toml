@@ -1,6 +1,6 @@
 [package]
 name = "iso8601"
-version = "0.6.2"
+version = "0.6.3"
 authors = [
     "Jan-Erik Rediger <janerik@fnordig.de>",
     "Hendrik Sollich <hendrik@hoodie.de>",
