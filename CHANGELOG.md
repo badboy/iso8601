@@ -2,7 +2,9 @@
 
 <!-- next-header -->
 
-## [Unreleased](https://github.com/badboy/iso8601/compare/v0.6.3...main) - ReleaseDate
+## [Unreleased](https://github.com/badboy/iso8601/compare/v0.6.4...main) - ReleaseDate
+
+## [0.6.4](https://github.com/badboy/iso8601/compare/v0.6.3...v0.6.4) - 2026-07-24
 
 ### Fixes
 
