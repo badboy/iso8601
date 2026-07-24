@@ -161,4 +161,94 @@ mod tests {
         let time = crate::time("16:43:16.010").unwrap();
         assert_eq!(format!("{}", time), "16:43:16.010+00:00");
     }
+
+    fn test_date_reparse(date: Date) {
+        let serialized = format!("{}", date);
+        let reparsed = crate::parsers::parse_date(serialized.as_bytes()).unwrap().1;
+        assert_eq!(date, reparsed);
+    }
+
+    #[test]
+    fn display_date_ymd() {
+        test_date_reparse(Date::YMD {
+            year: 2015,
+            month: 6,
+            day: 26,
+        });
+    }
+
+    #[test]
+    fn display_date_week() {
+        test_date_reparse(Date::Week {
+            year: 2015,
+            ww: 45,
+            d: 1,
+        });
+    }
+
+    #[test]
+    fn display_date_ordinal() {
+        test_date_reparse(Date::Ordinal {
+            year: 2015,
+            ddd: 306,
+        });
+    }
+
+    #[test]
+    fn display_date_negative_year() {
+        test_date_reparse(Date::YMD {
+            year: -333,
+            month: 7,
+            day: 11,
+        });
+    }
+
+    fn test_datetime_reparse(datetime: DateTime) {
+        let serialized = format!("{}", datetime);
+        let reparsed = crate::parsers::parse_datetime(serialized.as_bytes())
+            .unwrap()
+            .1;
+        assert_eq!(datetime, reparsed);
+    }
+
+    #[test]
+    fn display_datetime_with_positive_offset() {
+        test_datetime_reparse(DateTime {
+            date: Date::YMD {
+                year: 2015,
+                month: 6,
+                day: 26,
+            },
+            time: Time {
+                hour: 16,
+                minute: 43,
+                second: 16,
+                millisecond: 123,
+                tz_offset_hours: 5,
+                tz_offset_minutes: 30,
+            },
+        });
+    }
+
+    // The `Display` impl for `Time` hardcodes a literal `+` before the offset,
+    // so a negative offset serializes to something like "+-05:00", which does
+    // not round-trip back to the original value.
+    #[test]
+    fn display_time_with_negative_offset_does_not_round_trip() {
+        let time = Time {
+            hour: 16,
+            minute: 43,
+            second: 16,
+            millisecond: 0,
+            tz_offset_hours: -5,
+            tz_offset_minutes: 0,
+        };
+        let serialized = format!("{}", time);
+        let reparsed = crate::parsers::parse_time(serialized.as_bytes()).unwrap().1;
+        assert_eq!(
+            time, reparsed,
+            "formatted as {:?}, which does not reparse back to the original value",
+            serialized
+        );
+    }
 }

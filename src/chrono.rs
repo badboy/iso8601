@@ -183,4 +183,46 @@ mod test_datetime {
         assert_eq!(naive.second(), 15);
         assert_eq!(naive.nanosecond(), 123_000_000);
     }
+
+    #[test]
+    fn datetime_from_iso_ordinal() {
+        let iso = crate::datetime("2023-039T23:40:00+01:23").unwrap();
+        let datetime = chrono::DateTime::try_from(iso).unwrap();
+
+        assert_eq!(datetime.year(), 2023);
+        assert_eq!(datetime.month(), 2);
+        assert_eq!(datetime.day(), 8);
+        assert_eq!(datetime.hour(), 23);
+        assert_eq!(datetime.minute(), 40);
+        assert_eq!(datetime.second(), 00);
+        assert_eq!(datetime.offset().fix().local_minus_utc(), 3623);
+    }
+
+    #[test]
+    fn datetime_from_iso_ymd_negative_year() {
+        let iso = crate::datetime("-2023-039T23:40:00+01:23").unwrap();
+        let datetime = chrono::DateTime::try_from(iso).unwrap();
+
+        assert_eq!(datetime.year(), -2023);
+        assert_eq!(datetime.month(), 2);
+        assert_eq!(datetime.day(), 8);
+        assert_eq!(datetime.hour(), 23);
+        assert_eq!(datetime.minute(), 40);
+        assert_eq!(datetime.second(), 00);
+        assert_eq!(datetime.offset().fix().local_minus_utc(), 3623);
+    }
+
+    #[test]
+    fn datetime_from_iso_ymd_negative_offset() {
+        let iso = crate::datetime("2023-02-08T23:40:00-05:30").unwrap();
+        let datetime = chrono::DateTime::try_from(iso).unwrap();
+
+        assert_eq!(datetime.year(), 2023);
+        assert_eq!(datetime.month(), 2);
+        assert_eq!(datetime.day(), 8);
+        assert_eq!(datetime.hour(), 23);
+        assert_eq!(datetime.minute(), 40);
+        assert_eq!(datetime.second(), 00);
+        assert_eq!(datetime.offset().fix().local_minus_utc(), -19800);
+    }
 }

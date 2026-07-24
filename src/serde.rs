@@ -64,6 +64,66 @@ mod date {
 
         assert_eq!(deserialized_date, date);
     }
+
+    #[test]
+    fn serialize_week_date() {
+        let date_json = r#""2023-W06-2""#;
+        let date = crate::date("2023-W06-2").unwrap();
+
+        let serialized_date = serde_json::to_string(&date).unwrap();
+
+        assert_eq!(serialized_date, date_json);
+    }
+
+    #[test]
+    fn deserialize_week_date() {
+        let date_json = r#""2023-W06-2""#;
+        let date = crate::date("2023-W06-2").unwrap();
+
+        let deserialized_date = serde_json::from_str::<crate::Date>(date_json).unwrap();
+
+        assert_eq!(deserialized_date, date);
+    }
+
+    #[test]
+    fn serialize_ordinal_date() {
+        let date_json = r#""2023-039""#;
+        let date = crate::date("2023-039").unwrap();
+
+        let serialized_date = serde_json::to_string(&date).unwrap();
+
+        assert_eq!(serialized_date, date_json);
+    }
+
+    #[test]
+    fn deserialize_ordinal_date() {
+        let date_json = r#""2023-039""#;
+        let date = crate::date("2023-039").unwrap();
+
+        let deserialized_date = serde_json::from_str::<crate::Date>(date_json).unwrap();
+
+        assert_eq!(deserialized_date, date);
+    }
+
+    #[test]
+    fn serialize_negative_year() {
+        let date_json = r#""-0333-07-11""#;
+        let date = crate::date("-0333-07-11").unwrap();
+
+        let serialized_date = serde_json::to_string(&date).unwrap();
+
+        assert_eq!(serialized_date, date_json);
+    }
+
+    #[test]
+    fn deserialize_negative_year() {
+        let date_json = r#""-0333-07-11""#;
+        let date = crate::date("-0333-07-11").unwrap();
+
+        let deserialized_date = serde_json::from_str::<crate::Date>(date_json).unwrap();
+
+        assert_eq!(deserialized_date, date);
+    }
 }
 
 mod time {
@@ -251,6 +311,26 @@ mod duration {
     fn deserialize() {
         let duration_json = r#""P1Y2M3DT4H5M6S""#;
         let duration = crate::duration("P1Y2M3DT4H5M6S").unwrap();
+
+        let deserialized_duration = serde_json::from_str::<crate::Duration>(duration_json).unwrap();
+
+        assert_eq!(deserialized_duration, duration);
+    }
+
+    #[test]
+    fn serialize_weeks() {
+        let duration_json = r#""P26W""#;
+        let duration = crate::duration("P26W").unwrap();
+
+        let serialized_duration = serde_json::to_string(&duration).unwrap();
+
+        assert_eq!(serialized_duration, duration_json);
+    }
+
+    #[test]
+    fn deserialize_weeks() {
+        let duration_json = r#""P26W""#;
+        let duration = crate::duration("P26W").unwrap();
 
         let deserialized_duration = serde_json::from_str::<crate::Duration>(duration_json).unwrap();
 
