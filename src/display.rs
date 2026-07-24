@@ -8,7 +8,7 @@ impl Display for Date {
             // like `2015-11-02`
             Date::YMD { year, month, day } => write!(f, "{:04}-{:02}-{:02}", year, month, day),
             // like `2015-W45-01`
-            Date::Week { year, ww, d } => write!(f, "{:04}-{:02}-{:02}", year, ww, d),
+            Date::Week { year, ww, d } => write!(f, "{:04}-W{:02}-{:01}", year, ww, d),
             // like `2015-306`
             Date::Ordinal { year, ddd } => write!(f, "{:04}-{:03}", year, ddd),
         }

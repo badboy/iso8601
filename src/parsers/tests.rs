@@ -117,6 +117,10 @@ fn test_date_ordinal_date() {
 #[test]
 fn format_equivalence() {
     assert_eq!(
+        parse_datetime(b"2001-02-03T04:05:06+07:00.001"),
+        parse_datetime(b"20010203T040506+0700.001")
+    );
+    assert_eq!(
         parse_datetime(b"2001-02-03T04:05:06+07:00"),
         parse_datetime(b"20010203T040506+0700")
     );
@@ -154,6 +158,49 @@ fn test_datetime_error() {
         let res = parse_datetime(iso_string.as_bytes());
         assert!(res.is_err());
     }
+}
+
+#[rustfmt::skip]
+#[test]
+fn datetime_roundtrip_ymd() {
+    assert_parser!(
+        parse_datetime, "2001-02-03T04:05:06.000+07:00",
+        DateTime{
+            date: Date::YMD{year: 2001, month: 2, day: 3},
+            time: Time { hour: 4, minute: 5, second: 6, millisecond: 0, tz_offset_hours: 7, tz_offset_minutes: 0 }
+        }
+    );
+    assert_parser!(
+        parse_datetime, "2001-02-03T04:05:06.001+07:00",
+        DateTime{
+            date: Date::YMD{year: 2001, month: 2, day: 3},
+            time: Time { hour: 4, minute: 5, second: 6, millisecond: 1, tz_offset_hours: 7, tz_offset_minutes: 0 }
+        }
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn datetime_roundtrip_week() {
+    assert_parser!(
+        parse_datetime, "2015-W05-6T04:05:06.001+07:00",
+        DateTime{
+            date: Date::Week { year: 2015, ww: 5, d: 6 },
+            time: Time { hour: 4, minute: 5, second: 6, millisecond: 1, tz_offset_hours: 7, tz_offset_minutes: 0 }
+        }
+    );
+}
+
+#[rustfmt::skip]
+#[test]
+fn datetime_roundtrip_ordinal() {
+    assert_parser!(
+        parse_datetime, "2001-035T04:05:06.001+07:00",
+        DateTime{
+            date: Date::Ordinal { year: 2001, ddd: 35 },
+            time: Time { hour: 4, minute: 5, second: 6, millisecond: 1, tz_offset_hours: 7, tz_offset_minutes: 0 }
+        }
+    );
 }
 
 #[test]
@@ -287,13 +334,13 @@ fn test_duration_datetime_error() {
 #[test]
 fn test_duration_second_and_millisecond2() {
     assert_parser!(
-        parse_duration, "PT30S", 
+        parse_duration, "PT30S",
         Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 30, millisecond: 0 }
 
     );
 
     assert_parser!(
-        parse_duration, "PT30.123S", 
+        parse_duration, "PT30.123S",
         Duration::YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 30, millisecond: 123 }
 
     );
@@ -338,6 +385,14 @@ fn duration_roundtrip() {
     assert_parser!(
         parse_duration, "P2021Y11M16DT0.471S",
         Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 0, minute: 0, second: 0, millisecond: 471 }
+    );
+    assert_parser!(
+        parse_duration, "P2021Y11M16DT0.042S",
+        Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 0, minute: 0, second: 0, millisecond: 42 }
+    );
+    assert_parser!(
+        parse_duration, "P2021Y11M16DT0.004S",
+        Duration::YMDHMS { year: 2021, month: 11, day: 16, hour: 0, minute: 0, second: 0, millisecond: 4 }
     );
     assert_parser!(
         parse_duration, "P2021Y11M",

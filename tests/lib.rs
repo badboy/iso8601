@@ -43,6 +43,28 @@ fn test_millisecond() {
             hour: 16,
             minute: 43,
             second: 0,
+            millisecond: 42,
+            tz_offset_hours: 0,
+            tz_offset_minutes: 0
+        }),
+        time("16:43:00.042")
+    );
+    assert_eq!(
+        Ok(Time {
+            hour: 16,
+            minute: 43,
+            second: 0,
+            millisecond: 10,
+            tz_offset_hours: 0,
+            tz_offset_minutes: 0
+        }),
+        time("16:43:00.01")
+    );
+    assert_eq!(
+        Ok(Time {
+            hour: 16,
+            minute: 43,
+            second: 0,
             millisecond: 100,
             tz_offset_hours: 0,
             tz_offset_minutes: 0
