@@ -4,16 +4,29 @@
 
 ## [Unreleased](https://github.com/badboy/iso8601/compare/v0.6.3...main) - ReleaseDate
 
+### Fixes
+
+* correct week-day serialization
+* zero-pad milliseconds in Time and Duration display
+
 ## [0.6.3](https://github.com/badboy/iso8601/compare/v0.6.2...v0.6.3) - 2025-05-15
+* use millisecond when converting to chrono
 
 ## [0.6.2](https://github.com/badboy/iso8601/compare/v0.6.1...v0.6.2) - 2025-02-02
 
+* update to nom 8
+* refactor: move types into separate modules
+* add a few more examples in lib
+
 ## [0.6.1](https://github.com/badboy/iso8601/compare/v0.6.0...v0.6.1) - 2023-02-12
+
+* fix build status badge in README
 
 ## [0.6.0](https://github.com/badboy/iso8601/compare/v0.5.1...v0.6.0) - 2023-02-12
 
 * add serde (de)serializer implementations
 * add conversion to chrono as a feature
+* make parser error messages more explicit
 
 ## [0.5.1](https://github.com/badboy/iso8601/compare/v0.5.0...v0.5.1) - 2022-11-09
 
