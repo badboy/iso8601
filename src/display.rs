@@ -20,7 +20,7 @@ impl Display for Time {
         // like `16:43:16.123+00:00`
         write!(
             f,
-            "{:02}:{:02}:{:02}.{}+{:02}:{:02}",
+            "{:02}:{:02}:{:02}.{:03}+{:02}:{:02}",
             self.hour,
             self.minute,
             self.second,
@@ -80,7 +80,7 @@ impl Display for Duration {
                 }
 
                 if *millisecond > 0 {
-                    write!(f, "{}.{}S", second, millisecond)?
+                    write!(f, "{}.{:03}S", second, millisecond)?
                 } else if *second > 0 {
                     write!(f, "{}S", second)?
                 }
@@ -135,5 +135,30 @@ mod tests {
     fn display_duration_2() {
         let duration = Duration::Weeks(50);
         test_duration_reparse(duration);
+    }
+
+    #[test]
+    fn display_duration_small_milliseconds() {
+        for millisecond in [1, 10, 100] {
+            let duration = Duration::YMDHMS {
+                year: 0,
+                month: 0,
+                day: 0,
+                hour: 0,
+                minute: 0,
+                second: 0,
+                millisecond,
+            };
+            test_duration_reparse(duration);
+        }
+    }
+
+    #[test]
+    fn display_time_small_milliseconds() {
+        let time = crate::time("16:43:16.001").unwrap();
+        assert_eq!(format!("{}", time), "16:43:16.001+00:00");
+
+        let time = crate::time("16:43:16.010").unwrap();
+        assert_eq!(format!("{}", time), "16:43:16.010+00:00");
     }
 }

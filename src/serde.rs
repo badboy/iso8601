@@ -108,7 +108,7 @@ mod time {
 
     #[test]
     fn serialize() {
-        let time_json = r#""18:12:15.0+00:00""#;
+        let time_json = r#""18:12:15.000+00:00""#;
 
         let deserialized_time = serde_json::from_str::<crate::Time>(time_json).unwrap();
         let serialized_time = serde_json::to_string(&deserialized_time).unwrap();
@@ -168,7 +168,7 @@ mod datetime {
 
     #[test]
     fn serialize() {
-        let datetime_json = r#""2023-02-10T18:12:15.0+00:00""#;
+        let datetime_json = r#""2023-02-10T18:12:15.000+00:00""#;
         let datetime = crate::datetime("2023-02-10T18:12:15.0+00:00").unwrap();
 
         let serialized_datetime = serde_json::to_string(&datetime).unwrap();
