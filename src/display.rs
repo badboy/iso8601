@@ -97,14 +97,14 @@ mod tests {
 
     use super::*;
 
-    fn test_duration_reparse(duration: Duration) {
+    fn assert_duration_reparse(duration: Duration) {
         let serialized = format!("{}", duration);
         let reparsed = parse_duration(serialized.as_bytes()).unwrap().1;
         assert_eq!(duration, reparsed);
     }
 
     #[test]
-    fn display_duration_0() {
+    fn duration_0() {
         let duration = Duration::YMDHMS {
             year: 2021,
             month: 11,
@@ -114,11 +114,11 @@ mod tests {
             second: 59,
             millisecond: 0,
         };
-        test_duration_reparse(duration);
+        assert_duration_reparse(duration);
     }
 
     #[test]
-    fn display_duration_1() {
+    fn duration_1() {
         let duration = Duration::YMDHMS {
             year: 2021,
             month: 11,
@@ -128,17 +128,17 @@ mod tests {
             second: 59,
             millisecond: 123,
         };
-        test_duration_reparse(duration);
+        assert_duration_reparse(duration);
     }
 
     #[test]
-    fn display_duration_2() {
+    fn duration_2() {
         let duration = Duration::Weeks(50);
-        test_duration_reparse(duration);
+        assert_duration_reparse(duration);
     }
 
     #[test]
-    fn display_duration_small_milliseconds() {
+    fn duration_small_milliseconds() {
         for millisecond in [1, 10, 100] {
             let duration = Duration::YMDHMS {
                 year: 0,
@@ -149,12 +149,12 @@ mod tests {
                 second: 0,
                 millisecond,
             };
-            test_duration_reparse(duration);
+            assert_duration_reparse(duration);
         }
     }
 
     #[test]
-    fn display_time_small_milliseconds() {
+    fn time_small_milliseconds() {
         let time = crate::time("16:43:16.001").unwrap();
         assert_eq!(format!("{}", time), "16:43:16.001+00:00");
 
@@ -162,15 +162,15 @@ mod tests {
         assert_eq!(format!("{}", time), "16:43:16.010+00:00");
     }
 
-    fn test_date_reparse(date: Date) {
+    fn assert_date_reparse(date: Date) {
         let serialized = format!("{}", date);
         let reparsed = crate::parsers::parse_date(serialized.as_bytes()).unwrap().1;
         assert_eq!(date, reparsed);
     }
 
     #[test]
-    fn display_date_ymd() {
-        test_date_reparse(Date::YMD {
+    fn date_ymd() {
+        assert_date_reparse(Date::YMD {
             year: 2015,
             month: 6,
             day: 26,
@@ -178,8 +178,8 @@ mod tests {
     }
 
     #[test]
-    fn display_date_week() {
-        test_date_reparse(Date::Week {
+    fn date_week() {
+        assert_date_reparse(Date::Week {
             year: 2015,
             ww: 45,
             d: 1,
@@ -187,23 +187,23 @@ mod tests {
     }
 
     #[test]
-    fn display_date_ordinal() {
-        test_date_reparse(Date::Ordinal {
+    fn date_ordinal() {
+        assert_date_reparse(Date::Ordinal {
             year: 2015,
             ddd: 306,
         });
     }
 
     #[test]
-    fn display_date_negative_year() {
-        test_date_reparse(Date::YMD {
+    fn date_negative_year() {
+        assert_date_reparse(Date::YMD {
             year: -333,
             month: 7,
             day: 11,
         });
     }
 
-    fn test_datetime_reparse(datetime: DateTime) {
+    fn assert_datetime_reparse(datetime: DateTime) {
         let serialized = format!("{}", datetime);
         let reparsed = crate::parsers::parse_datetime(serialized.as_bytes())
             .unwrap()
@@ -212,8 +212,8 @@ mod tests {
     }
 
     #[test]
-    fn display_datetime_with_positive_offset() {
-        test_datetime_reparse(DateTime {
+    fn datetime_with_positive_offset() {
+        assert_datetime_reparse(DateTime {
             date: Date::YMD {
                 year: 2015,
                 month: 6,
@@ -230,11 +230,8 @@ mod tests {
         });
     }
 
-    // The `Display` impl for `Time` hardcodes a literal `+` before the offset,
-    // so a negative offset serializes to something like "+-05:00", which does
-    // not round-trip back to the original value.
     #[test]
-    fn display_time_with_negative_offset_does_not_round_trip() {
+    fn time_with_negative_offset() {
         let time = Time {
             hour: 16,
             minute: 43,
@@ -245,10 +242,6 @@ mod tests {
         };
         let serialized = format!("{}", time);
         let reparsed = crate::parsers::parse_time(serialized.as_bytes()).unwrap().1;
-        assert_eq!(
-            time, reparsed,
-            "formatted as {:?}, which does not reparse back to the original value",
-            serialized
-        );
+        assert_eq!(time, reparsed, "serialized as {:?}", serialized);
     }
 }
