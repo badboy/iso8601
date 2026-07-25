@@ -2,7 +2,9 @@
 
 <!-- next-header -->
 
-## [Unreleased](https://github.com/badboy/iso8601/compare/v0.6.4...main) - ReleaseDate
+## [Unreleased](https://github.com/badboy/iso8601/compare/v0.6.5...main) - ReleaseDate
+
+## [0.6.5](https://github.com/badboy/iso8601/compare/v0.6.4...v0.6.5) - 2026-07-25
 ### Fixes
 
 * correctly display negative offsets ([7af8cec](https://github.com/hoodie/iso8601/commit/7af8cec21c8caca82d5232ab5ba0d5833d7e198b))
