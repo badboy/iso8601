@@ -3,6 +3,13 @@
 <!-- next-header -->
 
 ## [Unreleased](https://github.com/badboy/iso8601/compare/v0.6.4...main) - ReleaseDate
+### Fixes
+
+* correctly display negative offsets ([7af8cec](https://github.com/hoodie/iso8601/commit/7af8cec21c8caca82d5232ab5ba0d5833d7e198b))
+* correctly display negative years ([b3ba5ad](https://github.com/hoodie/iso8601/commit/b3ba5ad21cf92a27ecb3517166d6230570d5d75e))
+* correctly calculate tz offsets in seconds ([ea1b3a1](https://github.com/hoodie/iso8601/commit/ea1b3a1a45bcf6fb25a12dcd3fec4e02ca1889a6))
+* allow for 53 week years ([a0e5295](https://github.com/hoodie/iso8601/commit/a0e5295fa1b0ee693b52bcac25c7f035e00fac5a))
+
 
 ## [0.6.4](https://github.com/badboy/iso8601/compare/v0.6.3...v0.6.4) - 2026-07-24
 
