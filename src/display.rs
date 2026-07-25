@@ -33,15 +33,23 @@ impl Display for Date {
 impl Display for Time {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // like `16:43:16.123+00:00`
+        let (sign, tz_offset_hours, tz_offset_minutes) =
+            if self.tz_offset_hours < 0 || self.tz_offset_minutes < 0 {
+                ('-', -self.tz_offset_hours, -self.tz_offset_minutes)
+            } else {
+                ('+', self.tz_offset_hours, self.tz_offset_minutes)
+            };
+
         write!(
             f,
-            "{:02}:{:02}:{:02}.{:03}+{:02}:{:02}",
+            "{:02}:{:02}:{:02}.{:03}{}{:02}:{:02}",
             self.hour,
             self.minute,
             self.second,
             self.millisecond,
-            self.tz_offset_hours,
-            self.tz_offset_minutes
+            sign,
+            tz_offset_hours,
+            tz_offset_minutes
         )
     }
 }
