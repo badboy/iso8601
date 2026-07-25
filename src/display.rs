@@ -2,15 +2,30 @@ use core::fmt::{self, Display};
 
 use super::{Date, DateTime, Duration, Time};
 
+fn write_year(f: &mut fmt::Formatter, year: i32) -> fmt::Result {
+    if year < 0 {
+        let year = -year;
+        write!(f, "-{year:04}")
+    } else {
+        write!(f, "{year:04}")
+    }
+}
+
 impl Display for Date {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            // like `2015-11-02`
-            Date::YMD { year, month, day } => write!(f, "{:04}-{:02}-{:02}", year, month, day),
-            // like `2015-W45-01`
-            Date::Week { year, ww, d } => write!(f, "{:04}-W{:02}-{:01}", year, ww, d),
-            // like `2015-306`
-            Date::Ordinal { year, ddd } => write!(f, "{:04}-{:03}", year, ddd),
+            Date::YMD { year, month, day } => {
+                write_year(f, year)?;
+                write!(f, "-{month:02}-{day:02}")
+            }
+            Date::Week { year, ww, d } => {
+                write_year(f, year)?;
+                write!(f, "-W{ww:02}-{d:01}")
+            }
+            Date::Ordinal { year, ddd } => {
+                write_year(f, year)?;
+                write!(f, "-{ddd:03}")
+            }
         }
     }
 }
