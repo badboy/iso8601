@@ -1225,3 +1225,219 @@ fn test_duration_weeks() {
     assert_eq!(Duration::Weeks(52), dur);
     assert_eq!(StdDuration::from(dur), StdDuration::new(31449600, 0));
 }
+
+#[rustfmt::skip]
+mod test_negative_and_expanded_years {
+    use super::*;
+
+    #[test]
+    fn week_date_with_negative_year() {
+        assert_eq!(
+            Ok(Date::Week { year: -333, ww: 7, d: 2}),
+            date("-0333-W07-2")
+        );
+    }
+
+    #[test]
+    fn ordinal_date_with_negative_year() {
+        assert_eq!(
+            Ok(Date::Ordinal { year: -333, ddd: 192 }),
+            date("-0333-192")
+        );
+    }
+
+    #[test]
+    fn ymd_date_with_negative_year_basic_format() {
+        assert_eq!(
+            Ok(Date::YMD { year: -333, month: 7, day: 11 }),
+            date("-03330711")
+        );
+    }
+
+    #[test]
+    fn datetime_with_negative_year() {
+        assert_eq!(
+            Ok(DateTime {
+                date: Date::YMD { year: -333, month: 7, day: 11 },
+                time: Time { hour: 10, minute: 0, second: 0, millisecond: 0, tz_offset_hours: 0, tz_offset_minutes: 0 },
+            }),
+            datetime("-0333-07-11T10:00:00")
+        );
+    }
+
+    #[test]
+    fn ymd_date_with_explicit_positive_sign() {
+        assert_eq!(
+            Ok(Date::YMD { year: 2015, month: 6, day: 26 }),
+            date("+2015-06-26")
+        );
+    }
+
+    #[test]
+    fn year_zero_is_accepted() {
+        assert_eq!(
+            Ok(Date::YMD { year: 0, month: 1, day: 1 }),
+            date("0000-01-01")
+        );
+    }
+}
+
+#[rustfmt::skip]
+mod test_iso_week_date_boundaries {
+    use super::*;
+
+    #[test]
+    fn first_week_of_year() {
+        assert_eq!(
+            Ok(Date::Week { year: 2015, ww: 1, d: 1 }),
+            date("2015-W01-1")
+        );
+    }
+
+    #[test]
+    fn week_53_of_a_53_week_year() {
+        assert_eq!(
+            Ok(Date::Week { year: 2020, ww: 53, d: 1 }),
+            date("2020-W53-1")
+        );
+    }
+}
+
+#[rustfmt::skip]
+mod test_leap_second {
+    use super::*;
+
+    #[test]
+    fn time_with_leap_second() {
+        assert_eq!(
+            Ok(Time { hour: 23, minute: 59, second: 60, millisecond: 0, tz_offset_hours: 0, tz_offset_minutes: 0 }),
+            time("23:59:60")
+        );
+    }
+
+    #[test]
+    fn datetime_with_leap_second() {
+        assert_eq!(
+            Ok(DateTime {
+                date: Date::YMD { year: 2016, month: 12, day: 31 },
+                time: Time { hour: 23, minute: 59, second: 60, millisecond: 0, tz_offset_hours: 0, tz_offset_minutes: 0 },
+            }),
+            datetime("2016-12-31T23:59:60Z")
+        );
+    }
+}
+
+#[rustfmt::skip]
+mod test_end_of_day_midnight {
+    use super::*;
+
+    // "24:00:00" is the standard's representation of end-of-day midnight.
+    #[test]
+    fn time_24_00_00() {
+        assert_eq!(
+            Ok(Time { hour: 24, minute: 0, second: 0, millisecond: 0, tz_offset_hours: 0, tz_offset_minutes: 0 }),
+            time("24:00:00")
+        );
+    }
+
+    #[test]
+    fn datetime_24_00_00() {
+        assert_eq!(
+            Ok(DateTime {
+                date: Date::YMD { year: 2015, month: 6, day: 26 },
+                time: Time { hour: 24, minute: 0, second: 0, millisecond: 0, tz_offset_hours: 0, tz_offset_minutes: 0 },
+            }),
+            datetime("2015-06-26T24:00:00")
+        );
+    }
+}
+
+#[rustfmt::skip]
+mod test_timezone_offset_variants {
+    use super::*;
+
+    #[test]
+    fn hour_only_positive_offset() {
+        assert_eq!(
+            Ok(Time { hour: 16, minute: 43, second: 16, millisecond: 0, tz_offset_hours: 5, tz_offset_minutes: 0 }),
+            time("16:43:16+05")
+        );
+    }
+
+    #[test]
+    fn hour_only_negative_offset() {
+        assert_eq!(
+            Ok(Time { hour: 16, minute: 43, second: 16, millisecond: 0, tz_offset_hours: -5, tz_offset_minutes: 0 }),
+            time("16:43:16-05")
+        );
+    }
+
+    #[test]
+    fn basic_format_with_hour_only_offset() {
+        assert_eq!(
+            Ok(Time { hour: 16, minute: 43, second: 16, millisecond: 0, tz_offset_hours: 5, tz_offset_minutes: 0 }),
+            time("164316+05")
+        );
+    }
+
+    // Chatham Islands (+13:45) exercises a real-world, non-zero-minute offset.
+    #[test]
+    fn quarter_hour_offset() {
+        assert_eq!(
+            Ok(Time { hour: 16, minute: 43, second: 16, millisecond: 0, tz_offset_hours: 13, tz_offset_minutes: 45 }),
+            time("16:43:16+13:45")
+        );
+    }
+}
+
+#[rustfmt::skip]
+mod test_date_basic_format_via_public_api {
+    use super::*;
+
+    #[test]
+    fn ymd_basic_format() {
+        assert_eq!(
+            Ok(Date::YMD { year: 2015, month: 6, day: 26 }),
+            date("20150626")
+        );
+    }
+
+    #[test]
+    fn ordinal_basic_format() {
+        assert_eq!(
+            Ok(Date::Ordinal { year: 2015, ddd: 56 }),
+            date("2015056")
+        );
+    }
+}
+
+#[rustfmt::skip]
+mod test_real_calendar_leap_day {
+    use super::*;
+
+    // 2016 is an actual leap year, unlike the non-leap-year example used
+    // elsewhere in this suite to demonstrate that calendar validity isn't checked.
+    #[test]
+    fn february_29_in_a_real_leap_year() {
+        assert_eq!(
+            Ok(Date::YMD { year: 2016, month: 2, day: 29 }),
+            date("2016-02-29")
+        );
+    }
+}
+
+#[rustfmt::skip]
+mod test_duration_datetime_format_with_timezone {
+    use super::*;
+
+    // The <duration> = "P" <datetime> form embeds a full time, which may carry
+    // a timezone offset; the offset itself has no representation in `Duration`
+    // and is simply dropped.
+    #[test]
+    fn offset_is_accepted_and_ignored() {
+        assert_eq!(
+            Ok(Duration::YMDHMS { year: 2015, month: 11, day: 3, hour: 21, minute: 56, second: 0, millisecond: 0 }),
+            duration("P2015-11-03T21:56:00+02:00")
+        );
+    }
+}

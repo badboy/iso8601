@@ -101,7 +101,7 @@ fn date_day(i: &[u8]) -> IResult<&[u8], u32> {
 
 // WW
 fn date_week(i: &[u8]) -> IResult<&[u8], u32> {
-    n_digit_in_range(i, 2, 1..=52)
+    n_digit_in_range(i, 2, 1..=53)
 }
 
 fn date_week_day(i: &[u8]) -> IResult<&[u8], u32> {
