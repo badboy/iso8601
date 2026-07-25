@@ -87,8 +87,8 @@ impl TryFrom<crate::DateTime> for chrono::DateTime<chrono::FixedOffset> {
             ..
         } = iso.time;
 
-        let offset_minutes = tz_offset_hours * 3600 + tz_offset_minutes;
-        let offset = chrono::FixedOffset::east_opt(offset_minutes).ok_or(())?;
+        let offset_seconds = tz_offset_hours * 3600 + tz_offset_minutes * 60;
+        let offset = chrono::FixedOffset::east_opt(offset_seconds).ok_or(())?;
 
         let naive_time = chrono::NaiveTime::try_from(iso.time)?;
         let naive_date_time = chrono::NaiveDate::try_from(iso.date)?.and_time(naive_time);
@@ -128,7 +128,7 @@ mod test_datetime {
         assert_eq!(datetime.hour(), 23);
         assert_eq!(datetime.minute(), 40);
         assert_eq!(datetime.second(), 00);
-        assert_eq!(datetime.offset().fix().local_minus_utc(), 3623);
+        assert_eq!(datetime.offset().fix().local_minus_utc(), 4980);
     }
 
     #[test]
@@ -170,7 +170,7 @@ mod test_datetime {
         assert_eq!(datetime.hour(), 23);
         assert_eq!(datetime.minute(), 40);
         assert_eq!(datetime.second(), 00);
-        assert_eq!(datetime.offset().fix().local_minus_utc(), 3623);
+        assert_eq!(datetime.offset().fix().local_minus_utc(), 4980);
     }
 
     #[test]
@@ -195,7 +195,7 @@ mod test_datetime {
         assert_eq!(datetime.hour(), 23);
         assert_eq!(datetime.minute(), 40);
         assert_eq!(datetime.second(), 00);
-        assert_eq!(datetime.offset().fix().local_minus_utc(), 3623);
+        assert_eq!(datetime.offset().fix().local_minus_utc(), 4980);
     }
 
     #[test]
@@ -209,7 +209,7 @@ mod test_datetime {
         assert_eq!(datetime.hour(), 23);
         assert_eq!(datetime.minute(), 40);
         assert_eq!(datetime.second(), 00);
-        assert_eq!(datetime.offset().fix().local_minus_utc(), 3623);
+        assert_eq!(datetime.offset().fix().local_minus_utc(), 4980);
     }
 
     #[test]
