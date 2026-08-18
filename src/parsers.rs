@@ -35,9 +35,13 @@ fn take_digits(i: &[u8]) -> IResult<&[u8], u32> {
     }
 
     let s = str::from_utf8(digits).expect("Invalid data, expected UTF-8 string");
-    let res = s
-        .parse()
-        .expect("Invalid string, expected ASCII representation of a number");
+    // `s` only contains ASCII digits, but the number it represents may not fit
+    // into a `u32` (e.g. `99999999999`). Report a parser error in that case
+    // instead of panicking.
+    let res = match s.parse() {
+        Ok(res) => res,
+        Err(_) => return Err(Err::Error(Error::new(i, nom::error::ErrorKind::MapRes))),
+    };
 
     Ok((i, res))
 }

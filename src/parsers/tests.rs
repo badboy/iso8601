@@ -220,6 +220,23 @@ fn test_duration_year() {
 }
 
 #[test]
+fn duration_digits_larger_than_u32_are_rejected() {
+    // A digit sequence that does not fit into a `u32` must produce a parser
+    // error rather than panicking.
+    assert!(duration_year(b"99999999999Y").is_err());
+    assert!(duration_month(b"99999999999M").is_err());
+    assert!(duration_week(b"99999999999W").is_err());
+    assert!(duration_day(b"4294967296D").is_err());
+    assert!(duration_hour(b"99999999999H").is_err());
+    assert!(duration_second(b"99999999999S").is_err());
+    assert!(parse_duration(b"P99999999999Y").is_err());
+    assert!(parse_duration(b"P4294967296D").is_err());
+
+    // The largest valid `u32` value still parses.
+    assert_eq!(Ok((&[][..], u32::MAX)), duration_day(b"4294967295D"));
+}
+
+#[test]
 fn test_duration_month() {
     assert_eq!(Ok((&[][..], 6)), duration_month(b"6M"));
     assert_eq!(Ok((&[][..], 0)), duration_month(b"0M"));
