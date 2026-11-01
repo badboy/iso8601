@@ -507,3 +507,87 @@ fn iso8601_vs_rfc3339() {
     // "2023-02-18_17:29:49.278Z".parse::<DateTime>().unwrap();
     // "2021-208T22:20:32.332320+08".parse::<DateTime>().unwrap();
 }
+
+#[test]
+fn duration_time_requires_at_least_one_component() {
+    // "T" must be followed by at least one time component
+    // ("T" (dur-hour / dur-minute / dur-second), see RFC 3339, Appendix A).
+    assert!(duration_time(b"").is_err());
+    assert!(parse_duration(b"PT").is_err());
+    assert!(parse_duration(b"PT,").is_err());
+    // A lone "T" after a valid date part must not be consumed.
+    let (rest, parsed) = parse_duration(b"P1DT").unwrap();
+    assert_eq!(
+        parsed,
+        Duration::YMDHMS {
+            year: 0,
+            month: 0,
+            day: 1,
+            hour: 0,
+            minute: 0,
+            second: 0,
+            millisecond: 0
+        }
+    );
+    assert_eq!(rest, b"T");
+}
+
+#[test]
+fn duration_fraction_requires_at_least_one_digit() {
+    // A fractional part must contain at least one digit.
+    assert!(parse_duration(b"PT1.S").is_err());
+    assert!(parse_duration(b"PT1,S").is_err());
+    // After other components, the incomplete fraction is left over.
+    let (rest, parsed) = parse_duration(b"P2021Y11M16DT23H26M59.S").unwrap();
+    assert_eq!(
+        parsed,
+        Duration::YMDHMS {
+            year: 2021,
+            month: 11,
+            day: 16,
+            hour: 23,
+            minute: 26,
+            second: 0,
+            millisecond: 0
+        }
+    );
+    assert_eq!(rest, b"59.S");
+    // A valid fractional part is still accepted.
+    assert_parser!(
+        parse_duration,
+        "P2021Y11M16DT23H26M59.100S",
+        Duration::YMDHMS {
+            year: 2021,
+            month: 11,
+            day: 16,
+            hour: 23,
+            minute: 26,
+            second: 59,
+            millisecond: 100
+        }
+    );
+}
+
+#[test]
+fn time_fraction_requires_at_least_one_digit() {
+    // A decimal separator without any fractional digits must be left over
+    // instead of being silently consumed.
+    let (rest, parsed) = parse_time(b"16:43:16.").unwrap();
+    assert_eq!(rest, b".");
+    assert_eq!(parsed.millisecond, 0);
+    assert!(parse_time(b"16:43:16,").unwrap().0 == b",");
+    // A valid fractional part is still accepted.
+    let (rest, parsed) = parse_time(b"16:43:16.100").unwrap();
+    assert_eq!(rest, b"");
+    assert_eq!(
+        parsed,
+        Time {
+            hour: 16,
+            minute: 43,
+            second: 16,
+            millisecond: 100,
+            tz_offset_hours: 0,
+            tz_offset_minutes: 0
+        }
+    );
+}
