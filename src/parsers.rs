@@ -180,6 +180,10 @@ fn time_second(i: &[u8]) -> IResult<&[u8], u32> {
 fn fraction_millisecond(i: &[u8]) -> IResult<&[u8], u32> {
     let (i, mut digits) = take_while(AsChar::is_dec_digit).parse(i)?;
     let mut l = digits.len();
+    if l == 0 {
+        // A fractional part must contain at least one digit.
+        return Err(Err::Error(Error::new(i, nom::error::ErrorKind::Eof)));
+    }
     if l > 3 {
         digits = digits.get(0..3).unwrap();
     }
@@ -296,17 +300,25 @@ fn duration_second_and_millisecond(i: &[u8]) -> IResult<&[u8], (u32, u32)> {
 }
 
 fn duration_time(i: &[u8]) -> IResult<&[u8], (u32, u32, u32, u32)> {
-    (
-        opt(duration_hour),
-        opt(duration_minute),
-        opt(duration_second_and_millisecond),
-    )
-        .map(|(h, m, s)| {
+    map_res(
+        (
+            opt(duration_hour),
+            opt(duration_minute),
+            opt(duration_second_and_millisecond),
+        ),
+        |(h, m, s)| {
+            // "T" must be followed by at least one time component
+            // ("T" (dur-hour / dur-minute / dur-second) per RFC 3339).
+            if h.is_none() && m.is_none() && s.is_none() {
+                return Err(nom::error::ErrorKind::Eof);
+            }
+
             let (s, ms) = s.unwrap_or((0, 0));
 
-            (h.unwrap_or(0), m.unwrap_or(0), s, ms)
-        })
-        .parse(i)
+            Ok((h.unwrap_or(0), m.unwrap_or(0), s, ms))
+        },
+    )
+    .parse(i)
 }
 
 fn duration_ymdhms(i: &[u8]) -> IResult<&[u8], Duration> {
