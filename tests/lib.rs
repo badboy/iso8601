@@ -1441,3 +1441,26 @@ mod test_duration_datetime_format_with_timezone {
         );
     }
 }
+
+#[test]
+fn test_reject_empty_duration_time_designator() {
+    assert!(duration("PT").is_err());
+    assert!(duration("P1Y2MT").is_err());
+    assert!(duration("P3DT").is_err());
+    assert!(parsers::parse_duration(b"PT").is_err());
+    assert!(parsers::parse_duration(b"P1Y2MT").is_err());
+}
+
+#[test]
+fn test_reject_invalid_hour_24_and_timezone_offset() {
+    assert!(time("24:00:00").is_ok());
+    assert!(time("24:00:00.000").is_ok());
+    assert!(time("24:00:01").is_err());
+    assert!(time("24:01:00").is_err());
+    assert!(time("24:00:00.001").is_err());
+    assert!(time("12:00:00+24:00").is_err());
+    assert!(time("12:00:00-24:00").is_err());
+    assert!(time("12:00:00+23:59").is_ok());
+    assert!(datetime("2015-06-26T24:00:01").is_err());
+    assert!(datetime("2015-06-26T12:00:00+24:00").is_err());
+}

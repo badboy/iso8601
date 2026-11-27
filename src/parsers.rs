@@ -14,7 +14,7 @@ use nom::{
     branch::alt,
     bytes::complete::{tag, take_while, take_while_m_n},
     character::complete::one_of,
-    combinator::{map_res, not, opt},
+    combinator::{cut, map_res, not, opt},
     error::Error,
     sequence::{preceded, separated_pair, terminated},
     AsChar, Err, IResult, Parser,
@@ -200,32 +200,45 @@ fn fraction_millisecond(i: &[u8]) -> IResult<&[u8], u32> {
 /// See [`time()`][`crate::time()`] for the supported formats.
 // HH:MM:[SS][.(m*)][(Z|+...|-...)]
 pub fn parse_time(i: &[u8]) -> IResult<&[u8], Time> {
-    (
-        time_hour,                                         // HH
-        opt(tag(":")),                                     // :
-        time_minute,                                       // MM
-        opt(preceded(opt(tag(":")), time_second)),         // [SS]
-        opt(preceded(one_of(",."), fraction_millisecond)), // [.(m*)]
-        opt(alt((timezone_hour, timezone_utc))),           // [(Z|+...|-...)]
-    )
-        .map(|(h, _, m, s, ms, z)| {
+    map_res(
+        (
+            time_hour,                                         // HH
+            opt(tag(":")),                                     // :
+            time_minute,                                       // MM
+            opt(preceded(opt(tag(":")), time_second)),         // [SS]
+            opt(preceded(one_of(",."), fraction_millisecond)), // [.(m*)]
+            opt(alt((timezone_hour, timezone_utc))),           // [(Z|+...|-...)]
+        ),
+        |(h, _, m, s, ms, z)| {
+            let sec = s.unwrap_or(0);
+            let msec = ms.unwrap_or(0);
+            if h == 24 && (m != 0 || sec != 0 || msec != 0) {
+                return Err((i, nom::error::ErrorKind::Verify));
+            }
             let (tz_offset_hours, tz_offset_minutes) = z.unwrap_or((0, 0));
 
-            Time {
+            Ok(Time {
                 hour: h,
                 minute: m,
-                second: s.unwrap_or(0),
-                millisecond: ms.unwrap_or(0),
+                second: sec,
+                millisecond: msec,
                 tz_offset_hours,
                 tz_offset_minutes,
-            }
-        })
-        .parse(i)
+            })
+        },
+    )
+    .parse(i)
 }
 
 fn timezone_hour(i: &[u8]) -> IResult<&[u8], (i32, i32)> {
-    (sign, time_hour, opt(preceded(opt(tag(":")), time_minute)))
-        .map(|(s, h, m)| (s * (h as i32), s * (m.unwrap_or(0) as i32)))
+    (
+        sign,
+        cut((
+            |i| n_digit_in_range(i, 2, 0..=23),
+            opt(preceded(opt(tag(":")), time_minute)),
+        )),
+    )
+        .map(|(s, (h, m))| (s * (h as i32), s * (m.unwrap_or(0) as i32)))
         .parse(i)
 }
 
@@ -296,17 +309,22 @@ fn duration_second_and_millisecond(i: &[u8]) -> IResult<&[u8], (u32, u32)> {
 }
 
 fn duration_time(i: &[u8]) -> IResult<&[u8], (u32, u32, u32, u32)> {
-    (
-        opt(duration_hour),
-        opt(duration_minute),
-        opt(duration_second_and_millisecond),
-    )
-        .map(|(h, m, s)| {
+    map_res(
+        (
+            opt(duration_hour),
+            opt(duration_minute),
+            opt(duration_second_and_millisecond),
+        ),
+        |(h, m, s)| {
+            if h.is_none() && m.is_none() && s.is_none() {
+                return Err((i, nom::error::ErrorKind::Eof));
+            }
             let (s, ms) = s.unwrap_or((0, 0));
 
-            (h.unwrap_or(0), m.unwrap_or(0), s, ms)
-        })
-        .parse(i)
+            Ok((h.unwrap_or(0), m.unwrap_or(0), s, ms))
+        },
+    )
+    .parse(i)
 }
 
 fn duration_ymdhms(i: &[u8]) -> IResult<&[u8], Duration> {
@@ -317,7 +335,7 @@ fn duration_ymdhms(i: &[u8]) -> IResult<&[u8], Duration> {
                 opt(duration_year),
                 opt(duration_month),
                 opt(duration_day),
-                opt(preceded(tag("T"), duration_time)),
+                opt(preceded(tag("T"), cut(duration_time))),
             ),
         ),
         |(y, mo, d, time)| {
